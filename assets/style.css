@@ -839,7 +839,6 @@ footer.footer-blue a {
     margin-top: 0.15rem;
     font-size: 1rem;
 }
-}
 
 #searchGlobal:focus {
     background-color: rgba(255,255,255,0.95) !important;
@@ -878,7 +877,7 @@ footer.footer-blue a {
     font-size: 1.1rem;
 }
 
-/* Nav tabs comptabilité */
+/* Nav tabs comptabilité / rapports */
 .nav-tabs .nav-link {
     font-size: 0.88rem;
     font-weight: 500;
@@ -896,6 +895,56 @@ footer.footer-blue a {
     border-bottom: 2px solid var(--bleu-accent);
     background: var(--bleu-light);
     font-weight: 600;
+}
+
+.reports-hero {
+    border-left-width: 5px;
+}
+
+.reports-actions .btn,
+.reports-actions .btn-group .btn {
+    border-radius: 0.5rem;
+}
+
+.reports-tabs-card {
+    overflow: hidden;
+}
+
+.reports-tabs {
+    align-items: center;
+}
+
+.reports-tabs .nav-link {
+    border: 1px solid #dbe7f3;
+    color: var(--bleu-secondary);
+    background: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.reports-tabs .nav-link:hover {
+    color: var(--bleu-primary);
+    border-color: var(--bleu-accent);
+    background: #f8fbff;
+}
+
+.reports-tabs .nav-link.active {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.18);
+}
+
+.reports-panel .card-header {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%) !important;
+    color: #fff !important;
+    border-bottom: none !important;
+}
+
+.reports-panel .card-header i {
+    opacity: 0.9;
 }
 
 /* Grand livre category headers */

@@ -63,6 +63,7 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
    $env:GESTION_COMPTA_DB_NAME='gestion_compta'
    $env:GESTION_COMPTA_DB_USER='root'
    $env:GESTION_COMPTA_DB_PASS=''
+   $env:GESTION_COMPTA_BASE_URL='/gestion%20comptabilit%C3%A9/'
    ```
 
 5. **Accéder à l'application** :
@@ -162,6 +163,24 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
    git remote add origin https://github.com/VOTRE-UTILISATEUR/VOTRE-REPO.git
    git push -u origin main
    ```
+
+## Mise en production sur cPanel
+
+1. **Créer la base MySQL** dans cPanel (`MySQL Databases`).
+2. **Importer** `database/schema.sql` puis les migrations via `phpMyAdmin`.
+3. **Déployer les fichiers** dans `public_html/` ou un sous-dossier dédié.
+4. **Configurer** les variables serveur ou adapter `.htaccess` / `config.php` :
+   ```apache
+   SetEnv GESTION_COMPTA_DB_HOST localhost
+   SetEnv GESTION_COMPTA_DB_NAME votre_base
+   SetEnv GESTION_COMPTA_DB_USER votre_user
+   SetEnv GESTION_COMPTA_DB_PASS votre_mot_de_passe
+   SetEnv GESTION_COMPTA_BASE_URL /
+   ```
+5. **Vérifier** que le domaine utilise bien `https://`.
+6. **Supprimer ou bloquer** tout accès public à `install.php` après import.
+
+> Pour un déploiement Git via cPanel, liez le dépôt GitHub puis publiez le contenu du dépôt vers `public_html`.
 
 ## Licence
 

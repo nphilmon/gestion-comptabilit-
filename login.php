@@ -87,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 3rem;
             margin-bottom: 0.5rem;
         }
+        
         .login-header h1 {
             font-size: 1.4rem;
             font-weight: 700;

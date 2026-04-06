@@ -11,11 +11,22 @@
  */
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/functions_commercial.php';
+requireLogin();
+requireRole('admin', 'comptable');
 $titre = 'Rapports';
 
 $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y');
 $onglet = $_GET['onglet'] ?? 'bilan';
 $annees = getAnneesDisponibles();
+$ongletLabels = [
+    'bilan' => 'Bilan annuel',
+    'resultat' => 'Compte de résultat',
+    'comparaison' => 'Comparaison N-1',
+    'mensuel' => 'Détail mensuel',
+    'categories' => 'Répartition par catégories',
+    'conseils' => 'Conseils & alertes',
+];
+$ongletLabel = $ongletLabels[$onglet] ?? 'Bilan annuel';
 
 $stats = getStatsAnnee($annee);
 $conf = getRegimeConfig();
@@ -44,14 +55,25 @@ if (isset($_GET['export_pdf'])) {
 
     class RapportPDF extends FPDF {
         function Header() {
+            $anneeRapport = (string) ($_GET['annee'] ?? date('Y'));
+            $entreprise = getParam('nom_entreprise', 'Mon Activité');
+            $regime = getRegimeLabel();
+
             $this->SetFillColor(30, 58, 95);
-            $this->Rect(0, 0, 210, 25, 'F');
+            $this->Rect(0, 0, 210, 34, 'F');
+            $this->SetY(5);
             $this->SetTextColor(255, 255, 255);
-            $this->SetFont('Arial', 'B', 14);
-            $this->Cell(0, 12, u8d(getParam('nom_entreprise', 'Mon Activité') . ' — Rapport ' . ($_GET['annee'] ?? date('Y'))), 0, 1, 'C');
+
+            $this->SetFont('Arial', 'B', 15);
+            $this->Cell(0, 8, u8d('Rapport ' . $anneeRapport), 0, 1, 'C');
+
             $this->SetFont('Arial', '', 9);
-            $this->Cell(0, 8, u8d(getRegimeLabel()), 0, 1, 'C');
-            $this->Ln(5);
+            $this->MultiCell(0, 4, u8d($regime), 0, 'C');
+
+            $this->SetFont('Arial', 'I', 8);
+            $this->Cell(0, 5, u8d($entreprise), 0, 1, 'C');
+
+            $this->Ln(4);
             $this->SetTextColor(0, 0, 0);
         }
         function Footer() {
@@ -149,60 +171,68 @@ if (isset($_GET['export_pdf'])) {
 include 'header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-bar-chart-line"></i> Rapports <?= $annee ?></h2>
-    <div class="d-flex gap-2">
-        <div class="btn-group">
-            <?php foreach ($annees as $a): ?>
-                <a href="?annee=<?= $a ?>&onglet=<?= e($onglet) ?>" class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>"><?= $a ?></a>
-            <?php endforeach; ?>
+<div class="hero-banner reports-hero mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="small text-uppercase fw-semibold text-primary mb-1">Rapport annuel</div>
+            <h2 class="mb-1"><i class="bi bi-bar-chart-line"></i> Rapport <?= $annee ?></h2>
+            <p class="text-muted mb-0"><?= e(getRegimeLabel()) ?> — <?= e($ongletLabel) ?></p>
         </div>
-        <a href="?annee=<?= $annee ?>&export_pdf=1" class="btn btn-sm btn-outline-danger">
-            <i class="bi bi-file-earmark-pdf"></i> Export PDF
-        </a>
-        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-printer"></i> Imprimer
-        </button>
+        <div class="d-flex gap-2 flex-wrap reports-actions">
+            <div class="btn-group">
+                <?php foreach ($annees as $a): ?>
+                    <a href="?annee=<?= $a ?>&onglet=<?= e($onglet) ?>" class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>"><?= $a ?></a>
+                <?php endforeach; ?>
+            </div>
+            <a href="?annee=<?= $annee ?>&export_pdf=1" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </a>
+            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer"></i> Imprimer
+            </button>
+        </div>
     </div>
 </div>
 
-<!-- Onglets -->
-<ul class="nav nav-tabs mb-0" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'bilan' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=bilan">
-            <i class="bi bi-file-earmark-bar-graph"></i> Bilan
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'resultat' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=resultat">
-            <i class="bi bi-graph-up-arrow"></i> Compte de résultat
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'comparaison' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=comparaison">
-            <i class="bi bi-arrow-left-right"></i> Comparaison N-1
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'mensuel' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=mensuel">
-            <i class="bi bi-calendar3"></i> Mensuel
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'categories' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=categories">
-            <i class="bi bi-pie-chart"></i> Catégories
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $onglet === 'conseils' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=conseils">
-            <i class="bi bi-lightbulb"></i> Conseils
-        </a>
-    </li>
-</ul>
-
+<div class="card border-0 mb-4 reports-tabs-card">
+    <div class="card-body py-2">
+        <ul class="nav nav-pills reports-tabs gap-2" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'bilan' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=bilan">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Bilan
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'resultat' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=resultat">
+                    <i class="bi bi-graph-up-arrow"></i> Compte de résultat
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'comparaison' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=comparaison">
+                    <i class="bi bi-arrow-left-right"></i> Comparaison N-1
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'mensuel' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=mensuel">
+                    <i class="bi bi-calendar3"></i> Mensuel
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'categories' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=categories">
+                    <i class="bi bi-pie-chart"></i> Catégories
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $onglet === 'conseils' ? 'active' : '' ?>" href="?annee=<?= $annee ?>&onglet=conseils">
+                    <i class="bi bi-lightbulb"></i> Conseils
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
 <?php if ($onglet === 'bilan'): ?>
 <!-- ============= BILAN ANNUEL ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-header bg-primary text-white">
         <i class="bi bi-file-earmark-bar-graph"></i> Bilan annuel <?= $annee ?> — <?= e(getRegimeLabel()) ?>
     </div>
@@ -310,7 +340,7 @@ include 'header.php';
 
 <?php elseif ($onglet === 'resultat'): ?>
 <!-- ============= COMPTE DE RÉSULTAT ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-header">
         <i class="bi bi-graph-up-arrow"></i> Compte de résultat <?= $annee ?> — <?= e(getRegimeLabel()) ?>
     </div>
@@ -441,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php elseif ($onglet === 'comparaison'): ?>
 <!-- ============= COMPARAISON N / N-1 ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-header">
         <i class="bi bi-arrow-left-right"></i> Comparaison <?= $annee ?> / <?= $annee - 1 ?>
     </div>
@@ -528,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php elseif ($onglet === 'mensuel'): ?>
 <!-- ============= DÉTAIL MENSUEL ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-header"><i class="bi bi-calendar3"></i> Détail mensuel <?= $annee ?></div>
     <div class="card-body p-0">
         <table class="table table-striped table-hover mb-0">
@@ -578,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php elseif ($onglet === 'categories'): ?>
 <!-- ============= RÉPARTITION CATÉGORIES ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-6">
@@ -649,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php elseif ($onglet === 'conseils'): ?>
 <!-- ============= CONSEILS & ALERTES ============= -->
-<div class="card border-top-0 rounded-top-0 mb-4">
+<div class="card border-0 mb-4 reports-panel">
     <div class="card-header"><i class="bi bi-lightbulb"></i> Conseils & Alertes — <?= $annee ?></div>
     <div class="card-body">
         <ul class="list-group list-group-flush">
