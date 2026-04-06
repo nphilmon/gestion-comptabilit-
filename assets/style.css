@@ -1,0 +1,940 @@
+/* =============================================================
+   Gestion Comptabilité - Thème Bleu
+   ============================================================= */
+
+:root {
+    --bleu-primary: #1e3a5f;
+    --bleu-secondary: #2c5282;
+    --bleu-accent: #3182ce;
+    --bleu-light: #ebf4ff;
+    --bleu-hover: #2b6cb0;
+}
+
+body {
+    background-color: #edf2f7;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Navbar bleu */
+.navbar-blue {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%) !important;
+    box-shadow: 0 2px 10px rgba(30, 58, 95, 0.3);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.navbar-blue .nav-link:hover,
+.navbar-blue .nav-link.active {
+    background-color: rgba(255,255,255,0.12);
+    border-radius: 0.4rem;
+}
+
+.card {
+    box-shadow: 0 1px 4px rgba(30, 58, 95, 0.08);
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.card-header {
+    font-weight: 600;
+    background-color: var(--bleu-light);
+    border-bottom: 2px solid var(--bleu-accent);
+}
+
+/* Dashboard cards */
+.card h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+/* Table améliorations */
+.table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badges catégories */
+.badge {
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+/* Print styles */
+@media print {
+    .navbar, .btn, footer, .card-header .btn, form {
+        display: none !important;
+    }
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    body {
+        background: white;
+    }
+    .container-fluid {
+        max-width: 100%;
+    }
+}
+
+/* Progress bar animations */
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+/* Responsive table scroll */
+@media (max-width: 768px) {
+    .table-responsive-wrapper {
+        overflow-x: auto;
+    }
+}
+
+/* Alert flash styling */
+.alert {
+    border-radius: 0.5rem;
+}
+
+/* Form improvements */
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bleu-accent);
+    box-shadow: 0 0 0 0.15rem rgba(49,130,206,.2);
+}
+
+/* Boutons bleu cohérent */
+.btn-primary {
+    background-color: var(--bleu-accent);
+    border-color: var(--bleu-accent);
+}
+
+.btn-primary:hover {
+    background-color: var(--bleu-hover);
+    border-color: var(--bleu-hover);
+}
+
+.btn-outline-primary {
+    color: var(--bleu-accent);
+    border-color: var(--bleu-accent);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bleu-accent);
+    border-color: var(--bleu-accent);
+}
+
+/* Table header bleu */
+.table-light th {
+    background-color: var(--bleu-light) !important;
+    color: var(--bleu-primary);
+}
+
+/* Page titles */
+h2 {
+    color: var(--bleu-primary);
+}
+
+/* Active nav badge */
+.nav-link.active {
+    font-weight: 600;
+}
+
+/* Navbar dropdown menus */
+.navbar .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    border-radius: 0.5rem;
+}
+
+.navbar .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: #212529 !important;
+    transition: background-color 0.2s ease, padding-left 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.navbar .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.4rem;
+    color: inherit !important;
+    transition: transform 0.2s ease;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: var(--bleu-light);
+    color: #212529 !important;
+    border-left-color: var(--bleu-accent);
+    padding-left: 1.15rem;
+}
+
+.navbar .dropdown-item:hover i {
+    transform: scale(1.15);
+}
+
+.navbar .dropdown-item.text-danger,
+.navbar .dropdown-item.text-danger i {
+    color: #dc3545 !important;
+}
+
+.navbar .dropdown-item.text-danger:hover {
+    background-color: #fee2e2 !important;
+    border-left-color: #dc3545 !important;
+}
+
+.navbar .dropdown-item.text-danger:hover,
+.navbar .dropdown-item.text-danger:hover i {
+    color: #b91c1c !important;
+}
+
+.navbar .dropdown-item.active {
+    background-color: var(--bleu-accent);
+    color: #fff;
+}
+
+/* Commercial line items */
+#tableLignes .form-control-sm {
+    font-size: 0.85rem;
+}
+
+#tableLignes .ligne-total {
+    background-color: #f8f9fa;
+    text-align: right;
+}
+
+/* Statut badges in tables */
+.table .badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+}
+
+/* Quick-create button */
+.btn-warning.dropdown-toggle {
+    font-weight: 600;
+}
+
+/* User dropdown menu */
+.navbar .dropdown .btn-outline-light {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 2rem;
+    white-space: nowrap;
+}
+
+.navbar .dropdown .btn-outline-light:hover,
+.navbar .dropdown .btn-outline-light:focus {
+    background-color: rgba(255,255,255,0.15);
+}
+
+.user-info-block {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.25rem;
+    color: #212529 !important;
+}
+
+.user-info-block .fw-semibold {
+    color: var(--bleu-primary) !important;
+}
+
+.user-info-block small {
+    color: #6b7280 !important;
+}
+
+/* Caisse — Recherche produit autocomplete */
+#resultsProduit {
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    border-radius: 0.4rem;
+}
+
+#resultsProduit .list-group-item {
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+#resultsProduit .list-group-item:hover {
+    background-color: var(--bleu-light);
+}
+
+/* Stock alerts */
+.text-danger.fw-bold {
+    animation: pulse-stock 2s ease-in-out infinite;
+}
+
+@keyframes pulse-stock {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Footer bleu */
+footer.footer-blue {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%) !important;
+    color: rgba(255,255,255,0.85);
+}
+
+footer.footer-blue a {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+}
+
+.breadcrumb-item a {
+    color: var(--bleu-accent);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--bleu-primary);
+}
+
+.breadcrumb-item.active {
+    color: var(--bleu-primary);
+    font-weight: 500;
+}
+
+/* Search bar in navbar */
+#searchGlobal::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+/* =============================================================
+   Commercial Pages — Enhanced Interface
+   ============================================================= */
+
+/* Hero banner upgrade */
+.hero-banner {
+    background: linear-gradient(135deg, var(--bleu-light) 0%, #dbeafe 50%, #e0e7ff 100%);
+    border-radius: 1rem;
+    padding: 1.5rem 2rem;
+    border-left: 5px solid var(--bleu-accent);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(49,130,206,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.hero-banner h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.hero-banner h2 i {
+    opacity: 0.7;
+}
+
+/* Stat cards enhanced */
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0.75rem !important;
+    overflow: hidden;
+    position: relative;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(30, 58, 95, 0.12) !important;
+}
+
+.stat-card:hover::after {
+    background: var(--bleu-accent);
+}
+
+.stat-card .card-body {
+    padding: 1.25rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.stat-card .text-muted.small {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.stat-card .fs-4 {
+    font-size: 1.5rem !important;
+    line-height: 1.2;
+}
+
+/* Filter bar */
+.card .card-body.py-3 form .form-control-sm,
+.card .card-body.py-3 form .form-select-sm {
+    border-radius: 0.5rem;
+}
+
+/* Table improvements for commercial pages */
+.table-commercial {
+    font-size: 0.9rem;
+}
+
+.table-commercial thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--bleu-primary);
+    padding: 0.85rem 0.75rem;
+    border-bottom: 2px solid var(--bleu-accent);
+    background: linear-gradient(180deg, var(--bleu-light) 0%, #f0f7ff 100%) !important;
+    white-space: nowrap;
+}
+
+.table-commercial tbody tr {
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+}
+
+.table-commercial tbody tr:hover {
+    background-color: #f0f7ff !important;
+    border-left-color: var(--bleu-accent);
+}
+
+.table-commercial tbody td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.table-commercial .numero-link {
+    color: var(--bleu-accent);
+    font-weight: 700;
+    text-decoration: none;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.table-commercial .numero-link:hover {
+    color: var(--bleu-primary);
+    text-decoration: underline;
+}
+
+.table-commercial .client-name {
+    font-weight: 500;
+    color: #1a202c;
+}
+
+.table-commercial .date-cell {
+    color: #64748b;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.table-commercial .montant-cell {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-weight: 600;
+}
+
+/* Enhanced badges with icons */
+.badge-statut {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.4em 0.8em;
+    border-radius: 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    letter-spacing: 0.02em;
+}
+
+.badge-statut i {
+    font-size: 0.7rem;
+}
+
+/* Action buttons group */
+.btn-actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.btn-actions .btn {
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.btn-actions .btn:hover {
+    transform: scale(1.1);
+}
+
+/* Document detail view */
+.document-wrapper {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px rgba(30, 58, 95, 0.08);
+    overflow: hidden;
+}
+
+.document-header-bar {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.document-header-bar .badge {
+    font-size: 0.85rem;
+    padding: 0.5em 1em;
+    border-radius: 2rem;
+}
+
+/* Info cards (Émetteur / Client) */
+.info-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    transition: border-color 0.2s ease;
+}
+
+.info-card:hover {
+    border-color: var(--bleu-accent) !important;
+}
+
+.info-card .card-header {
+    background: white !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--bleu-secondary);
+    padding: 0.75rem 1rem;
+}
+
+.info-card .card-body {
+    padding: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Detail table (lignes) */
+.table-detail thead th {
+    background: linear-gradient(180deg, var(--bleu-light) 0%, #f0f7ff 100%) !important;
+    color: var(--bleu-primary);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    padding: 0.85rem 0.75rem;
+    border-bottom: 2px solid var(--bleu-accent);
+}
+
+.table-detail tbody tr {
+    transition: background 0.15s ease;
+}
+
+.table-detail tbody tr:nth-child(even) {
+    background-color: #fafbfe;
+}
+
+.table-detail tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+.table-detail tbody td {
+    padding: 0.75rem;
+}
+
+.table-detail tfoot {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%) !important;
+}
+
+.table-detail tfoot td {
+    border: none !important;
+    color: white !important;
+    padding: 0.6rem 0.75rem;
+}
+
+.table-detail tfoot tr:last-child td {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+/* Payment progress */
+.payment-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.payment-progress .bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.payment-progress .bar.partial {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.payment-progress .bar.overdue {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Payment card enhancements */
+.payment-summary {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border-radius: 0.75rem;
+    border: 1px solid #bbf7d0;
+}
+
+.payment-summary .amount {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.payment-summary .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Form enhancements for line items */
+#tableLignes {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#tableLignes thead th {
+    background: linear-gradient(180deg, var(--bleu-light) 0%, #f0f7ff 100%) !important;
+    color: var(--bleu-primary);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    padding: 0.75rem;
+    border-bottom: 2px solid var(--bleu-accent);
+}
+
+#tableLignes tbody tr {
+    transition: background 0.15s ease;
+}
+
+#tableLignes tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+#tableLignes .form-control-sm {
+    border-radius: 0.4rem;
+    border-color: #e2e8f0;
+    font-size: 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#tableLignes .form-control-sm:focus {
+    border-color: var(--bleu-accent);
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.15);
+}
+
+#tableLignes .ligne-total {
+    background-color: #f0f7ff !important;
+    text-align: right;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    color: var(--bleu-primary);
+    font-weight: 700;
+}
+
+#tableLignes tfoot {
+    background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 100%) !important;
+}
+
+#tableLignes tfoot td {
+    color: white !important;
+    border: none !important;
+    padding: 0.75rem;
+}
+
+#grandTotalHT {
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 1.1rem;
+}
+
+/* Ligne add animation */
+#lignesBody tr {
+    animation: slideInRow 0.3s ease-out;
+}
+
+@keyframes slideInRow {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Empty state */
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--bleu-accent);
+    opacity: 0.4;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    margin-bottom: 1.5rem;
+}
+
+/* Status change bar */
+.status-bar {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(30, 58, 95, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.status-bar .badge {
+    font-size: 0.9rem;
+    padding: 0.5em 1em;
+    border-radius: 2rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .hero-banner {
+        padding: 1rem 1.25rem;
+    }
+    
+    .hero-banner h2 {
+        font-size: 1.2rem;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    .stat-card .fs-4 {
+        font-size: 1.2rem !important;
+    }
+    
+    .btn-actions .btn {
+        padding: 0.25rem 0.4rem;
+    }
+
+    .document-header-bar {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* Transition for table row highlight (en retard) */
+.table-commercial tbody tr.row-danger {
+    background-color: #fef2f2 !important;
+    border-left-color: #ef4444;
+}
+
+.table-commercial tbody tr.row-danger:hover {
+    background-color: #fee2e2 !important;
+}
+
+/* Nouveautés modal */
+.news-modal {
+    border: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(30, 58, 95, 0.25);
+}
+
+.news-modal .modal-header {
+    background: linear-gradient(135deg, var(--bleu-light) 0%, #dbeafe 100%);
+}
+
+.news-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+}
+
+.news-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.news-list li:last-child {
+    border-bottom: none;
+}
+
+.news-list i {
+    margin-top: 0.15rem;
+    font-size: 1rem;
+}
+}
+
+#searchGlobal:focus {
+    background-color: rgba(255,255,255,0.95) !important;
+    color: #212529 !important;
+}
+
+/* Notification alerts on dashboard */
+.alert.d-flex {
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* ====== Dashboard styles ====== */
+.hero-banner {
+    background: linear-gradient(135deg, var(--bleu-light) 0%, #dbeafe 100%);
+    border-radius: 0.75rem;
+    padding: 1.2rem 1.5rem;
+    border-left: 4px solid var(--bleu-accent);
+}
+
+.stat-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.12);
+}
+
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* Nav tabs comptabilité */
+.nav-tabs .nav-link {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--bleu-secondary);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 0.8rem;
+}
+.nav-tabs .nav-link:hover {
+    border-bottom-color: var(--bleu-accent);
+    color: var(--bleu-accent);
+}
+.nav-tabs .nav-link.active {
+    color: var(--bleu-primary);
+    border-bottom: 2px solid var(--bleu-accent);
+    background: var(--bleu-light);
+    font-weight: 600;
+}
+
+/* Grand livre category headers */
+.card .border-bottom .bg-light {
+    background-color: var(--bleu-light) !important;
+}
+
+/* List group items for dashboard */
+.list-group-item {
+    border-color: rgba(0,0,0,0.05);
+}
+
+/* Scrollbar améliorée */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: var(--bleu-accent); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bleu-hover); }
+
+footer.footer-blue a:hover {
+    color: #fff;
+}
+
+/* Table dark footer -> bleu */
+.table-dark {
+    --bs-table-bg: var(--bleu-primary);
+    --bs-table-color: #fff;
+}
+
+/* Empty state icons */
+.card-body .bi[style*="font-size: 3rem"] {
+    opacity: 0.3;
+}
+
+/* Smooth page transitions */
+.container-fluid {
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
