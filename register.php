@@ -67,68 +67,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - <?= APP_NAME ?></title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --bleu-primary: #1e3a5f;
-            --bleu-secondary: #2c5282;
-            --bleu-accent: #3182ce;
-            --bleu-light: #ebf4ff;
+            --md-primary: #1565C0;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #D1E4FF;
+            --md-on-primary-container: #001D36;
+            --md-surface: #FAFAFA;
+            --md-on-surface: #191C20;
+            --md-on-surface-variant: #43474E;
+            --md-outline: #73777F;
+            --md-surface-container: #ECEEF0;
+            --md-surface-container-lowest: #FFFFFF;
+            --md-error-container: #FFDAD6;
+            --md-on-error-container: #410002;
+            --md-warning-container: #FFE0B2;
+            --md-elevation-2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+            --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.3);
         }
         body {
-            background: linear-gradient(135deg, var(--bleu-primary) 0%, var(--bleu-secondary) 50%, var(--bleu-accent) 100%);
+            background: var(--md-surface);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Roboto', system-ui, -apple-system, sans-serif;
         }
         .register-card {
-            background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            background: var(--md-surface-container-lowest);
+            border-radius: 28px;
+            box-shadow: var(--md-elevation-3);
             max-width: 460px;
             width: 100%;
             overflow: hidden;
         }
         .register-header {
-            background: linear-gradient(135deg, var(--bleu-primary), var(--bleu-secondary));
-            color: white;
-            padding: 2rem;
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            padding: 2.5rem 2rem 2rem;
             text-align: center;
         }
-        .register-header i { font-size: 3rem; margin-bottom: 0.5rem; }
-        .register-header h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
-        .register-header p { margin: 0.3rem 0 0; opacity: 0.8; font-size: 0.9rem; }
+        .register-header .material-symbols-outlined {
+            font-size: 48px;
+            margin-bottom: 0.5rem;
+            font-variation-settings: 'FILL' 1;
+        }
+        .register-header h1 { font-size: 1.4rem; font-weight: 600; margin: 0; }
+        .register-header p { margin: 0.3rem 0 0; opacity: 0.85; font-size: 0.875rem; font-weight: 300; }
         .register-body { padding: 2rem; }
+        .form-control {
+            border: 1px solid var(--md-outline);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            padding: 0.625rem 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
         .form-control:focus {
-            border-color: var(--bleu-accent);
-            box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25);
+            border-color: var(--md-primary);
+            box-shadow: 0 0 0 1px var(--md-primary);
         }
         .btn-register {
-            background: linear-gradient(135deg, var(--bleu-primary), var(--bleu-accent));
+            background: var(--md-primary);
             border: none;
-            padding: 0.7rem;
-            font-weight: 600;
-            font-size: 1rem;
-            border-radius: 0.5rem;
-            transition: opacity 0.2s;
+            padding: 0.75rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-radius: 9999px;
+            transition: box-shadow 0.2s;
+            box-shadow: var(--md-elevation-2);
         }
-        .btn-register:hover { opacity: 0.9; }
+        .btn-register:hover { box-shadow: var(--md-elevation-3); }
         .input-group-text {
-            background: var(--bleu-light);
-            border-right: none;
-            color: var(--bleu-primary);
+            background: var(--md-surface-container);
+            border: 1px solid var(--md-outline);
+            color: var(--md-on-surface-variant);
         }
         .input-group .form-control { border-left: none; }
         .register-footer {
             text-align: center;
             padding: 0 2rem 1.5rem;
-            color: #718096;
+            color: var(--md-on-surface-variant);
             font-size: 0.85rem;
         }
-        .register-footer a { color: var(--bleu-accent); text-decoration: none; font-weight: 600; }
+        .register-footer a { color: var(--md-primary); text-decoration: none; font-weight: 500; }
         .register-footer a:hover { text-decoration: underline; }
         .password-strength { height: 4px; border-radius: 2px; margin-top: 4px; transition: all 0.3s; }
     </style>
@@ -136,20 +161,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="register-card">
         <div class="register-header">
-            <i class="bi bi-person-plus-fill"></i>
+            <span class="material-symbols-outlined">person_add</span>
             <h1>Créer un compte</h1>
             <p><?= e(APP_NAME) ?></p>
         </div>
 
         <div class="register-body">
             <?php if ($registrationClosed): ?>
-                <div class="alert alert-warning py-2">
+                <div class="alert py-2" style="background:var(--md-warning-container);color:#BF360C;border:none;border-radius:12px;">
                     <i class="bi bi-shield-lock"></i> Les inscriptions publiques sont désactivées. Contactez l'administrateur.
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($errors)): ?>
-                <div class="alert alert-danger py-2">
+                <div class="alert py-2" style="background:var(--md-error-container);color:var(--md-on-error-container);border:none;border-radius:12px;">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <?php foreach ($errors as $err): ?>
                         <div><?= e($err) ?></div>

@@ -123,34 +123,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuration initiale - <?= APP_NAME ?></title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --bleu-primary: #1e3a5f;
-            --bleu-secondary: #2c5282;
-            --bleu-accent: #3182ce;
-            --bleu-light: #ebf4ff;
+            --md-primary: #1565C0;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #D1E4FF;
+            --md-on-primary-container: #001D36;
+            --md-surface: #FAFAFA;
+            --md-on-surface: #191C20;
+            --md-on-surface-variant: #43474E;
+            --md-outline: #73777F;
+            --md-outline-variant: #C3C7CF;
+            --md-surface-container: #ECEEF0;
+            --md-surface-container-lowest: #FFFFFF;
+            --md-error-container: #FFDAD6;
+            --md-on-error-container: #410002;
+            --md-success: #1B8D40;
+            --md-elevation-2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+            --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.3);
         }
         body {
-            background: #f0f4f8;
+            background: var(--md-surface);
             min-height: 100vh;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Roboto', system-ui, -apple-system, sans-serif;
         }
         .setup-container { max-width: 680px; margin: 2rem auto; padding: 0 1rem; }
         .setup-header {
-            background: linear-gradient(135deg, var(--bleu-primary), var(--bleu-secondary));
-            color: white;
-            border-radius: 1rem 1rem 0 0;
-            padding: 2rem;
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            border-radius: 28px 28px 0 0;
+            padding: 2.5rem 2rem 2rem;
             text-align: center;
         }
-        .setup-header i { font-size: 2.5rem; }
-        .setup-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0 0; }
+        .setup-header .material-symbols-outlined { font-size: 48px; font-variation-settings: 'FILL' 1; }
+        .setup-header h1 { font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0 0; }
         .setup-card {
-            background: #fff;
-            border-radius: 0 0 1rem 1rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            background: var(--md-surface-container-lowest);
+            border-radius: 0 0 28px 28px;
+            box-shadow: var(--md-elevation-3);
             padding: 2rem;
         }
         .step-indicator {
@@ -165,44 +179,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gap: 0.5rem;
             padding: 0.5rem 1rem;
             font-size: 0.85rem;
-            color: #a0aec0;
+            color: var(--md-on-surface-variant);
             position: relative;
         }
-        .step-item.active { color: var(--bleu-primary); font-weight: 700; }
-        .step-item.done { color: #38a169; }
+        .step-item.active { color: var(--md-primary); font-weight: 700; }
+        .step-item.done { color: var(--md-success); }
         .step-num {
             width: 28px; height: 28px;
             border-radius: 50%;
-            background: #e2e8f0;
+            background: var(--md-surface-container);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 0.8rem;
         }
-        .step-item.active .step-num { background: var(--bleu-primary); color: #fff; }
-        .step-item.done .step-num { background: #38a169; color: #fff; }
-        .step-connector { width: 40px; height: 2px; background: #e2e8f0; align-self: center; }
-        .step-connector.done { background: #38a169; }
+        .step-item.active .step-num { background: var(--md-primary); color: var(--md-on-primary); }
+        .step-item.done .step-num { background: var(--md-success); color: #fff; }
+        .step-connector { width: 40px; height: 2px; background: var(--md-outline-variant); align-self: center; }
+        .step-connector.done { background: var(--md-success); }
+        .form-control, .form-select {
+            border: 1px solid var(--md-outline);
+            border-radius: 4px;
+            font-size: 0.875rem;
+            padding: 0.625rem 0.875rem;
+        }
         .form-control:focus, .form-select:focus {
-            border-color: var(--bleu-accent);
-            box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.2);
+            border-color: var(--md-primary);
+            box-shadow: 0 0 0 1px var(--md-primary);
         }
         .btn-setup {
-            background: linear-gradient(135deg, var(--bleu-primary), var(--bleu-accent));
+            background: var(--md-primary);
             border: none;
-            font-weight: 600;
+            font-weight: 500;
+            border-radius: 9999px;
+            box-shadow: var(--md-elevation-2);
         }
-        .btn-setup:hover { opacity: 0.9; }
+        .btn-setup:hover { box-shadow: var(--md-elevation-3); }
         .success-screen { text-align: center; padding: 2rem 0; }
-        .success-screen i { font-size: 4rem; color: #38a169; }
-        .input-group-text { background: var(--bleu-light); color: var(--bleu-primary); }
+        .success-screen .material-symbols-outlined { font-size: 64px; color: var(--md-success); font-variation-settings: 'FILL' 1; }
+        .input-group-text { background: var(--md-surface-container); color: var(--md-on-surface-variant); border: 1px solid var(--md-outline); }
     </style>
 </head>
 <body>
     <div class="setup-container">
         <div class="setup-header">
-            <i class="bi bi-gear-wide-connected"></i>
+            <span class="material-symbols-outlined">settings_applications</span>
             <h1><?= $success ? 'Configuration terminée !' : 'Assistant de configuration' ?></h1>
             <p class="mb-0 opacity-75"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></p>
         </div>
@@ -211,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if ($success): ?>
                 <!-- Écran de fin -->
                 <div class="success-screen">
-                    <i class="bi bi-check-circle-fill"></i>
+                    <span class="material-symbols-outlined">check_circle</span>
                     <h2 class="mt-3 mb-2">Tout est prêt !</h2>
                     <p class="text-muted mb-4">Votre application est configurée et opérationnelle.</p>
                     <div class="d-flex flex-column gap-2 mx-auto" style="max-width: 300px;">

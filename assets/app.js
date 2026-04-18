@@ -242,4 +242,49 @@ document.addEventListener('DOMContentLoaded', function() {
         d.textContent = text;
         return d.innerHTML;
     }
+
+    // =============================================================
+    // MATERIAL DESIGN — Ripple Effect
+    // =============================================================
+    function addRipple(e) {
+        const btn = e.currentTarget;
+        const circle = document.createElement('span');
+        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+        const radius = diameter / 2;
+        const rect = btn.getBoundingClientRect();
+
+        circle.style.width = circle.style.height = diameter + 'px';
+        circle.style.left = (e.clientX - rect.left - radius) + 'px';
+        circle.style.top = (e.clientY - rect.top - radius) + 'px';
+        circle.classList.add('ripple-circle');
+
+        const existing = btn.querySelector('.ripple-circle');
+        if (existing) existing.remove();
+
+        btn.appendChild(circle);
+        setTimeout(() => circle.remove(), 600);
+    }
+
+    // Apply ripple to all buttons and interactive elements
+    document.querySelectorAll('.btn, .nav-link, .dropdown-item, .list-group-item-action').forEach(function(el) {
+        el.classList.add('md-ripple');
+        el.addEventListener('click', addRipple);
+    });
+
+    // =============================================================
+    // MATERIAL DESIGN — Elevated Navbar on scroll
+    // =============================================================
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        let lastScroll = 0;
+        window.addEventListener('scroll', function() {
+            const currentScroll = window.pageYOffset;
+            if (currentScroll > 8) {
+                navbar.style.boxShadow = '0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15)';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+            lastScroll = currentScroll;
+        }, { passive: true });
+    }
 });
