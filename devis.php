@@ -100,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $clientsList = getClients();
 
 include 'header.php';
+include 'commercial_header.php';
 ?>
 
 <?php if ($action === 'liste'): ?>
@@ -111,6 +112,7 @@ $totalTTC = array_sum(array_map(fn($d) => (float)$d['montant_ttc'], $devisList))
 $nbAccepte = count(array_filter($devisList, fn($d) => $d['statut'] === 'accepte'));
 $nbEnvoye = count(array_filter($devisList, fn($d) => $d['statut'] === 'envoye'));
 $nbBrouillon = count(array_filter($devisList, fn($d) => $d['statut'] === 'brouillon'));
+$tauxAcceptation = count($devisList) > 0 ? round(($nbAccepte / count($devisList)) * 100) : 0;
 ?>
 
 <div class="hero-banner mb-4">
@@ -188,7 +190,7 @@ $nbBrouillon = count(array_filter($devisList, fn($d) => $d['statut'] === 'brouil
 </div>
 
 <!-- Filtres -->
-<div class="card border-0 mb-4">
+<div class="card border-0 mb-4 commercial-filter-card">
     <div class="card-body py-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto flex-grow-1">
@@ -215,13 +217,33 @@ $nbBrouillon = count(array_filter($devisList, fn($d) => $d['statut'] === 'brouil
 <?php if (empty($devisList)): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
-            <i class="bi bi-file-earmark-text"></i>
-            <p>Aucun devis trouvé.</p>
-            <a href="?action=nouveau" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Créer un devis</a>
+            <div class="empty-state-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <h3 class="empty-state-title">Aucun devis trouvé</h3>
+            <p class="empty-state-text">
+                Commence par créer ton premier devis pour préparer une proposition commerciale et la convertir ensuite en facture ou commande.
+            </p>
+            <div class="empty-state-actions">
+                <a href="?action=nouveau" class="btn btn-primary empty-state-btn">
+                    <i class="bi bi-plus-lg"></i> Créer un devis
+                </a>
+            </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="card border-0">
+    <div class="card border-0 commercial-table-card">
+        <div class="card-header commercial-table-card__header">
+            <div>
+                <div class="commercial-table-card__eyebrow">Pipeline commercial</div>
+                <div class="commercial-table-card__title">Liste des devis</div>
+            </div>
+            <div class="commercial-table-card__stats">
+                <span class="commercial-table-pill"><i class="bi bi-check2-circle"></i> Taux d'acceptation : <strong><?= $tauxAcceptation ?>%</strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-send"></i> Envoyés : <strong><?= $nbEnvoye ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($devisList) ?></strong></span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover table-commercial mb-0">
                 <thead>
@@ -246,8 +268,8 @@ $nbBrouillon = count(array_filter($devisList, fn($d) => $d['statut'] === 'brouil
                         <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         <td class="text-end">
                             <div class="btn-actions justify-content-end">
-                                <a href="?action=voir&id=<?= $d['id'] ?>" class="btn btn-sm btn-outline-info" title="Voir"><i class="bi bi-eye"></i></a>
-                                <a href="pdf_generator.php?type=devis&id=<?= $d['id'] ?>" class="btn btn-sm btn-outline-danger" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
+                                <a href="?action=voir&id=<?= $d['id'] ?>" class="btn btn-sm btn-outline-info table-action-btn" title="Voir"><i class="bi bi-eye"></i></a>
+                                <a href="pdf_generator.php?type=devis&id=<?= $d['id'] ?>" class="btn btn-sm btn-outline-danger table-action-btn" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -276,26 +298,26 @@ $s = getStatutDevisLabel($devis['statut']);
                 — Valable jusqu'au <?= formatDate($devis['date_validite']) ?>
             </p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="pdf_generator.php?type=devis&id=<?= $devis['id'] ?>" class="btn btn-danger" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
+        <div class="d-flex gap-2 flex-wrap document-actions">
+            <a href="pdf_generator.php?type=devis&id=<?= $devis['id'] ?>" class="btn btn-danger document-action-btn" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
             <?php if ($devis['statut'] === 'brouillon' || $devis['statut'] === 'envoye'): ?>
-                <a href="?action=modifier&id=<?= $devis['id'] ?>" class="btn btn-warning"><i class="bi bi-pencil"></i> Modifier</a>
+                <a href="?action=modifier&id=<?= $devis['id'] ?>" class="btn btn-warning document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
             <?php endif; ?>
             <?php if ($devis['statut'] === 'accepte'): ?>
                 <form method="post" class="d-inline">
                     <?= csrfField() ?>
                     <input type="hidden" name="post_action" value="convertir_facture">
                     <input type="hidden" name="id" value="<?= $devis['id'] ?>">
-                    <button class="btn btn-success"><i class="bi bi-receipt"></i> Facture</button>
+                    <button class="btn btn-success document-action-btn"><i class="bi bi-receipt"></i> Facture</button>
                 </form>
                 <form method="post" class="d-inline">
                     <?= csrfField() ?>
                     <input type="hidden" name="post_action" value="convertir_commande">
                     <input type="hidden" name="id" value="<?= $devis['id'] ?>">
-                    <button class="btn btn-info text-white"><i class="bi bi-cart-check"></i> Commande</button>
+                    <button class="btn btn-info text-white document-action-btn"><i class="bi bi-cart-check"></i> Commande</button>
                 </form>
             <?php endif; ?>
-            <a href="devis.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+            <a href="devis.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
         </div>
     </div>
 </div>
@@ -313,8 +335,27 @@ $s = getStatutDevisLabel($devis['statut']);
                 <option value="<?= $st ?>" <?= $devis['statut'] === $st ? 'selected' : '' ?>><?= $stl['label'] ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
     </form>
+</div>
+
+<div class="doc-summary-grid mb-4">
+    <div class="doc-summary-card">
+        <small>Date du devis</small>
+        <strong><?= formatDate($devis['date_devis']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Validité</small>
+        <strong><?= formatDate($devis['date_validite']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Total TTC</small>
+        <strong><?= formatMontant($devis['montant_ttc']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Client</small>
+        <strong><?= e($devis['client_entreprise'] ?: trim($devis['client_prenom'] . ' ' . $devis['client_nom'])) ?></strong>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -384,10 +425,14 @@ $s = getStatutDevisLabel($devis['statut']);
             </tfoot>
         </table>
     </div>
-    <?php if ($devis['notes'] || $devis['conditions']): ?>
-    <div class="card-footer">
-        <?php if ($devis['notes']): ?><p class="mb-1"><strong>Notes :</strong> <?= nl2br(e($devis['notes'])) ?></p><?php endif; ?>
-        <?php if ($devis['conditions']): ?><p class="mb-0"><strong>Conditions :</strong> <?= nl2br(e($devis['conditions'])) ?></p><?php endif; ?>
+    <?php $devisConditions = getConditionsDocumentVente('devis', $devis); ?>
+    <?php if ($devis['notes'] || $devisConditions): ?>
+    <div class="card-footer terms-card">
+        <?php if ($devis['notes']): ?><p class="mb-3"><strong>Notes :</strong> <?= nl2br(e($devis['notes'])) ?></p><?php endif; ?>
+        <?php if ($devisConditions): ?>
+            <div class="terms-card__title"><i class="bi bi-shield-check"></i> Conditions générales de vente</div>
+            <div class="terms-card__content"><?= nl2br(e($devisConditions)) ?></div>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 </div>
@@ -403,27 +448,35 @@ if ($action === 'modifier') {
 }
 $defaultValidite = (int)getParam('validite_devis', '30');
 $preselectedClient = (int)($_GET['client_id'] ?? ($devis['client_id'] ?? 0));
+$generatedConditions = genererConditionsDocumentVente('devis', $devis ?? [
+    'date_validite' => date('Y-m-d', strtotime("+{$defaultValidite} days")),
+]);
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-file-earmark-text"></i> <?= $devis ? 'Modifier le devis ' . e($devis['numero']) : 'Nouveau devis' ?></h2>
             <p class="text-muted mb-0"><?= $devis ? 'Modifiez les détails du devis' : 'Renseignez les informations du devis' ?></p>
         </div>
-        <a href="devis.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <a href="devis.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<form method="post" id="formDevis">
+<form method="post" id="formDevis" class="doc-workspace">
     <?= csrfField() ?>
     <input type="hidden" name="post_action" value="sauvegarder">
     <?php if ($devis): ?><input type="hidden" name="devis_id" value="<?= $devis['id'] ?>"><?php endif; ?>
 
-    <div class="card border-0 mb-4">
-        <div class="card-header"><i class="bi bi-info-circle"></i> Informations générales</div>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--meta">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <i class="bi bi-info-circle"></i> Informations générales
+                <small class="doc-form-section__subtitle">Client, statut et validité du devis</small>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 doc-meta-grid">
                 <div class="col-md-6">
                     <label class="form-label">Client *</label>
                     <select name="client_id" class="form-select" required>
@@ -460,10 +513,20 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($devis['client_id'] ?? 0));
     </div>
 
     <!-- Lignes du devis -->
-    <div class="card border-0 mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-list-ol"></i> Lignes du devis</span>
-            <button type="button" class="btn btn-sm btn-success" onclick="ajouterLigne()"><i class="bi bi-plus-lg"></i> Ajouter une ligne</button>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--lines">
+        <div class="card-header d-flex justify-content-between align-items-center doc-form-section__header">
+            <div class="doc-lines-title">
+                <span><i class="bi bi-list-ol"></i> Lignes du devis</span>
+                <small class="doc-form-section__subtitle">Prépare une proposition claire et chiffrée</small>
+            </div>
+            <div class="doc-lines-tools">
+                <span class="doc-lines-badge"><i class="bi bi-hash"></i> <span id="lineCountBadge">1</span> ligne(s)</span>
+                <span class="doc-lines-badge"><i class="bi bi-calculator"></i> Total HT <strong id="grandTotalHTBadge">0,00 €</strong></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-success line-add-btn" onclick="ajouterLigne()">
+                <span class="line-add-btn__icon"><i class="bi bi-plus-lg"></i></span>
+                <span>Ajouter une ligne</span>
+            </button>
         </div>
         <div class="card-body p-0">
             <table class="table mb-0" id="tableLignes">
@@ -490,7 +553,7 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($devis['client_id'] ?? 0));
                             <td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="<?= $l['taux_tva'] ?>" onchange="calcLigne(this)"></td>
                             <?php endif; ?>
                             <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="<?= number_format($l['montant_ht'], 2) ?>"></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -503,7 +566,7 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($devis['client_id'] ?? 0));
                             <td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="20" onchange="calcLigne(this)"></td>
                             <?php endif; ?>
                             <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="0.00"></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -518,24 +581,42 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($devis['client_id'] ?? 0));
         </div>
     </div>
 
-    <div class="card border-0 mb-4">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-journal-text"></i> Notes et conditions</strong>
+                <small class="doc-form-section__subtitle">Commentaires internes, mentions et conditions commerciales</small>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 doc-notes-grid">
                 <div class="col-md-6">
                     <label class="form-label">Notes</label>
                     <textarea name="notes" class="form-control" rows="3"><?= e($devis['notes'] ?? '') ?></textarea>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Conditions</label>
-                    <textarea name="conditions" class="form-control" rows="3"><?= e($devis['conditions'] ?? getParam('conditions_paiement', '')) ?></textarea>
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <label class="form-label mb-0">Conditions générales de vente</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick='document.querySelector("#formDevis textarea[name=&quot;conditions&quot;]").value = <?= json_encode($generatedConditions) ?>;'>
+                            <i class="bi bi-magic"></i> Générer les CGV
+                        </button>
+                    </div>
+                    <textarea name="conditions" class="form-control" rows="9"><?= e($devis['conditions'] ?? $generatedConditions) ?></textarea>
+                    <small class="text-muted">Texte automatique premium, modifiable avant enregistrement.</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Enregistrer le devis</button>
-        <a href="devis.php" class="btn btn-outline-secondary btn-lg">Annuler</a>
+    <div class="doc-submit-bar">
+        <div class="doc-submit-bar__summary">
+            <span class="doc-submit-bar__label">Montant HT courant</span>
+            <strong id="grandTotalHTBottom">0,00 €</strong>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary btn-lg document-action-btn"><i class="bi bi-check-lg"></i> Enregistrer le devis</button>
+            <a href="devis.php" class="btn btn-outline-secondary btn-lg document-action-btn">Annuler</a>
+        </div>
     </div>
 </form>
 
@@ -553,9 +634,10 @@ function ajouterLigne() {
         <td><input type="number" name="ligne_prix[]" class="form-control form-control-sm ligne-prix" step="0.01" min="0" value="0" onchange="calcLigne(this)"></td>
         ${tvaApplicable ? '<td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="20" onchange="calcLigne(this)"></td>' : ''}
         <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="0.00"></td>
-        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
+    calcTotal();
 }
 
 function calcLigne(el) {
@@ -569,7 +651,11 @@ function calcLigne(el) {
 function calcTotal() {
     let total = 0;
     document.querySelectorAll('.ligne-total').forEach(el => { total += parseFloat(el.value) || 0; });
-    document.getElementById('grandTotalHT').textContent = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    const totalFormatted = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    document.getElementById('grandTotalHT').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBadge').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBottom').textContent = totalFormatted;
+    document.getElementById('lineCountBadge').textContent = document.querySelectorAll('#lignesBody tr').length;
 }
 
 document.addEventListener('DOMContentLoaded', calcTotal);

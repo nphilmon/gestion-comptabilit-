@@ -3,8 +3,17 @@
  * Gestion des transactions (CRUD)
  */
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/functions_intelligence.php';
 requireLogin();
 requireRole('admin', 'comptable');
+
+// API auto-suggestion de catégorie
+if (isset($_GET['api']) && $_GET['api'] === 'suggest_categorie') {
+    requireLogin();
+    apiSuggestionCategorie();
+    exit;
+}
+
 $titre = 'Transactions';
 
 $action = $_GET['action'] ?? 'liste';
@@ -161,8 +170,19 @@ include 'header.php';
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Description *</label>
-                        <input type="text" name="description" class="form-control" required maxlength="255"
-                               value="<?= e($transaction['description'] ?? $data['description'] ?? '') ?>">
+                        <input type="text" name="description" id="descriptionInput" class="form-control" required maxlength="255"
+                               value="<?= e($transaction['description'] ?? $data['description'] ?? '') ?>"
+                               autocomplete="off">
+                        <div id="suggestionCategorie" class="suggestion-categorie d-none mt-1">
+                            <small class="d-flex align-items-center gap-1">
+                                <i class="bi bi-magic text-primary"></i>
+                                <span>Suggestion : <strong id="suggestionNom"></strong></span>
+                                <span class="badge bg-primary-subtle text-primary" id="suggestionConfiance"></span>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-1" id="appliquerSuggestion">
+                                    Appliquer
+                                </button>
+                            </small>
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Client / Fournisseur</label>
@@ -339,10 +359,17 @@ include 'header.php';
     <div class="card border-0">
         <div class="card-body p-0">
             <?php if (empty($transactions)): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                    <p class="mt-2">Aucune transaction trouvée.</p>
-                    <a href="transactions.php?action=ajouter" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter une transaction</a>
+                <div class="text-center empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h3 class="empty-state-title">Aucune transaction trouvée</h3>
+                    <p class="empty-state-text">
+                        Commence par saisir une recette ou une dépense pour alimenter la comptabilité et les rapports.
+                    </p>
+                    <div class="empty-state-actions">
+                        <a href="transactions.php?action=ajouter" class="btn btn-primary empty-state-btn"><i class="bi bi-plus-lg"></i> Ajouter une transaction</a>
+                    </div>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">

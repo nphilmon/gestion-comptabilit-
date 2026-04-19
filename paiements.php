@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 include 'header.php';
+include 'commercial_header.php';
 ?>
 
 <?php if ($action === 'liste'): ?>
@@ -128,7 +129,7 @@ $enAttente = $db->query("SELECT COUNT(*) FROM factures WHERE statut IN ('envoyee
 </div>
 
 <!-- Filtres -->
-<div class="card border-0 mb-4">
+<div class="card border-0 mb-4 commercial-filter-card">
     <div class="card-body py-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto flex-grow-1">
@@ -154,17 +155,35 @@ $enAttente = $db->query("SELECT COUNT(*) FROM factures WHERE statut IN ('envoyee
 
 <?php if (empty($paiementsList)): ?>
     <div class="card border-0">
-        <div class="card-body text-center py-5 text-muted">
-            <i class="bi bi-credit-card" style="font-size: 3rem;"></i>
-            <p class="mt-2">Aucun paiement enregistré.</p>
-            <a href="?action=nouveau" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Enregistrer un paiement</a>
+        <div class="card-body text-center empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-credit-card"></i>
+            </div>
+            <h3 class="empty-state-title">Aucun paiement enregistré</h3>
+            <p class="empty-state-text">
+                Enregistre un paiement pour mettre à jour l’encaissement des factures et suivre ta trésorerie plus précisément.
+            </p>
+            <div class="empty-state-actions">
+                <a href="?action=nouveau" class="btn btn-primary empty-state-btn"><i class="bi bi-plus-lg"></i> Enregistrer un paiement</a>
+            </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="card border-0">
+    <div class="card border-0 commercial-table-card">
+        <div class="card-header commercial-table-card__header">
+            <div>
+                <div class="commercial-table-card__eyebrow">Encaissements</div>
+                <div class="commercial-table-card__title">Journal des paiements</div>
+            </div>
+            <div class="commercial-table-card__stats">
+                <span class="commercial-table-pill"><i class="bi bi-wallet2"></i> Encaissé : <strong><?= formatMontant($totalPaiements) ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> Factures ouvertes : <strong><?= (int)$enAttente ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Lignes : <strong><?= count($paiementsList) ?></strong></span>
+            </div>
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover table-commercial mb-0">
+                <thead>
                     <tr>
                         <th>Date</th>
                         <th>Facture</th>
@@ -179,12 +198,12 @@ $enAttente = $db->query("SELECT COUNT(*) FROM factures WHERE statut IN ('envoyee
                 <tbody>
                     <?php foreach ($paiementsList as $p): ?>
                     <tr>
-                        <td><?= formatDate($p['date_paiement']) ?></td>
-                        <td><a href="factures.php?action=voir&id=<?= $p['facture_id'] ?>" class="fw-bold"><?= e($p['facture_numero'] ?? '—') ?></a></td>
-                        <td><?= e($p['client_entreprise'] ?: trim(($p['client_prenom'] ?? '') . ' ' . ($p['client_nom'] ?? ''))) ?></td>
-                        <td><span class="badge bg-info"><?= e(getModePaiementLabel($p['mode_paiement'])) ?></span></td>
-                        <td><?= e($p['reference'] ?: '—') ?></td>
-                        <td class="text-end fw-bold text-success"><?= formatMontant($p['montant']) ?></td>
+                        <td class="date-cell"><?= formatDate($p['date_paiement']) ?></td>
+                        <td><a href="factures.php?action=voir&id=<?= $p['facture_id'] ?>" class="numero-link"><?= e($p['facture_numero'] ?? '—') ?></a></td>
+                        <td class="client-name"><?= e($p['client_entreprise'] ?: trim(($p['client_prenom'] ?? '') . ' ' . ($p['client_nom'] ?? ''))) ?></td>
+                        <td><span class="badge-statut bg-info"><?= e(getModePaiementLabel($p['mode_paiement'])) ?></span></td>
+                        <td class="date-cell"><?= e($p['reference'] ?: '—') ?></td>
+                        <td class="text-end montant-cell text-success"><?= formatMontant($p['montant']) ?></td>
                         <td><small class="text-muted"><?= e($p['notes'] ?? '') ?></small></td>
                         <td class="text-end">
                             <form method="post" class="d-inline" onsubmit="return confirm('Supprimer ce paiement ?')">
@@ -192,7 +211,7 @@ $enAttente = $db->query("SELECT COUNT(*) FROM factures WHERE statut IN ('envoyee
                                 <input type="hidden" name="post_action" value="supprimer">
                                 <input type="hidden" name="paiement_id" value="<?= $p['id'] ?>">
                                 <input type="hidden" name="redirect" value="paiements.php">
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger table-action-btn"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -225,18 +244,24 @@ $facturesOuvertes = $db->query("
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-credit-card"></i> Enregistrer un paiement</h2>
             <p class="text-muted mb-0">Sélectionnez une facture et saisissez le montant reçu</p>
         </div>
-        <a href="paiements.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <a href="paiements.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<div class="card border-0">
-    <div class="card-body">
-        <form method="post">
+<form method="post" class="doc-workspace">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-receipt-cutoff"></i> Facture et montant</strong>
+                <small class="doc-form-section__subtitle">Sélectionne la pièce à solder ou encaisser partiellement</small>
+            </div>
+        </div>
+        <div class="card-body">
             <?= csrfField() ?>
             <input type="hidden" name="post_action" value="enregistrer">
 
@@ -262,6 +287,19 @@ $facturesOuvertes = $db->query("
                     <label class="form-label">Montant *</label>
                     <input type="number" name="montant" id="montantInput" class="form-control" step="0.01" min="0.01" required>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-wallet2"></i> Règlement</strong>
+                <small class="doc-form-section__subtitle">Mode de paiement, référence bancaire et commentaire</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Mode de paiement *</label>
                     <select name="mode_paiement" class="form-select" required>
@@ -283,14 +321,20 @@ $facturesOuvertes = $db->query("
                     <input type="text" name="notes" class="form-control">
                 </div>
             </div>
-
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-check-lg"></i> Enregistrer le paiement</button>
-                <a href="paiements.php" class="btn btn-outline-secondary btn-lg">Annuler</a>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
+    <div class="doc-submit-bar">
+        <div class="doc-submit-bar__summary">
+            <span class="doc-submit-bar__label">Encaissement</span>
+            <strong>Saisie d'un règlement client</strong>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-success btn-lg document-action-btn"><i class="bi bi-check-lg"></i> Enregistrer le paiement</button>
+            <a href="paiements.php" class="btn btn-outline-secondary btn-lg document-action-btn">Annuler</a>
+        </div>
+    </div>
+</form>
 
 <script>
 function updateResteAPayer() {

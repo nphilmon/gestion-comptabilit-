@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if ($postAction === 'convertir_facture') {
+if ($postAction === 'convertir_facture') {
         $cmd = getCommande((int)$_POST['id']);
         $lignesCmd = getLignesCommande($cmd['id']);
         $factureData = [
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'statut'       => 'brouillon',
             'objet'        => $cmd['objet'],
             'notes'        => '',
-            'conditions'   => getParam('conditions_paiement', ''),
+            'conditions'   => genererConditionsDocumentVente('facture', $cmd),
         ];
         $factureId = sauvegarderFacture($factureData, $lignesCmd);
         setFlash('success', 'Facture créée à partir de la commande.');
@@ -101,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $clientsList = getClients();
 
 include 'header.php';
+include 'commercial_header.php';
 ?>
 
 <?php if ($action === 'liste'): ?>
@@ -191,7 +192,7 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
 </div>
 
 <!-- Filtres -->
-<div class="card border-0 mb-4">
+<div class="card border-0 mb-4 commercial-filter-card">
     <div class="card-body py-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto flex-grow-1">
@@ -218,13 +219,31 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
 <?php if (empty($commandesList)): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
-            <i class="bi bi-cart-check"></i>
-            <p>Aucune commande trouvée.</p>
-            <a href="?action=nouvelle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Créer une commande</a>
+            <div class="empty-state-icon">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <h3 class="empty-state-title">Aucune commande trouvée</h3>
+            <p class="empty-state-text">
+                Ajoute une commande pour suivre les ventes confirmées et les transformer plus facilement en factures.
+            </p>
+            <div class="empty-state-actions">
+                <a href="?action=nouvelle" class="btn btn-primary empty-state-btn"><i class="bi bi-plus-lg"></i> Créer une commande</a>
+            </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="card border-0">
+    <div class="card border-0 commercial-table-card">
+        <div class="card-header commercial-table-card__header">
+            <div>
+                <div class="commercial-table-card__eyebrow">Suivi des commandes</div>
+                <div class="commercial-table-card__title">Liste des commandes</div>
+            </div>
+            <div class="commercial-table-card__stats">
+                <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> En attente : <strong><?= $nbEnAttente ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-box-seam"></i> Confirmées : <strong><?= $nbConfirmee ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($commandesList) ?></strong></span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover table-commercial mb-0">
                 <thead>
@@ -249,8 +268,8 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
                         <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         <td class="text-end">
                             <div class="btn-actions justify-content-end">
-                                <a href="?action=voir&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info" title="Voir"><i class="bi bi-eye"></i></a>
-                                <a href="pdf_generator.php?type=commande&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-danger" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
+                                <a href="?action=voir&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info table-action-btn" title="Voir"><i class="bi bi-eye"></i></a>
+                                <a href="pdf_generator.php?type=commande&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-danger table-action-btn" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -279,27 +298,46 @@ $s = getStatutCommandeLabel($commande['statut']);
                 — <?= formatDate($commande['date_commande']) ?>
             </p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="pdf_generator.php?type=commande&id=<?= $commande['id'] ?>" class="btn btn-danger" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
+        <div class="d-flex gap-2 flex-wrap document-actions">
+            <a href="pdf_generator.php?type=commande&id=<?= $commande['id'] ?>" class="btn btn-danger document-action-btn" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
             <?php if (in_array($commande['statut'], ['en_attente', 'confirmee'])): ?>
-                <a href="?action=modifier&id=<?= $commande['id'] ?>" class="btn btn-warning"><i class="bi bi-pencil"></i> Modifier</a>
+                <a href="?action=modifier&id=<?= $commande['id'] ?>" class="btn btn-warning document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
             <?php endif; ?>
             <?php if (in_array($commande['statut'], ['confirmee', 'livree'])): ?>
                 <form method="post" class="d-inline">
                     <?= csrfField() ?>
                     <input type="hidden" name="post_action" value="convertir_facture">
                     <input type="hidden" name="id" value="<?= $commande['id'] ?>">
-                    <button class="btn btn-success"><i class="bi bi-receipt"></i> Créer facture</button>
+                    <button class="btn btn-success document-action-btn"><i class="bi bi-receipt"></i> Créer facture</button>
                 </form>
             <?php endif; ?>
             <form method="post" class="d-inline" onsubmit="return confirm('Supprimer cette commande ?')">
                 <?= csrfField() ?>
                 <input type="hidden" name="post_action" value="supprimer">
                 <input type="hidden" name="id" value="<?= $commande['id'] ?>">
-                <button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                <button class="btn btn-outline-danger document-action-btn document-action-btn--icon"><i class="bi bi-trash"></i></button>
             </form>
-            <a href="commandes.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+            <a href="commandes.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
         </div>
+    </div>
+</div>
+
+<div class="doc-summary-grid mb-4">
+    <div class="doc-summary-card">
+        <small>Date de commande</small>
+        <strong><?= formatDate($commande['date_commande']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Statut</small>
+        <strong><?= e($s['label']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Total TTC</small>
+        <strong><?= formatMontant($commande['montant_ttc']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Client</small>
+        <strong><?= e($commande['client_entreprise'] ?: trim($commande['client_prenom'] . ' ' . $commande['client_nom'])) ?></strong>
     </div>
 </div>
 
@@ -316,7 +354,7 @@ $s = getStatutCommandeLabel($commande['statut']);
                 <option value="<?= $st ?>" <?= $commande['statut'] === $st ? 'selected' : '' ?>><?= $stl['label'] ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
     </form>
 </div>
 
@@ -350,6 +388,10 @@ $s = getStatutCommandeLabel($commande['statut']);
 </div>
 
 <div class="card border-0 mt-4 document-wrapper">
+    <div class="document-header-bar">
+        <div><strong>Objet :</strong> <?= e($commande['objet']) ?></div>
+        <div><i class="bi bi-calendar-event"></i> Commande du <?= formatDate($commande['date_commande']) ?></div>
+    </div>
     <div class="card-body p-0">
         <table class="table table-detail mb-0">
             <thead>
@@ -385,8 +427,15 @@ $s = getStatutCommandeLabel($commande['statut']);
             </tfoot>
         </table>
     </div>
-    <?php if ($commande['notes']): ?>
-    <div class="card-footer"><strong>Notes :</strong> <?= nl2br(e($commande['notes'])) ?></div>
+    <?php $commandeConditions = getConditionsDocumentVente('commande', $commande); ?>
+    <?php if ($commande['notes'] || $commandeConditions): ?>
+    <div class="card-footer terms-card">
+        <?php if ($commande['notes']): ?><p class="mb-3"><strong>Notes :</strong> <?= nl2br(e($commande['notes'])) ?></p><?php endif; ?>
+        <?php if ($commandeConditions): ?>
+            <div class="terms-card__title"><i class="bi bi-shield-check"></i> Conditions générales de vente</div>
+            <div class="terms-card__content"><?= nl2br(e($commandeConditions)) ?></div>
+        <?php endif; ?>
+    </div>
     <?php endif; ?>
 </div>
 
@@ -400,27 +449,33 @@ if ($action === 'modifier') {
     $lignes = getLignesCommande($commande['id']);
 }
 $preselectedClient = (int)($_GET['client_id'] ?? ($commande['client_id'] ?? 0));
+$generatedConditions = genererConditionsDocumentVente('commande', $commande ?? []);
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-cart-check"></i> <?= $commande ? 'Modifier commande ' . e($commande['numero']) : 'Nouvelle commande' ?></h2>
             <p class="text-muted mb-0"><?= $commande ? 'Modifiez les détails de la commande' : 'Renseignez les informations de la commande' ?></p>
         </div>
-        <a href="commandes.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <a href="commandes.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<form method="post" id="formCommande">
+<form method="post" id="formCommande" class="doc-workspace">
     <?= csrfField() ?>
     <input type="hidden" name="post_action" value="sauvegarder">
     <?php if ($commande): ?><input type="hidden" name="commande_id" value="<?= $commande['id'] ?>"><?php endif; ?>
 
-    <div class="card border-0 mb-4">
-        <div class="card-header"><i class="bi bi-info-circle"></i> Informations</div>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--meta">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <i class="bi bi-info-circle"></i> Informations
+                <small class="doc-form-section__subtitle">Contexte commercial et suivi de la commande</small>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 doc-meta-grid">
                 <div class="col-md-5">
                     <label class="form-label">Client *</label>
                     <select name="client_id" class="form-select" required>
@@ -450,10 +505,20 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($commande['client_id'] ?? 0));
         </div>
     </div>
 
-    <div class="card border-0 mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-list-ol"></i> Lignes de la commande</span>
-            <button type="button" class="btn btn-sm btn-success" onclick="ajouterLigne()"><i class="bi bi-plus-lg"></i> Ajouter</button>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--lines">
+        <div class="card-header d-flex justify-content-between align-items-center doc-form-section__header">
+            <div class="doc-lines-title">
+                <span><i class="bi bi-list-ol"></i> Lignes de la commande</span>
+                <small class="doc-form-section__subtitle">Prépare les éléments à livrer ou à facturer</small>
+            </div>
+            <div class="doc-lines-tools">
+                <span class="doc-lines-badge"><i class="bi bi-hash"></i> <span id="lineCountBadge">1</span> ligne(s)</span>
+                <span class="doc-lines-badge"><i class="bi bi-calculator"></i> Total HT <strong id="grandTotalHTBadge">0,00 €</strong></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-success line-add-btn" onclick="ajouterLigne()">
+                <span class="line-add-btn__icon"><i class="bi bi-plus-lg"></i></span>
+                <span>Ajouter une ligne</span>
+            </button>
         </div>
         <div class="card-body p-0">
             <table class="table mb-0" id="tableLignes">
@@ -480,7 +545,7 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($commande['client_id'] ?? 0));
                         <td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="<?= $l['taux_tva'] ?>" onchange="calcLigne(this)"></td>
                         <?php endif; ?>
                         <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="<?= number_format($l['montant_ht'], 2) ?>"></td>
-                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -495,16 +560,32 @@ $preselectedClient = (int)($_GET['client_id'] ?? ($commande['client_id'] ?? 0));
         </div>
     </div>
 
-    <div class="card border-0 mb-4">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-journal-text"></i> Notes de commande</strong>
+                <small class="doc-form-section__subtitle">Consignes internes, informations de livraison ou contexte commercial</small>
+            </div>
+        </div>
         <div class="card-body">
             <label class="form-label">Notes</label>
             <textarea name="notes" class="form-control" rows="3"><?= e($commande['notes'] ?? '') ?></textarea>
+            <div class="generated-terms-preview mt-3">
+                <div class="terms-card__title"><i class="bi bi-shield-check"></i> CGV générées automatiquement sur le document</div>
+                <div class="terms-card__content"><?= nl2br(e($generatedConditions)) ?></div>
+            </div>
         </div>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Enregistrer</button>
-        <a href="commandes.php" class="btn btn-outline-secondary btn-lg">Annuler</a>
+    <div class="doc-submit-bar">
+        <div class="doc-submit-bar__summary">
+            <span class="doc-submit-bar__label">Montant HT courant</span>
+            <strong id="grandTotalHTBottom">0,00 €</strong>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary btn-lg document-action-btn"><i class="bi bi-check-lg"></i> Enregistrer</button>
+            <a href="commandes.php" class="btn btn-outline-secondary btn-lg document-action-btn">Annuler</a>
+        </div>
     </div>
 </form>
 
@@ -522,9 +603,10 @@ function ajouterLigne() {
         <td><input type="number" name="ligne_prix[]" class="form-control form-control-sm ligne-prix" step="0.01" min="0" value="0" onchange="calcLigne(this)"></td>
         ${tvaApplicable ? '<td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="20" onchange="calcLigne(this)"></td>' : ''}
         <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="0.00"></td>
-        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
+    calcTotal();
 }
 
 function calcLigne(el) {
@@ -538,7 +620,11 @@ function calcLigne(el) {
 function calcTotal() {
     let total = 0;
     document.querySelectorAll('.ligne-total').forEach(el => { total += parseFloat(el.value) || 0; });
-    document.getElementById('grandTotalHT').textContent = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    const totalFormatted = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    document.getElementById('grandTotalHT').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBadge').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBottom').textContent = totalFormatted;
+    document.getElementById('lineCountBadge').textContent = document.querySelectorAll('#lignesBody tr').length;
 }
 
 document.addEventListener('DOMContentLoaded', calcTotal);

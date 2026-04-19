@@ -3,7 +3,7 @@
 -- Script de création de la base de données
 -- =============================================================
 
-CREATE DATABASE IF NOT EXISTS `gestion_compta` 
+CREATE DATABASE IF NOT EXISTS `gestion_compta`
     DEFAULT CHARACTER SET utf8mb4 
     COLLATE utf8mb4_unicode_ci;
 
@@ -166,4 +166,11 @@ INSERT INTO `parametres` (`cle`, `valeur`, `description`) VALUES
 ('inscription_ouverte', '0', 'Autoriser l''inscription publique (0/1)'),
 ('nom_entreprise', 'Mon Activité', 'Nom de l''activité'),
 ('siret', '', 'Numéro SIRET'),
-('activite', 'Prestations de services', 'Nature de l''activité');
+('activite', 'Prestations de services', 'Nature de l''activité'),
+('acompte_commande_pct', '30', 'Pourcentage d''acompte automatique sur les documents de vente'),
+('garantie_sav_mois', '12', 'Durée de garantie ou SAV commercial en mois'),
+('delai_livraison_jours', '30', 'Délai indicatif de livraison ou d''exécution'),
+('clause_chantier_livraison', '', 'Clause personnalisée chantier / livraison'),
+('logo_pdf_path', '', 'Chemin du logo utilisé dans les PDF'),
+('signature_pdf_path', '', 'Chemin de la signature image utilisée dans les PDF'),
+('cachet_pdf_path', '', 'Chemin du cachet image utilisé dans les PDF');

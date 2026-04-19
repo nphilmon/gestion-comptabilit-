@@ -68,6 +68,7 @@ $recherche = $_GET['recherche'] ?? '';
 $clients = getClients(['recherche' => $recherche]);
 
 include 'header.php';
+include 'commercial_header.php';
 ?>
 
 <?php if ($action === 'liste'): ?>
@@ -136,7 +137,7 @@ $nbParticulier = count($clients) - $nbPro;
 </div>
 
 <!-- Recherche -->
-<div class="card border-0 mb-4">
+<div class="card border-0 mb-4 commercial-filter-card">
     <div class="card-body py-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto flex-grow-1">
@@ -154,17 +155,35 @@ $nbParticulier = count($clients) - $nbPro;
 
 <?php if (empty($clients)): ?>
     <div class="card border-0">
-        <div class="card-body text-center py-5 text-muted">
-            <i class="bi bi-people" style="font-size: 3rem;"></i>
-            <p class="mt-2">Aucun client enregistré.</p>
-            <a href="?action=ajouter" class="btn btn-primary"><i class="bi bi-person-plus"></i> Ajouter un client</a>
+        <div class="card-body text-center empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <h3 class="empty-state-title">Aucun client enregistré</h3>
+            <p class="empty-state-text">
+                Crée une première fiche client pour préparer tes devis, factures et retrouver rapidement ses coordonnées.
+            </p>
+            <div class="empty-state-actions">
+                <a href="?action=ajouter" class="btn btn-primary empty-state-btn"><i class="bi bi-person-plus"></i> Ajouter un client</a>
+            </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="card border-0">
+    <div class="card border-0 commercial-table-card">
+        <div class="card-header commercial-table-card__header">
+            <div>
+                <div class="commercial-table-card__eyebrow">Fichier clients</div>
+                <div class="commercial-table-card__title">Liste des clients</div>
+            </div>
+            <div class="commercial-table-card__stats">
+                <span class="commercial-table-pill"><i class="bi bi-building"></i> Professionnels : <strong><?= $nbPro ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-person"></i> Particuliers : <strong><?= $nbParticulier ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($clients) ?></strong></span>
+            </div>
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover table-commercial mb-0">
+                <thead>
                     <tr>
                         <th>Client</th>
                         <th>Email</th>
@@ -178,23 +197,25 @@ $nbParticulier = count($clients) - $nbPro;
                     <?php foreach ($clients as $c): ?>
                     <tr>
                         <td>
-                            <strong><?= e($c['entreprise'] ?: $c['nom']) ?></strong>
+                            <div class="client-name"><?= e($c['entreprise'] ?: $c['nom']) ?></div>
                             <?php if ($c['entreprise'] && $c['nom']): ?>
                                 <br><small class="text-muted"><?= e(trim($c['prenom'] . ' ' . $c['nom'])) ?></small>
+                            <?php elseif ($c['prenom']): ?>
+                                <br><small class="text-muted"><?= e($c['prenom']) ?></small>
                             <?php endif; ?>
                         </td>
-                        <td><?= $c['email'] ? '<a href="mailto:' . e($c['email']) . '">' . e($c['email']) . '</a>' : '<span class="text-muted">—</span>' ?></td>
-                        <td><?= e($c['telephone'] ?? '') ?: '<span class="text-muted">—</span>' ?></td>
-                        <td><?= e($c['ville'] ?? '') ?: '<span class="text-muted">—</span>' ?></td>
-                        <td><span class="badge bg-<?= $c['type'] === 'professionnel' ? 'primary' : 'info' ?>"><?= ucfirst(e($c['type'])) ?></span></td>
+                        <td class="date-cell"><?= $c['email'] ? '<a href="mailto:' . e($c['email']) . '">' . e($c['email']) . '</a>' : '<span class="text-muted">—</span>' ?></td>
+                        <td class="date-cell"><?= e($c['telephone'] ?? '') ?: '<span class="text-muted">—</span>' ?></td>
+                        <td class="date-cell"><?= e($c['ville'] ?? '') ?: '<span class="text-muted">—</span>' ?></td>
+                        <td><span class="badge-statut bg-<?= $c['type'] === 'professionnel' ? 'primary' : 'info' ?>"><?= ucfirst(e($c['type'])) ?></span></td>
                         <td class="text-end text-nowrap">
-                            <a href="?action=voir&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info" title="Voir"><i class="bi bi-eye"></i></a>
-                            <a href="?action=modifier&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+                            <a href="?action=voir&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info table-action-btn" title="Voir"><i class="bi bi-eye"></i></a>
+                            <a href="?action=modifier&id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-primary table-action-btn" title="Modifier"><i class="bi bi-pencil"></i></a>
                             <form method="post" class="d-inline" onsubmit="return confirm('Supprimer ce client ?')">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="action" value="supprimer">
                                 <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger table-action-btn" title="Supprimer"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -217,7 +238,7 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-person"></i> <?= e(clientNomComplet($client)) ?></h2>
             <p class="text-muted mb-0">
@@ -225,10 +246,31 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
                 <?php if ($client['ville']): ?> — <?= e($client['code_postal'] . ' ' . $client['ville']) ?><?php endif; ?>
             </p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="?action=modifier&id=<?= $client['id'] ?>" class="btn btn-warning"><i class="bi bi-pencil"></i> Modifier</a>
-            <a href="clients.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <div class="d-flex gap-2 flex-wrap document-actions">
+            <a href="devis.php?action=nouveau&client_id=<?= $client['id'] ?>" class="btn btn-primary document-action-btn"><i class="bi bi-file-earmark-plus"></i> Nouveau devis</a>
+            <a href="factures.php?action=nouvelle&client_id=<?= $client['id'] ?>" class="btn btn-success document-action-btn"><i class="bi bi-receipt-cutoff"></i> Nouvelle facture</a>
+            <a href="?action=modifier&id=<?= $client['id'] ?>" class="btn btn-warning document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
+            <a href="clients.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
         </div>
+    </div>
+</div>
+
+<div class="doc-summary-grid mb-4">
+    <div class="doc-summary-card">
+        <small>Type de client</small>
+        <strong><?= ucfirst(e($client['type'])) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Pièces commerciales</small>
+        <strong><?= count($devisClient) + count($facturesClient) + count($commandesClient) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>CA facturé</small>
+        <strong><?= formatMontant($totalFacture) ?></strong>
+    </div>
+    <div class="doc-summary-card <?= ($totalFacture - $totalPaye) > 0.01 ? 'doc-summary-card--alert' : '' ?>">
+        <small>Reste à encaisser</small>
+        <strong><?= formatMontant(max(0, $totalFacture - $totalPaye)) ?></strong>
     </div>
 </div>
 
@@ -298,7 +340,7 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
 
 <div class="row g-4">
     <div class="col-md-4">
-        <div class="card border-0">
+        <div class="card border-0 info-card h-100">
             <div class="card-header"><i class="bi bi-info-circle"></i> Informations</div>
             <div class="card-body">
                 <?php if ($client['entreprise']): ?><p class="mb-2"><strong>Entreprise :</strong> <?= e($client['entreprise']) ?></p><?php endif; ?>
@@ -328,23 +370,23 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
     </div>
     <div class="col-md-8">
         <!-- Devis -->
-        <div class="card border-0 mb-3">
+        <div class="card border-0 mb-3 commercial-table-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-file-earmark-text"></i> Devis (<?= count($devisClient) ?>)</span>
-                <a href="devis.php?action=nouveau&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus"></i> Nouveau</a>
+                <a href="devis.php?action=nouveau&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-primary document-status-btn"><i class="bi bi-plus"></i> Nouveau</a>
             </div>
             <?php if (!empty($devisClient)): ?>
             <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light"><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th>Statut</th></tr></thead>
+                <table class="table table-sm table-hover table-commercial mb-0">
+                    <thead><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th>Statut</th></tr></thead>
                     <tbody>
                     <?php foreach (array_slice($devisClient, 0, 5) as $d): $s = getStatutDevisLabel($d['statut']); ?>
                         <tr>
-                            <td><a href="devis.php?action=voir&id=<?= $d['id'] ?>"><?= e($d['numero']) ?></a></td>
-                            <td><?= formatDate($d['date_devis']) ?></td>
+                            <td><a href="devis.php?action=voir&id=<?= $d['id'] ?>" class="numero-link"><?= e($d['numero']) ?></a></td>
+                            <td class="date-cell"><?= formatDate($d['date_devis']) ?></td>
                             <td><?= e(mb_strimwidth($d['objet'], 0, 40, '...')) ?></td>
-                            <td class="text-end fw-bold"><?= formatMontant($d['montant_ttc']) ?></td>
-                            <td><span class="badge bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
+                            <td class="text-end montant-cell"><?= formatMontant($d['montant_ttc']) ?></td>
+                            <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -356,24 +398,24 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
         </div>
 
         <!-- Factures -->
-        <div class="card border-0 mb-3">
+        <div class="card border-0 mb-3 commercial-table-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-receipt"></i> Factures (<?= count($facturesClient) ?>)</span>
-                <a href="factures.php?action=nouvelle&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-plus"></i> Nouvelle</a>
+                <a href="factures.php?action=nouvelle&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-success document-status-btn"><i class="bi bi-plus"></i> Nouvelle</a>
             </div>
             <?php if (!empty($facturesClient)): ?>
             <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light"><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th class="text-end">Payé</th><th>Statut</th></tr></thead>
+                <table class="table table-sm table-hover table-commercial mb-0">
+                    <thead><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th class="text-end">Payé</th><th>Statut</th></tr></thead>
                     <tbody>
                     <?php foreach (array_slice($facturesClient, 0, 5) as $f): $s = getStatutFactureLabel($f['statut']); ?>
                         <tr>
-                            <td><a href="factures.php?action=voir&id=<?= $f['id'] ?>"><?= e($f['numero']) ?></a></td>
-                            <td><?= formatDate($f['date_facture']) ?></td>
+                            <td><a href="factures.php?action=voir&id=<?= $f['id'] ?>" class="numero-link"><?= e($f['numero']) ?></a></td>
+                            <td class="date-cell"><?= formatDate($f['date_facture']) ?></td>
                             <td><?= e(mb_strimwidth($f['objet'], 0, 40, '...')) ?></td>
-                            <td class="text-end fw-bold"><?= formatMontant($f['montant_ttc']) ?></td>
-                            <td class="text-end"><?= formatMontant($f['montant_paye']) ?></td>
-                            <td><span class="badge bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
+                            <td class="text-end montant-cell"><?= formatMontant($f['montant_ttc']) ?></td>
+                            <td class="text-end montant-cell text-success"><?= formatMontant($f['montant_paye']) ?></td>
+                            <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -386,22 +428,22 @@ $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesC
 
         <!-- Commandes -->
         <?php if (!empty($commandesClient)): ?>
-        <div class="card border-0">
+        <div class="card border-0 commercial-table-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-cart-check"></i> Commandes (<?= count($commandesClient) ?>)</span>
-                <a href="commandes.php?action=nouvelle&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-warning"><i class="bi bi-plus"></i> Nouvelle</a>
+                <a href="commandes.php?action=nouvelle&client_id=<?= $client['id'] ?>" class="btn btn-sm btn-outline-warning document-status-btn"><i class="bi bi-plus"></i> Nouvelle</a>
             </div>
             <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light"><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th>Statut</th></tr></thead>
+                <table class="table table-sm table-hover table-commercial mb-0">
+                    <thead><tr><th>N°</th><th>Date</th><th>Objet</th><th class="text-end">TTC</th><th>Statut</th></tr></thead>
                     <tbody>
                     <?php foreach (array_slice($commandesClient, 0, 5) as $cmd): $s = getStatutCommandeLabel($cmd['statut']); ?>
                         <tr>
-                            <td><a href="commandes.php?action=voir&id=<?= $cmd['id'] ?>"><?= e($cmd['numero']) ?></a></td>
-                            <td><?= formatDate($cmd['date_commande']) ?></td>
+                            <td><a href="commandes.php?action=voir&id=<?= $cmd['id'] ?>" class="numero-link"><?= e($cmd['numero']) ?></a></td>
+                            <td class="date-cell"><?= formatDate($cmd['date_commande']) ?></td>
                             <td><?= e(mb_strimwidth($cmd['objet'], 0, 40, '...')) ?></td>
-                            <td class="text-end fw-bold"><?= formatMontant($cmd['montant_ttc']) ?></td>
-                            <td><span class="badge bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
+                            <td class="text-end montant-cell"><?= formatMontant($cmd['montant_ttc']) ?></td>
+                            <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -422,23 +464,27 @@ if ($action === 'modifier') {
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-person-<?= $client ? 'gear' : 'plus' ?>"></i> <?= $client ? 'Modifier le client' : 'Nouveau client' ?></h2>
             <p class="text-muted mb-0"><?= $client ? e(clientNomComplet($client)) : 'Renseignez les informations du client' ?></p>
         </div>
-        <a href="clients.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <a href="clients.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<div class="card border-0">
-    <div class="card-body">
-        <form method="post">
+<form method="post" class="doc-workspace">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-person-vcard"></i> Identité et contact</strong>
+                <small class="doc-form-section__subtitle">Coordonnées principales et qualification du tiers</small>
+            </div>
+        </div>
+        <div class="card-body">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="<?= $client ? 'modifier' : 'ajouter' ?>">
             <?php if ($client): ?><input type="hidden" name="id" value="<?= $client['id'] ?>"><?php endif; ?>
-
-            <h6 class="text-uppercase text-muted small mb-3"><i class="bi bi-person"></i> Identité</h6>
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <label class="form-label">Type de client *</label>
@@ -469,8 +515,17 @@ if ($action === 'modifier') {
                     <input type="text" name="telephone" class="form-control" value="<?= e($client['telephone'] ?? '') ?>">
                 </div>
             </div>
+        </div>
+    </div>
 
-            <h6 class="text-uppercase text-muted small mb-3"><i class="bi bi-geo-alt"></i> Adresse</h6>
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-geo-alt"></i> Adresse</strong>
+                <small class="doc-form-section__subtitle">Données utiles pour la facturation et l'envoi des documents</small>
+            </div>
+        </div>
+        <div class="card-body">
             <div class="row g-3 mb-4">
                 <div class="col-md-12">
                     <label class="form-label">Adresse</label>
@@ -489,8 +544,17 @@ if ($action === 'modifier') {
                     <input type="text" name="pays" class="form-control" value="<?= e($client['pays'] ?? 'France') ?>">
                 </div>
             </div>
+        </div>
+    </div>
 
-            <h6 class="text-uppercase text-muted small mb-3"><i class="bi bi-bank"></i> Informations légales</h6>
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-bank"></i> Informations légales</strong>
+                <small class="doc-form-section__subtitle">Recherche société, SIREN, SIRET et TVA intracommunautaire</small>
+            </div>
+        </div>
+        <div class="card-body">
             <div class="row g-3 mb-4">
                 <div class="col-md-6 position-relative">
                     <label class="form-label">Recherche SIREN / SIRET / Nom d'entreprise</label>
@@ -525,21 +589,37 @@ if ($action === 'modifier') {
                     <input type="text" name="numero_tva" id="tvaField" class="form-control" value="<?= e($client['numero_tva'] ?? '') ?>" maxlength="20">
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="row g-3 mb-4">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-journal-text"></i> Notes internes</strong>
+                <small class="doc-form-section__subtitle">Historique, consignes ou contexte commercial</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label">Notes</label>
                     <textarea name="notes" class="form-control" rows="3"><?= e($client['notes'] ?? '') ?></textarea>
                 </div>
             </div>
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> <?= $client ? 'Enregistrer' : 'Ajouter le client' ?></button>
-                <a href="clients.php" class="btn btn-outline-secondary">Annuler</a>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
+    <div class="doc-submit-bar">
+        <div class="doc-submit-bar__summary">
+            <span class="doc-submit-bar__label">Fiche client</span>
+            <strong><?= $client ? 'Modification du tiers' : 'Création d\'un nouveau client' ?></strong>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary document-action-btn"><i class="bi bi-check-lg"></i> <?= $client ? 'Enregistrer' : 'Ajouter le client' ?></button>
+            <a href="clients.php" class="btn btn-outline-secondary document-action-btn">Annuler</a>
+        </div>
+    </div>
+</form>
 
 <?php endif; ?>
 

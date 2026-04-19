@@ -109,6 +109,13 @@ function initializeDatabaseSchema(PDO $pdo): void {
         if (tableExists($pdo, 'parametres')) {
             $stmt = $pdo->prepare('INSERT INTO parametres (cle, valeur, description) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE valeur = valeur');
             $stmt->execute(['inscription_ouverte', '0', 'Autoriser l\'inscription publique (0/1)']);
+            $stmt->execute(['acompte_commande_pct', '30', 'Pourcentage d\'acompte automatique sur les documents de vente']);
+            $stmt->execute(['garantie_sav_mois', '12', 'Durée de garantie ou SAV commercial en mois']);
+            $stmt->execute(['delai_livraison_jours', '30', 'Délai indicatif de livraison ou d\'exécution']);
+            $stmt->execute(['clause_chantier_livraison', '', 'Clause personnalisée chantier / livraison']);
+            $stmt->execute(['logo_pdf_path', '', 'Chemin du logo utilisé dans les PDF']);
+            $stmt->execute(['signature_pdf_path', '', 'Chemin de la signature image utilisée dans les PDF']);
+            $stmt->execute(['cachet_pdf_path', '', 'Chemin du cachet image utilisé dans les PDF']);
         }
     } catch (Throwable $e) {
         // Ne jamais bloquer l'application pour une migration corrective.

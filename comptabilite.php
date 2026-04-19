@@ -320,10 +320,17 @@ include 'header.php';
     </div>
     <div class="card-body p-0">
         <?php if (empty($recettesChronologiques)): ?>
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-journal" style="font-size: 3rem;"></i>
-                <p class="mt-2">Aucune recette pour <?= $annee ?>.</p>
-                <a href="transactions.php?action=ajouter&type=recette" class="btn btn-success"><i class="bi bi-plus-lg"></i> Enregistrer une recette</a>
+            <div class="text-center empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-journal"></i>
+                </div>
+                <h3 class="empty-state-title">Aucune recette pour <?= $annee ?></h3>
+                <p class="empty-state-text">
+                    Enregistre une première recette pour alimenter le livre des recettes et suivre ton chiffre d’affaires annuel.
+                </p>
+                <div class="empty-state-actions">
+                    <a href="transactions.php?action=ajouter&type=recette" class="btn btn-success empty-state-btn"><i class="bi bi-plus-lg"></i> Enregistrer une recette</a>
+                </div>
             </div>
         <?php else: ?>
             <div class="table-responsive">

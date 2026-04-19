@@ -106,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $clientsList = getClients();
 
 include 'header.php';
+include 'commercial_header.php';
 ?>
 
 <?php if ($action === 'liste'): ?>
@@ -115,6 +116,7 @@ $filtreRecherche = $_GET['recherche'] ?? '';
 $facturesList = getFacturesList(['statut' => $filtreStatut, 'recherche' => $filtreRecherche]);
 $totalTTC = array_sum(array_map(fn($f) => (float)$f['montant_ttc'], $facturesList));
 $totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesList));
+$totalReste = max(0, $totalTTC - $totalPaye);
 $nbEnRetard = count(array_filter($facturesList, fn($f) => $f['statut'] === 'en_retard'));
 $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoyee'));
 ?>
@@ -194,7 +196,7 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
 </div>
 
 <!-- Filtres -->
-<div class="card border-0 mb-4">
+<div class="card border-0 mb-4 commercial-filter-card">
     <div class="card-body py-3">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-auto flex-grow-1">
@@ -221,13 +223,31 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
 <?php if (empty($facturesList)): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
-            <i class="bi bi-receipt"></i>
-            <p>Aucune facture trouvée.</p>
-            <a href="?action=nouvelle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Créer une facture</a>
+            <div class="empty-state-icon">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <h3 class="empty-state-title">Aucune facture trouvée</h3>
+            <p class="empty-state-text">
+                Crée ta première facture pour suivre les échéances, les paiements reçus et les éventuels retards clients.
+            </p>
+            <div class="empty-state-actions">
+                <a href="?action=nouvelle" class="btn btn-primary empty-state-btn"><i class="bi bi-plus-lg"></i> Créer une facture</a>
+            </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="card border-0">
+    <div class="card border-0 commercial-table-card">
+        <div class="card-header commercial-table-card__header">
+            <div>
+                <div class="commercial-table-card__eyebrow">Suivi du poste clients</div>
+                <div class="commercial-table-card__title">Liste des factures</div>
+            </div>
+            <div class="commercial-table-card__stats">
+                <span class="commercial-table-pill"><i class="bi bi-wallet2"></i> À encaisser : <strong><?= formatMontant($totalReste) ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> En retard : <strong><?= $nbEnRetard ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($facturesList) ?></strong></span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover table-commercial mb-0">
                 <thead>
@@ -256,8 +276,8 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
                         <td><span class="badge-statut bg-<?= $s['class'] ?>"><?= $s['label'] ?></span></td>
                         <td class="text-end">
                             <div class="btn-actions justify-content-end">
-                                <a href="?action=voir&id=<?= $f['id'] ?>" class="btn btn-sm btn-outline-info" title="Voir"><i class="bi bi-eye"></i></a>
-                                <a href="pdf_generator.php?type=facture&id=<?= $f['id'] ?>" class="btn btn-sm btn-outline-danger" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
+                                <a href="?action=voir&id=<?= $f['id'] ?>" class="btn btn-sm btn-outline-info table-action-btn" title="Voir"><i class="bi bi-eye"></i></a>
+                                <a href="pdf_generator.php?type=facture&id=<?= $f['id'] ?>" class="btn btn-sm btn-outline-danger table-action-btn" target="_blank" title="PDF"><i class="bi bi-file-pdf"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -291,18 +311,18 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                 <?php endif; ?>
             </p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="pdf_generator.php?type=facture&id=<?= $facture['id'] ?>" class="btn btn-danger" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
+        <div class="d-flex gap-2 flex-wrap document-actions">
+            <a href="pdf_generator.php?type=facture&id=<?= $facture['id'] ?>" class="btn btn-danger document-action-btn" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
             <?php if ($facture['statut'] === 'brouillon'): ?>
-                <a href="?action=modifier&id=<?= $facture['id'] ?>" class="btn btn-warning"><i class="bi bi-pencil"></i> Modifier</a>
+                <a href="?action=modifier&id=<?= $facture['id'] ?>" class="btn btn-warning document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
             <?php endif; ?>
             <form method="post" class="d-inline" onsubmit="return confirm('Supprimer cette facture ?')">
                 <?= csrfField() ?>
                 <input type="hidden" name="post_action" value="supprimer">
                 <input type="hidden" name="id" value="<?= $facture['id'] ?>">
-                <button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                <button class="btn btn-outline-danger document-action-btn document-action-btn--icon"><i class="bi bi-trash"></i></button>
             </form>
-            <a href="factures.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+            <a href="factures.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
         </div>
     </div>
 </div>
@@ -326,8 +346,27 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                 <option value="<?= $st ?>" <?= $facture['statut'] === $st ? 'selected' : '' ?>><?= $stl['label'] ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
     </form>
+</div>
+
+<div class="doc-summary-grid mb-4">
+    <div class="doc-summary-card">
+        <small>Date d'émission</small>
+        <strong><?= formatDate($facture['date_facture']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Échéance</small>
+        <strong><?= formatDate($facture['date_echeance']) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Total TTC</small>
+        <strong><?= formatMontant($facture['montant_ttc']) ?></strong>
+    </div>
+    <div class="doc-summary-card <?= $resteAPayer > 0.01 ? 'doc-summary-card--alert' : '' ?>">
+        <small>Reste à payer</small>
+        <strong><?= formatMontant($resteAPayer) ?></strong>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -398,18 +437,29 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
             </tfoot>
         </table>
     </div>
-    <?php if ($facture['notes'] || $facture['conditions']): ?>
-    <div class="card-footer">
-        <?php if ($facture['notes']): ?><p class="mb-1"><strong>Notes :</strong> <?= nl2br(e($facture['notes'])) ?></p><?php endif; ?>
-        <?php if ($facture['conditions']): ?><p class="mb-0"><strong>Conditions :</strong> <?= nl2br(e($facture['conditions'])) ?></p><?php endif; ?>
+    <?php $factureConditions = getConditionsDocumentVente('facture', $facture); ?>
+    <?php if ($facture['notes'] || $factureConditions): ?>
+    <div class="card-footer terms-card">
+        <?php if ($facture['notes']): ?><p class="mb-3"><strong>Notes :</strong> <?= nl2br(e($facture['notes'])) ?></p><?php endif; ?>
+        <?php if ($factureConditions): ?>
+            <div class="terms-card__title"><i class="bi bi-shield-check"></i> Conditions générales de vente</div>
+            <div class="terms-card__content"><?= nl2br(e($factureConditions)) ?></div>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 </div>
 
 <!-- Paiements -->
-<div class="card border-0 mt-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-credit-card"></i> Paiements (<?= count($paiements) ?>)</span>
+<div class="card border-0 mt-4 commercial-table-card">
+    <div class="card-header commercial-table-card__header">
+        <div>
+            <div class="commercial-table-card__eyebrow">Encaissements liés</div>
+            <div class="commercial-table-card__title"><i class="bi bi-credit-card"></i> Paiements (<?= count($paiements) ?>)</div>
+        </div>
+        <div class="commercial-table-card__stats">
+            <span class="commercial-table-pill"><i class="bi bi-check2-circle"></i> Payé : <strong><?= formatMontant($facture['montant_paye']) ?></strong></span>
+            <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> Reste : <strong><?= formatMontant($resteAPayer) ?></strong></span>
+        </div>
     </div>
     <div class="card-body">
         <div class="payment-summary mb-3">
@@ -435,17 +485,17 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     </div>
     <?php if (!empty($paiements)): ?>
     <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead class="table-light">
+        <table class="table table-sm table-commercial mb-0">
+            <thead>
                 <tr><th>Date</th><th>Mode</th><th>Référence</th><th class="text-end">Montant</th><th>Notes</th><th></th></tr>
             </thead>
             <tbody>
             <?php foreach ($paiements as $p): ?>
                 <tr>
-                    <td><?= formatDate($p['date_paiement']) ?></td>
-                    <td><span class="badge bg-info"><?= e(getModePaiementLabel($p['mode_paiement'])) ?></span></td>
-                    <td><?= e($p['reference'] ?? '—') ?></td>
-                    <td class="text-end fw-bold text-success"><?= formatMontant($p['montant']) ?></td>
+                    <td class="date-cell"><?= formatDate($p['date_paiement']) ?></td>
+                    <td><span class="badge-statut bg-info"><?= e(getModePaiementLabel($p['mode_paiement'])) ?></span></td>
+                    <td class="date-cell"><?= e($p['reference'] ?? '—') ?></td>
+                    <td class="text-end montant-cell text-success"><?= formatMontant($p['montant']) ?></td>
                     <td><small class="text-muted"><?= e($p['notes'] ?? '') ?></small></td>
                     <td>
                         <form method="post" class="d-inline" onsubmit="return confirm('Supprimer ce paiement ?')">
@@ -453,7 +503,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                             <input type="hidden" name="post_action" value="supprimer_paiement">
                             <input type="hidden" name="paiement_id" value="<?= $p['id'] ?>">
                             <input type="hidden" name="facture_redirect" value="<?= $facture['id'] ?>">
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-sm btn-outline-danger document-action-btn document-action-btn--icon"><i class="bi bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>
@@ -464,9 +514,14 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     <?php endif; ?>
 
     <?php if ($resteAPayer > 0.01 && $facture['statut'] !== 'annulee'): ?>
-    <div class="card-body border-top">
-        <h6 class="mb-3"><i class="bi bi-plus-circle"></i> Enregistrer un paiement</h6>
-        <form method="post" class="row g-2 align-items-end">
+    <div class="card-body border-top payment-entry-panel">
+        <div class="payment-entry-panel__header">
+            <div>
+                <strong><i class="bi bi-plus-circle"></i> Enregistrer un paiement</strong>
+                <small>Saisie rapide d'un règlement sur cette facture</small>
+            </div>
+        </div>
+        <form method="post" class="row g-3 align-items-end">
             <?= csrfField() ?>
             <input type="hidden" name="post_action" value="enregistrer_paiement">
             <input type="hidden" name="facture_id" value="<?= $facture['id'] ?>">
@@ -499,7 +554,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                 <input type="text" name="paiement_notes" class="form-control form-control-sm">
             </div>
             <div class="col-md-2">
-                <button class="btn btn-sm btn-success w-100"><i class="bi bi-check"></i> Enregistrer</button>
+                <button class="btn btn-sm btn-success w-100 document-action-btn"><i class="bi bi-check"></i> Enregistrer</button>
             </div>
         </form>
     </div>
@@ -517,27 +572,35 @@ if ($action === 'modifier') {
 }
 $preselectedClient = (int)($_GET['client_id'] ?? ($facture['client_id'] ?? 0));
 $echeanceJours = (int)getParam('validite_devis', '30');
+$generatedConditions = genererConditionsDocumentVente('facture', $facture ?? [
+    'date_echeance' => date('Y-m-d', strtotime("+{$echeanceJours} days")),
+]);
 ?>
 
 <div class="hero-banner mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h2 class="mb-1"><i class="bi bi-receipt"></i> <?= $facture ? 'Modifier facture ' . e($facture['numero']) : 'Nouvelle facture' ?></h2>
             <p class="text-muted mb-0"><?= $facture ? 'Modifiez les détails de la facture' : 'Renseignez les informations de la facture' ?></p>
         </div>
-        <a href="factures.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+        <a href="factures.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
     </div>
 </div>
 
-<form method="post" id="formFacture">
+<form method="post" id="formFacture" class="doc-workspace">
     <?= csrfField() ?>
     <input type="hidden" name="post_action" value="sauvegarder">
     <?php if ($facture): ?><input type="hidden" name="facture_id" value="<?= $facture['id'] ?>"><?php endif; ?>
 
-    <div class="card border-0 mb-4">
-        <div class="card-header"><i class="bi bi-info-circle"></i> Informations</div>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--meta">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <i class="bi bi-info-circle"></i> Informations
+                <small class="doc-form-section__subtitle">En-tête de la pièce et paramètres de facturation</small>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 doc-meta-grid">
                 <div class="col-md-6">
                     <label class="form-label">Client *</label>
                     <select name="client_id" class="form-select" required>
@@ -572,10 +635,20 @@ $echeanceJours = (int)getParam('validite_devis', '30');
     </div>
 
     <!-- Lignes -->
-    <div class="card border-0 mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-list-ol"></i> Lignes de la facture</span>
-            <button type="button" class="btn btn-sm btn-success" onclick="ajouterLigne()"><i class="bi bi-plus-lg"></i> Ajouter une ligne</button>
+    <div class="card border-0 mb-4 doc-form-section doc-form-section--lines">
+        <div class="card-header d-flex justify-content-between align-items-center doc-form-section__header">
+            <div class="doc-lines-title">
+                <span><i class="bi bi-list-ol"></i> Lignes de la facture</span>
+                <small class="doc-form-section__subtitle">Saisie rapide des articles, prestations et quantités</small>
+            </div>
+            <div class="doc-lines-tools">
+                <span class="doc-lines-badge"><i class="bi bi-hash"></i> <span id="lineCountBadge">1</span> ligne(s)</span>
+                <span class="doc-lines-badge"><i class="bi bi-calculator"></i> Total HT <strong id="grandTotalHTBadge">0,00 €</strong></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-success line-add-btn" onclick="ajouterLigne()">
+                <span class="line-add-btn__icon"><i class="bi bi-plus-lg"></i></span>
+                <span>Ajouter une ligne</span>
+            </button>
         </div>
         <div class="card-body p-0">
             <table class="table mb-0" id="tableLignes">
@@ -602,7 +675,7 @@ $echeanceJours = (int)getParam('validite_devis', '30');
                             <td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="<?= $l['taux_tva'] ?>" onchange="calcLigne(this)"></td>
                             <?php endif; ?>
                             <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="<?= number_format($l['montant_ht'], 2) ?>"></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -615,7 +688,7 @@ $echeanceJours = (int)getParam('validite_devis', '30');
                             <td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="20" onchange="calcLigne(this)"></td>
                             <?php endif; ?>
                             <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="0.00"></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -630,24 +703,42 @@ $echeanceJours = (int)getParam('validite_devis', '30');
         </div>
     </div>
 
-    <div class="card border-0 mb-4">
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <strong><i class="bi bi-journal-text"></i> Notes et conditions</strong>
+                <small class="doc-form-section__subtitle">Mentions commerciales, notes de facturation et conditions de règlement</small>
+            </div>
+        </div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="row g-3 doc-notes-grid">
                 <div class="col-md-6">
                     <label class="form-label">Notes</label>
                     <textarea name="notes" class="form-control" rows="3"><?= e($facture['notes'] ?? '') ?></textarea>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Conditions de paiement</label>
-                    <textarea name="conditions" class="form-control" rows="3"><?= e($facture['conditions'] ?? getParam('conditions_paiement', '')) ?></textarea>
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <label class="form-label mb-0">Conditions générales de vente</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick='document.querySelector("#formFacture textarea[name=&quot;conditions&quot;]").value = <?= json_encode($generatedConditions) ?>;'>
+                            <i class="bi bi-magic"></i> Générer les CGV
+                        </button>
+                    </div>
+                    <textarea name="conditions" class="form-control" rows="9"><?= e($facture['conditions'] ?? $generatedConditions) ?></textarea>
+                    <small class="text-muted">Texte généré automatiquement avec échéance, pénalités de retard et mentions commerciales.</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Enregistrer la facture</button>
-        <a href="factures.php" class="btn btn-outline-secondary btn-lg">Annuler</a>
+    <div class="doc-submit-bar">
+        <div class="doc-submit-bar__summary">
+            <span class="doc-submit-bar__label">Montant HT courant</span>
+            <strong id="grandTotalHTBottom">0,00 €</strong>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary btn-lg document-action-btn"><i class="bi bi-check-lg"></i> Enregistrer la facture</button>
+            <a href="factures.php" class="btn btn-outline-secondary btn-lg document-action-btn">Annuler</a>
+        </div>
     </div>
 </form>
 
@@ -665,9 +756,10 @@ function ajouterLigne() {
         <td><input type="number" name="ligne_prix[]" class="form-control form-control-sm ligne-prix" step="0.01" min="0" value="0" onchange="calcLigne(this)"></td>
         ${tvaApplicable ? '<td><input type="number" name="ligne_tva[]" class="form-control form-control-sm ligne-tva" step="0.1" value="20" onchange="calcLigne(this)"></td>' : ''}
         <td><input type="text" class="form-control form-control-sm ligne-total fw-bold" readonly value="0.00"></td>
-        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger line-delete-btn" onclick="this.closest('tr').remove(); calcTotal()"><i class="bi bi-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
+    calcTotal();
 }
 
 function calcLigne(el) {
@@ -681,7 +773,11 @@ function calcLigne(el) {
 function calcTotal() {
     let total = 0;
     document.querySelectorAll('.ligne-total').forEach(el => { total += parseFloat(el.value) || 0; });
-    document.getElementById('grandTotalHT').textContent = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    const totalFormatted = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'}).format(total);
+    document.getElementById('grandTotalHT').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBadge').textContent = totalFormatted;
+    document.getElementById('grandTotalHTBottom').textContent = totalFormatted;
+    document.getElementById('lineCountBadge').textContent = document.querySelectorAll('#lignesBody tr').length;
 }
 
 document.addEventListener('DOMContentLoaded', calcTotal);

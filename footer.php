@@ -1,6 +1,6 @@
-    </div><!-- /.container-fluid -->
+    </main><!-- /.app-content -->
 
-    <footer class="mt-5 py-4 footer-blue border-top">
+    <footer class="py-4 footer-blue border-top">
         <div class="container-fluid">
             <div class="row align-items-center text-center text-md-start">
                 <div class="col-md-4">

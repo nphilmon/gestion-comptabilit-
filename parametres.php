@@ -37,6 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'taux_versement_liberatoire', 'versement_liberatoire_actif',
         'tva_applicable', 'taux_tva', 'taux_is',
         'conditions_paiement', 'validite_devis',
+        'acompte_commande_pct', 'garantie_sav_mois',
+        'delai_livraison_jours', 'clause_chantier_livraison',
+        'logo_pdf_path', 'signature_pdf_path', 'cachet_pdf_path',
     ];
 
     foreach ($champs as $champ) {
@@ -109,6 +112,44 @@ include 'header.php';
                     <label class="form-label">Validité devis (jours)</label>
                     <input type="number" name="validite_devis" class="form-control" min="1"
                            value="<?= e(getParam('validite_devis', '30')) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Acompte automatique (%)</label>
+                    <input type="number" name="acompte_commande_pct" class="form-control" min="0" max="100" step="1"
+                           value="<?= e(getParam('acompte_commande_pct', '30')) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Garantie / SAV (mois)</label>
+                    <input type="number" name="garantie_sav_mois" class="form-control" min="0" max="60" step="1"
+                           value="<?= e(getParam('garantie_sav_mois', '12')) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Délai livraison indicatif (jours)</label>
+                    <input type="number" name="delai_livraison_jours" class="form-control" min="0" max="365" step="1"
+                           value="<?= e(getParam('delai_livraison_jours', '30')) ?>">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Clause chantier / livraison personnalisée</label>
+                    <textarea name="clause_chantier_livraison" class="form-control" rows="3"><?= e(getParam('clause_chantier_livraison')) ?></textarea>
+                    <small class="text-muted">Si ce champ est rempli, il remplace la clause automatique de chantier/livraison dans les CGV.</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Logo PDF</label>
+                    <input type="text" name="logo_pdf_path" class="form-control"
+                           value="<?= e(getParam('logo_pdf_path')) ?>" placeholder="ex: uploads/logo.png">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Signature image PDF</label>
+                    <input type="text" name="signature_pdf_path" class="form-control"
+                           value="<?= e(getParam('signature_pdf_path')) ?>" placeholder="ex: uploads/signature.png">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Cachet image PDF</label>
+                    <input type="text" name="cachet_pdf_path" class="form-control"
+                           value="<?= e(getParam('cachet_pdf_path')) ?>" placeholder="ex: uploads/cachet.png">
+                </div>
+                <div class="col-md-12">
+                    <small class="text-muted">Renseigne un chemin local relatif au projet, par exemple <code>uploads/logo.png</code> ou <code>assets/logo.jpg</code>.</small>
                 </div>
             </div>
         </div>
