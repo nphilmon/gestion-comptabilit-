@@ -29,6 +29,12 @@ $dernieresFactures = array_slice(getFacturesList(), 0, 5);
 
 // Notifications / alertes
 $notifications = [];
+$actionsPrioritaires = [];
+$insights = [];
+$stockFaible = 0;
+$tauxEncaissement = $statsCommerciales['ca_facture'] > 0
+    ? round((($statsCommerciales['ca_facture'] - $statsCommerciales['en_attente_paiement']) / $statsCommerciales['ca_facture']) * 100)
+    : null;
 
 // Factures en retard
 if ($statsCommerciales['factures_en_retard'] > 0) {
@@ -74,20 +80,134 @@ try {
     }
 } catch (\PDOException $e) {}
 
+if (empty($dernieres)) {
+    $actionsPrioritaires[] = [
+        'icon' => 'journal-plus',
+        'title' => 'Démarrer la saisie comptable',
+        'text' => 'Aucune écriture trouvée pour ' . $annee . '. Commence par enregistrer tes premières recettes ou dépenses.',
+        'link' => BASE_URL . 'transactions.php?action=ajouter&type=recette',
+        'button' => 'Ajouter une écriture',
+        'tone' => 'primary',
+    ];
+}
+
+if (empty($derniersDevis) && empty($dernieresFactures)) {
+    $actionsPrioritaires[] = [
+        'icon' => 'file-earmark-plus',
+        'title' => 'Lancer le cycle commercial',
+        'text' => 'Le module devis et factures est prêt, mais aucun document récent n\'apparaît encore.',
+        'link' => BASE_URL . 'devis.php?action=nouveau',
+        'button' => 'Créer un devis',
+        'tone' => 'info',
+    ];
+}
+
+if ($statsCommerciales['factures_en_retard'] > 0) {
+    $actionsPrioritaires[] = [
+        'icon' => 'cash-stack',
+        'title' => 'Relancer les impayés',
+        'text' => $statsCommerciales['factures_en_retard'] . ' facture(s) en retard demandent un suivi pour sécuriser la trésorerie.',
+        'link' => BASE_URL . 'factures.php?statut=en_retard',
+        'button' => 'Voir les retards',
+        'tone' => 'danger',
+    ];
+} elseif ($statsCommerciales['en_attente_paiement'] > 0) {
+    $actionsPrioritaires[] = [
+        'icon' => 'credit-card-2-front',
+        'title' => 'Suivre les encaissements',
+        'text' => formatMontant($statsCommerciales['en_attente_paiement']) . ' restent à encaisser sur les factures en cours.',
+        'link' => BASE_URL . 'paiements.php',
+        'button' => 'Suivre les paiements',
+        'tone' => 'warning',
+    ];
+}
+
+if ($stockFaible > 0) {
+    $actionsPrioritaires[] = [
+        'icon' => 'boxes',
+        'title' => 'Surveiller le stock faible',
+        'text' => $stockFaible . ' produit(s) approchent du seuil d\'alerte et méritent une vérification.',
+        'link' => BASE_URL . 'produits.php',
+        'button' => 'Contrôler le stock',
+        'tone' => 'warning',
+    ];
+}
+
+if (empty($actionsPrioritaires)) {
+    $actionsPrioritaires[] = [
+        'icon' => 'check2-circle',
+        'title' => 'Tableau de bord sain',
+        'text' => 'Aucune urgence détectée. C\'est le bon moment pour préparer un devis, rapprocher les écritures ou consulter les rapports.',
+        'link' => BASE_URL . 'rapports.php?annee=' . $annee,
+        'button' => 'Ouvrir les rapports',
+        'tone' => 'success',
+    ];
+}
+
+if ($tauxEncaissement !== null) {
+    $insights[] = [
+        'icon' => 'percent',
+        'label' => 'Taux d\'encaissement',
+        'value' => $tauxEncaissement . '%',
+        'tone' => $tauxEncaissement >= 85 ? 'success' : ($tauxEncaissement >= 60 ? 'warning' : 'danger'),
+    ];
+}
+
+if (!empty($dernieres)) {
+    $insights[] = [
+        'icon' => 'clock-history',
+        'label' => 'Dernière écriture',
+        'value' => formatDate($dernieres[0]['date_transaction']),
+        'tone' => 'info',
+    ];
+}
+
+if ($stats['benefice_net'] !== 0.0) {
+    $insights[] = [
+        'icon' => $stats['benefice_net'] >= 0 ? 'graph-up-arrow' : 'graph-down-arrow',
+        'label' => $stats['benefice_net'] >= 0 ? 'Résultat positif' : 'Résultat à surveiller',
+        'value' => formatMontant($stats['benefice_net']),
+        'tone' => $stats['benefice_net'] >= 0 ? 'success' : 'danger',
+    ];
+}
+
+if ($stats['plafond_ca'] > 0) {
+    $insights[] = [
+        'icon' => 'speedometer',
+        'label' => 'Plafond micro',
+        'value' => $stats['pct_plafond'] . '%',
+        'tone' => $stats['pct_plafond'] > 95 ? 'danger' : ($stats['pct_plafond'] > 80 ? 'warning' : 'primary'),
+    ];
+}
+
 include 'header.php';
 ?>
 
 <!-- Hero / Welcome -->
 <div class="hero-banner mb-4">
     <div class="row align-items-center">
-        <div class="col-md-8">
+        <div class="col-lg-7">
             <h2 class="mb-1"><i class="bi bi-speedometer2"></i> Tableau de bord <?= $annee ?></h2>
             <p class="text-muted mb-0">
                 <?= e(getParam('nom_entreprise', 'Mon Activité')) ?> — <?= e(getRegimeLabel()) ?>
             </p>
+            <div class="hero-metrics mt-3">
+                <span class="hero-metric-pill">
+                    <i class="bi bi-bell"></i>
+                    <?= count($notifications) ?> alerte<?= count($notifications) > 1 ? 's' : '' ?>
+                </span>
+                <span class="hero-metric-pill">
+                    <i class="bi bi-journal-text"></i>
+                    <?= count($dernieres) ?> écriture<?= count($dernieres) > 1 ? 's' : '' ?> récente<?= count($dernieres) > 1 ? 's' : '' ?>
+                </span>
+                <span class="hero-metric-pill">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <?= $statsCommerciales['factures_en_retard'] ?> facture<?= $statsCommerciales['factures_en_retard'] > 1 ? 's' : '' ?> en retard
+                </span>
+            </div>
         </div>
-        <div class="col-md-4 text-end">
-            <div class="d-flex justify-content-end gap-2 mb-2">
+        <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+            <div class="d-flex justify-content-lg-end gap-2 mb-2 flex-wrap">
                 <div class="btn-group">
                     <?php foreach ($annees as $a): ?>
                         <a href="?annee=<?= $a ?>" class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>">
@@ -105,6 +225,51 @@ include 'header.php';
                         <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=clients"><i class="bi bi-people"></i> Clients</a></li>
                         <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=produits"><i class="bi bi-box-seam"></i> Produits</a></li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-stars"></i> Priorités du moment</span>
+                <small class="text-muted">Ce qui mérite ton attention en premier</small>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <?php foreach (array_slice($actionsPrioritaires, 0, 3) as $action): ?>
+                    <div class="col-md-6 col-xl-4">
+                        <a href="<?= $action['link'] ?>" class="priority-card priority-<?= $action['tone'] ?>">
+                            <span class="priority-icon"><i class="bi bi-<?= $action['icon'] ?>"></i></span>
+                            <strong><?= e($action['title']) ?></strong>
+                            <span><?= e($action['text']) ?></span>
+                            <span class="priority-link"><?= e($action['button']) ?> <i class="bi bi-arrow-right-short"></i></span>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 h-100">
+            <div class="card-header">
+                <i class="bi bi-activity"></i> Vue rapide
+            </div>
+            <div class="card-body">
+                <div class="insight-stack">
+                    <?php foreach ($insights as $insight): ?>
+                    <div class="insight-item insight-<?= $insight['tone'] ?>">
+                        <div class="insight-icon"><i class="bi bi-<?= $insight['icon'] ?>"></i></div>
+                        <div>
+                            <small><?= e($insight['label']) ?></small>
+                            <div class="fw-semibold"><?= e($insight['value']) ?></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
