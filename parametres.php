@@ -39,6 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'conditions_paiement', 'validite_devis',
         'acompte_commande_pct', 'garantie_sav_mois',
         'delai_livraison_jours', 'clause_chantier_livraison',
+        'module_cp_actif', 'cp_mode_decompte', 'cp_reference_start_month',
+        'cp_reference_start_day', 'cp_acquisition_rate', 'cp_annual_cap',
+        'module_paie_actif', 'paie_jours_travail_mensuel',
+        'paie_taux_charges_patronales', 'paie_taux_charges_salariales',
+        'pdp_enabled', 'pdp_provider', 'pdp_auto_send', 'pdp_endpoint_url',
+        'pdp_auth_type', 'pdp_api_key_env', 'pdp_custom_header_name', 'pdp_export_format',
         'logo_pdf_path', 'signature_pdf_path', 'cachet_pdf_path',
     ];
 
@@ -54,6 +60,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!isset($_POST['tva_applicable'])) {
         setParam('tva_applicable', '0');
+    }
+    if (!isset($_POST['module_cp_actif'])) {
+        setParam('module_cp_actif', '0');
+    }
+    if (!isset($_POST['module_paie_actif'])) {
+        setParam('module_paie_actif', '0');
+    }
+    if (!isset($_POST['pdp_enabled'])) {
+        setParam('pdp_enabled', '0');
+    }
+    if (!isset($_POST['pdp_auto_send'])) {
+        setParam('pdp_auto_send', '0');
     }
 
     setFlash('success', 'Paramètres enregistrés avec succès.');
@@ -150,6 +168,175 @@ include 'header.php';
                 </div>
                 <div class="col-md-12">
                     <small class="text-muted">Renseigne un chemin local relatif au projet, par exemple <code>uploads/logo.png</code> ou <code>assets/logo.jpg</code>.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4">
+        <div class="card-header"><i class="bi bi-calendar2-check"></i> Modules métier - Congés payés (CP)</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-2">
+                        <input type="hidden" name="module_cp_actif" value="0">
+                        <input class="form-check-input" type="checkbox" name="module_cp_actif" value="1"
+                               id="cpModuleSwitch" <?= getParam('module_cp_actif', '0') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="cpModuleSwitch">
+                            <strong>Activer la gestion des congés payés</strong>
+                        </label>
+                    </div>
+                    <small class="text-muted">Ajoute le module RH CP dans la navigation et le tableau de bord.</small>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Décompte</label>
+                    <select name="cp_mode_decompte" class="form-select">
+                        <option value="ouvrables" <?= getParam('cp_mode_decompte', 'ouvrables') === 'ouvrables' ? 'selected' : '' ?>>Jours ouvrables</option>
+                        <option value="ouvres" <?= getParam('cp_mode_decompte', 'ouvrables') === 'ouvres' ? 'selected' : '' ?>>Jours ouvrés</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Début période - mois</label>
+                    <input type="number" name="cp_reference_start_month" class="form-control" min="1" max="12"
+                           value="<?= e(getParam('cp_reference_start_month', '6')) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Début période - jour</label>
+                    <input type="number" name="cp_reference_start_day" class="form-control" min="1" max="28"
+                           value="<?= e(getParam('cp_reference_start_day', '1')) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Acquisition mensuelle</label>
+                    <input type="number" name="cp_acquisition_rate" class="form-control" min="0" step="0.01"
+                           value="<?= e(getParam('cp_acquisition_rate', '2.5')) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Plafond annuel</label>
+                    <input type="number" name="cp_annual_cap" class="form-control" min="0" step="0.01"
+                           value="<?= e(getParam('cp_annual_cap', '30')) ?>">
+                </div>
+                <div class="col-md-10">
+                    <div class="alert alert-light border-0 mb-0">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        Réglage par défaut conforme au droit commun en France métropolitaine :
+                        <strong>2,5 jours ouvrables</strong> acquis par mois de travail effectif, sur une période de référence du
+                        <strong>1er juin au 31 mai</strong>. Les cas particuliers (convention collective, arrêt maladie, fractionnement, jours supplémentaires) restent ajustables dans le module CP.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4">
+        <div class="card-header"><i class="bi bi-diagram-3"></i> Facturation électronique - PDP</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-2">
+                        <input type="hidden" name="pdp_enabled" value="0">
+                        <input class="form-check-input" type="checkbox" name="pdp_enabled" value="1"
+                               id="pdpEnabledSwitch" <?= getParam('pdp_enabled', '0') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="pdpEnabledSwitch">
+                            <strong>Activer le module PDP</strong>
+                        </label>
+                    </div>
+                    <small class="text-muted">Permet l'export UBL et la transmission automatique à une plateforme choisie.</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fournisseur</label>
+                    <select name="pdp_provider" class="form-select">
+                        <option value="generic_api" <?= getParam('pdp_provider', 'generic_api') === 'generic_api' ? 'selected' : '' ?>>API générique</option>
+                        <option value="chorus_pro" <?= getParam('pdp_provider', 'generic_api') === 'chorus_pro' ? 'selected' : '' ?>>Chorus Pro / secteur public</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Format par défaut</label>
+                    <select name="pdp_export_format" class="form-select">
+                        <option value="ubl" <?= getParam('pdp_export_format', 'ubl') === 'ubl' ? 'selected' : '' ?>>UBL 2.1</option>
+                        <option value="factur-x" <?= getParam('pdp_export_format', 'ubl') === 'factur-x' ? 'selected' : '' ?>>Factur-X</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check form-switch mt-4">
+                        <input type="hidden" name="pdp_auto_send" value="0">
+                        <input class="form-check-input" type="checkbox" name="pdp_auto_send" value="1"
+                               id="pdpAutoSendSwitch" <?= getParam('pdp_auto_send', '0') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="pdpAutoSendSwitch">
+                            Envoi automatique
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">URL endpoint PDP</label>
+                    <input type="url" name="pdp_endpoint_url" class="form-control"
+                           value="<?= e(getParam('pdp_endpoint_url')) ?>" placeholder="https://api.votre-pdp.fr/invoices">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Authentification</label>
+                    <select name="pdp_auth_type" class="form-select">
+                        <option value="bearer_env" <?= getParam('pdp_auth_type', 'bearer_env') === 'bearer_env' ? 'selected' : '' ?>>Bearer via variable env</option>
+                        <option value="header_env" <?= getParam('pdp_auth_type', 'bearer_env') === 'header_env' ? 'selected' : '' ?>>En-tête custom via variable env</option>
+                        <option value="none" <?= getParam('pdp_auth_type', 'bearer_env') === 'none' ? 'selected' : '' ?>>Aucune</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Variable d'environnement clé</label>
+                    <input type="text" name="pdp_api_key_env" class="form-control"
+                           value="<?= e(getParam('pdp_api_key_env', 'GESTION_COMPTA_PDP_API_KEY')) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Nom en-tête custom</label>
+                    <input type="text" name="pdp_custom_header_name" class="form-control"
+                           value="<?= e(getParam('pdp_custom_header_name', 'X-API-Key')) ?>">
+                </div>
+                <div class="col-md-12">
+                    <div class="alert alert-light border-0 mb-0">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        Cette configuration prépare une intégration générique de type solution compatible / PDP.
+                        Le format <strong>UBL 2.1</strong> peut être généré directement. Le format <strong>Factur-X</strong> nécessite un PDF/A-3 embarquant un XML normé, ce qui demandera une couche supplémentaire spécifique.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4">
+        <div class="card-header"><i class="bi bi-cash-coin"></i> Modules métier - Paie / Bulletins de paye</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-2">
+                        <input type="hidden" name="module_paie_actif" value="0">
+                        <input class="form-check-input" type="checkbox" name="module_paie_actif" value="1"
+                               id="paieModuleSwitch" <?= getParam('module_paie_actif', '0') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="paieModuleSwitch">
+                            <strong>Activer le module paie</strong>
+                        </label>
+                    </div>
+                    <small class="text-muted">Ajoute la gestion des salaires et bulletins dans la navigation.</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Base mensuelle d'heures</label>
+                    <input type="number" name="paie_jours_travail_mensuel" class="form-control" min="0" step="0.01"
+                           value="<?= e(getParam('paie_jours_travail_mensuel', '151.67')) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Charges salariales (%)</label>
+                    <input type="number" name="paie_taux_charges_salariales" class="form-control" min="0" step="0.01"
+                           value="<?= e(getParam('paie_taux_charges_salariales', '22')) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Charges patronales (%)</label>
+                    <input type="number" name="paie_taux_charges_patronales" class="form-control" min="0" step="0.01"
+                           value="<?= e(getParam('paie_taux_charges_patronales', '42')) ?>">
+                </div>
+                <div class="col-md-12">
+                    <div class="alert alert-light border-0 mb-0">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        Ce module fournit une base interne de gestion des bulletins de paye par collaborateur :
+                        salaire brut, heures supplémentaires, primes, retenues, charges salariales, charges patronales et net à payer.
+                        Les taux proposés servent de préremplissage et restent modifiables sur chaque bulletin.
+                    </div>
                 </div>
             </div>
         </div>

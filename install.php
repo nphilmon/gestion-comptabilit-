@@ -61,6 +61,8 @@ try {
         __DIR__ . '/database/migration_multi_regimes.sql',
         __DIR__ . '/database/migration_commercial.sql',
         __DIR__ . '/database/migration_caisse.sql',
+        __DIR__ . '/database/migration_cp.sql',
+        __DIR__ . '/database/migration_paie.sql',
     ];
 
     foreach ($sqlFiles as $sqlFile) {
@@ -78,7 +80,7 @@ try {
     echo "<h4>✅ Installation réussie !</h4>";
     echo "<ul>";
     echo "<li>Base de données <strong>" . htmlspecialchars(DB_NAME) . "</strong> créée/initialisée</li>";
-    echo "<li>Migrations principales, commerciales et caisse appliquées</li>";
+    echo "<li>Migrations principales, commerciales, caisse, congés et paie appliquées</li>";
     echo "<li>Vous pouvez maintenant finaliser la configuration via l'application</li>";
     echo "</ul>";
     echo "</div>";

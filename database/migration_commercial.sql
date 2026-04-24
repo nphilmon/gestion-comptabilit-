@@ -76,6 +76,17 @@ CREATE TABLE IF NOT EXISTS `factures` (
     `client_id` INT UNSIGNED NOT NULL,
     `devis_id` INT UNSIGNED DEFAULT NULL,
     `commande_id` INT UNSIGNED DEFAULT NULL,
+    `client_siren` VARCHAR(20) DEFAULT NULL,
+    `adresse_livraison` VARCHAR(255) DEFAULT NULL,
+    `code_postal_livraison` VARCHAR(10) DEFAULT NULL,
+    `ville_livraison` VARCHAR(100) DEFAULT NULL,
+    `pays_livraison` VARCHAR(50) DEFAULT NULL,
+    `type_operation` ENUM('services', 'biens', 'mixte') NOT NULL DEFAULT 'services',
+    `circuit_facturation` ENUM('b2b_france', 'b2c', 'international', 'secteur_public') NOT NULL DEFAULT 'b2b_france',
+    `einvoice_format` ENUM('factur-x', 'ubl', 'cii', 'pdf') NOT NULL DEFAULT 'factur-x',
+    `einvoice_statut` ENUM('non_preparee', 'prete', 'a_transmettre', 'transmise', 'rejetee') NOT NULL DEFAULT 'non_preparee',
+    `einvoice_plateforme` VARCHAR(120) DEFAULT NULL,
+    `einvoice_reference` VARCHAR(120) DEFAULT NULL,
     `date_facture` DATE NOT NULL,
     `date_echeance` DATE NOT NULL,
     `statut` ENUM('brouillon', 'envoyee', 'payee', 'partielle', 'en_retard', 'annulee') DEFAULT 'brouillon',
@@ -108,6 +119,21 @@ CREATE TABLE IF NOT EXISTS `lignes_factures` (
     `montant_ttc` DECIMAL(12,2) NOT NULL,
     `ordre` INT DEFAULT 0,
     FOREIGN KEY (`facture_id`) REFERENCES `factures`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `einvoice_transmissions` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `facture_id` INT UNSIGNED NOT NULL,
+    `format` VARCHAR(20) NOT NULL,
+    `endpoint` VARCHAR(255) DEFAULT NULL,
+    `payload_path` VARCHAR(255) DEFAULT NULL,
+    `statut` ENUM('pending', 'success', 'error') NOT NULL DEFAULT 'pending',
+    `http_code` SMALLINT UNSIGNED DEFAULT NULL,
+    `response_excerpt` TEXT DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_einvoice_transmissions_facture` (`facture_id`, `created_at`),
+    CONSTRAINT `fk_einvoice_transmissions_facture` FOREIGN KEY (`facture_id`) REFERENCES `factures`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------

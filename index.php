@@ -5,6 +5,8 @@
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/functions_commercial.php';
 require_once __DIR__ . '/functions_intelligence.php';
+require_once __DIR__ . '/functions_cp.php';
+require_once __DIR__ . '/functions_paie.php';
 $titre = 'Tableau de bord';
 
 $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y');
@@ -37,6 +39,10 @@ $analyseProduits = getAnalyseProduits();
 $kpisAvances = getKPIsAvances($annee);
 $tresorerie = getTresoreriePrevisionnelle($annee);
 $recommandationsIA = getRecommandationsIntelligentes($annee);
+$cpModuleEnabled = isCpModuleEnabled();
+$cpStats = $cpModuleEnabled ? getCpDashboardStats() : null;
+$paieModuleEnabled = isPaieModuleEnabled();
+$paieStats = $paieModuleEnabled ? getPaieDashboardStats(date('Y-m')) : null;
 
 // Notifications / alertes
 $notifications = [];
@@ -161,6 +167,33 @@ if ($stockFaible > 0) {
     ];
 }
 
+if ($cpModuleEnabled && !empty($cpStats['pending'])) {
+    $notifications[] = [
+        'type' => 'warning',
+        'icon' => 'calendar2-check-fill',
+        'text' => $cpStats['pending'] . ' demande(s) de congés en attente',
+        'link' => BASE_URL . 'conges.php',
+    ];
+}
+
+if ($cpModuleEnabled && !empty($cpStats['on_leave_today'])) {
+    $notifications[] = [
+        'type' => 'info',
+        'icon' => 'people-fill',
+        'text' => $cpStats['on_leave_today'] . ' collaborateur(s) en congé aujourd\'hui',
+        'link' => BASE_URL . 'conges.php',
+    ];
+}
+
+if ($paieModuleEnabled && !empty($paieStats['drafts_count'])) {
+    $notifications[] = [
+        'type' => 'warning',
+        'icon' => 'cash-coin',
+        'text' => $paieStats['drafts_count'] . ' bulletin(s) de paie en brouillon ce mois-ci',
+        'link' => BASE_URL . 'paie.php',
+    ];
+}
+
 if (empty($actionsPrioritaires)) {
     $actionsPrioritaires[] = [
         'icon' => 'check2-circle',
@@ -169,6 +202,30 @@ if (empty($actionsPrioritaires)) {
         'link' => BASE_URL . 'rapports.php?annee=' . $annee,
         'button' => 'Ouvrir les rapports',
         'tone' => 'success',
+    ];
+}
+
+if ($cpModuleEnabled && !empty($cpStats['pending'])) {
+    $actionsPrioritaires[] = [
+        'icon' => 'calendar2-week',
+        'title' => 'Valider les congés payés',
+        'text' => $cpStats['pending'] . ' demande(s) de CP attendent une décision dans le module RH.',
+        'link' => BASE_URL . 'conges.php',
+        'button' => 'Ouvrir le module CP',
+        'tone' => 'warning',
+    ];
+}
+
+if ($paieModuleEnabled) {
+    $actionsPrioritaires[] = [
+        'icon' => 'cash-stack',
+        'title' => 'Préparer les bulletins de paye',
+        'text' => $paieStats['bulletins_count'] > 0
+            ? $paieStats['bulletins_count'] . ' bulletin(s) déjà généré(s) pour ' . formatPaiePeriod($paieStats['period']) . '.'
+            : 'Aucun bulletin n\'a encore été généré pour ' . formatPaiePeriod($paieStats['period']) . '.',
+        'link' => BASE_URL . 'paie.php',
+        'button' => 'Ouvrir le module paie',
+        'tone' => !empty($paieStats['drafts_count']) ? 'warning' : 'info',
     ];
 }
 
@@ -219,6 +276,15 @@ if ($statsCommerciales['factures_en_retard'] > 0) {
         'text' => 'Relancer en priorité les factures en retard pour protéger la trésorerie.',
         'link' => BASE_URL . 'factures.php?statut=en_retard',
         'button' => 'Relancer',
+    ];
+}
+
+if ($paieModuleEnabled && $paieStats['employer_total'] > 0) {
+    $insights[] = [
+        'icon' => 'cash-coin',
+        'label' => 'Coût employeur mensuel',
+        'value' => formatMontant((float) $paieStats['employer_total']),
+        'tone' => 'warning',
     ];
 }
 
@@ -1284,6 +1350,13 @@ include 'header.php';
                     <i class="bi bi-bar-chart-line"></i><br><small>Voir les rapports</small>
                 </a>
             </div>
+            <?php if ($cpModuleEnabled): ?>
+            <div class="col">
+                <a href="conges.php" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-calendar2-check"></i><br><small>Gérer les CP</small>
+                </a>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

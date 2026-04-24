@@ -26,6 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'client_id'     => (int)$_POST['client_id'],
             'devis_id'      => (int)($_POST['devis_id'] ?? 0) ?: null,
             'commande_id'   => (int)($_POST['commande_id'] ?? 0) ?: null,
+            'client_siren'  => trim($_POST['client_siren'] ?? ''),
+            'adresse_livraison' => trim($_POST['adresse_livraison'] ?? ''),
+            'code_postal_livraison' => trim($_POST['code_postal_livraison'] ?? ''),
+            'ville_livraison' => trim($_POST['ville_livraison'] ?? ''),
+            'pays_livraison' => trim($_POST['pays_livraison'] ?? ''),
+            'type_operation' => $_POST['type_operation'] ?? 'services',
+            'circuit_facturation' => $_POST['circuit_facturation'] ?? 'b2b_france',
+            'einvoice_format' => $_POST['einvoice_format'] ?? 'factur-x',
+            'einvoice_statut' => $_POST['einvoice_statut'] ?? 'non_preparee',
+            'einvoice_plateforme' => trim($_POST['einvoice_plateforme'] ?? ''),
+            'einvoice_reference' => trim($_POST['einvoice_reference'] ?? ''),
             'date_facture'  => $_POST['date_facture'],
             'date_echeance' => $_POST['date_echeance'],
             'statut'        => $_POST['statut'] ?? 'brouillon',
@@ -60,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['numero'] = genererNumero('facture');
         }
         $id = sauvegarderFacture($data, $lignes, $editId);
+        maybeAutoSendFactureToPdp($id);
         setFlash('success', $editId ? 'Facture modifiée.' : 'Facture créée.');
         header('Location: factures.php?action=voir&id=' . $id);
         exit;
@@ -74,9 +86,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($postAction === 'changer_statut') {
         $db = getDB();
-        $db->prepare('UPDATE factures SET statut = ? WHERE id = ?')->execute([$_POST['statut'], (int)$_POST['id']]);
+        $factureId = (int) $_POST['id'];
+        $db->prepare('UPDATE factures SET statut = ? WHERE id = ?')->execute([$_POST['statut'], $factureId]);
+        maybeAutoSendFactureToPdp($factureId);
         setFlash('success', 'Statut mis à jour.');
-        header('Location: factures.php?action=voir&id=' . (int)$_POST['id']);
+        header('Location: factures.php?action=voir&id=' . $factureId);
+        exit;
+    }
+
+    if ($postAction === 'changer_statut_einvoice') {
+        $factureId = (int) ($_POST['id'] ?? 0);
+        $status = $_POST['einvoice_statut'] ?? 'non_preparee';
+
+        try {
+            setFactureEInvoiceStatus($factureId, $status);
+            setFlash('success', 'Statut e-facture mis à jour.');
+        } catch (Throwable $e) {
+            setFlash('danger', $e->getMessage());
+        }
+
+        header('Location: factures.php?action=voir&id=' . $factureId);
+        exit;
+    }
+
+    if ($postAction === 'transmettre_pdp') {
+        $factureId = (int) ($_POST['id'] ?? 0);
+        try {
+            $result = transmitFactureToPdp($factureId, false);
+            $message = 'Transmission PDP réussie.';
+            if (!empty($result['note'])) {
+                $message .= ' ' . $result['note'];
+            }
+            setFlash('success', $message);
+        } catch (Throwable $e) {
+            setFlash('danger', $e->getMessage());
+        }
+        header('Location: factures.php?action=voir&id=' . $factureId);
         exit;
     }
 
@@ -295,6 +340,10 @@ if (!$facture) { setFlash('danger', 'Facture introuvable.'); header('Location: f
 $lignes = getLignesFacture($facture['id']);
 $paiements = getPaiementsFacture($facture['id']);
 $s = getStatutFactureLabel($facture['statut']);
+$eStatus = getEInvoiceStatusLabel($facture['einvoice_statut'] ?? 'non_preparee');
+$eMissing = getFactureEInvoiceMissingFields($facture);
+$pdpConfig = getPdpConfig();
+$transmissions = getTransmissionHistory((int) $facture['id']);
 $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
 ?>
 
@@ -304,6 +353,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
             <h2 class="mb-1"><i class="bi bi-receipt"></i> Facture <?= e($facture['numero']) ?></h2>
             <p class="text-muted mb-0">
                 <span class="badge bg-<?= $s['class'] ?>"><?= $s['label'] ?></span>
+                <span class="badge bg-<?= $eStatus['class'] ?>"><?= $eStatus['label'] ?> e-facture</span>
                 — <?= e($facture['client_entreprise'] ?: trim($facture['client_prenom'] . ' ' . $facture['client_nom'])) ?>
                 — Émise le <?= formatDate($facture['date_facture']) ?>
                 <?php if ($resteAPayer > 0.01 && $facture['statut'] !== 'annulee'): ?>
@@ -313,6 +363,19 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
         </div>
         <div class="d-flex gap-2 flex-wrap document-actions">
             <a href="pdf_generator.php?type=facture&id=<?= $facture['id'] ?>" class="btn btn-danger document-action-btn" target="_blank"><i class="bi bi-file-pdf"></i> PDF</a>
+            <a href="export_einvoice.php?id=<?= $facture['id'] ?>&format=ubl" class="btn btn-outline-primary document-action-btn">
+                <i class="bi bi-filetype-xml"></i> Export UBL
+            </a>
+            <?php if ($pdpConfig['enabled']): ?>
+            <form method="post" class="d-inline">
+                <?= csrfField() ?>
+                <input type="hidden" name="post_action" value="transmettre_pdp">
+                <input type="hidden" name="id" value="<?= $facture['id'] ?>">
+                <button type="submit" class="btn btn-outline-success document-action-btn" <?= empty($eMissing) ? '' : 'disabled' ?>>
+                    <i class="bi bi-send-check"></i> Transmettre PDP
+                </button>
+            </form>
+            <?php endif; ?>
             <?php if ($facture['statut'] === 'brouillon'): ?>
                 <a href="?action=modifier&id=<?= $facture['id'] ?>" class="btn btn-warning document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
             <?php endif; ?>
@@ -350,6 +413,27 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     </form>
 </div>
 
+<div class="status-bar mb-4">
+    <span class="fw-bold">E-facture :</span>
+    <span class="badge bg-<?= $eStatus['class'] ?> badge-statut"><?= $eStatus['label'] ?></span>
+    <?php if (empty($eMissing)): ?>
+    <span class="text-success small"><i class="bi bi-check-circle"></i> Dossier prêt pour export / PDP</span>
+    <?php else: ?>
+    <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> Champs à compléter : <?= e(implode(', ', $eMissing)) ?></span>
+    <?php endif; ?>
+    <form method="post" class="d-flex gap-2 ms-auto">
+        <?= csrfField() ?>
+        <input type="hidden" name="post_action" value="changer_statut_einvoice">
+        <input type="hidden" name="id" value="<?= $facture['id'] ?>">
+        <select name="einvoice_statut" class="form-select form-select-sm" style="width: auto; border-radius: 0.5rem;">
+            <?php foreach (['non_preparee', 'prete', 'a_transmettre', 'transmise', 'rejetee'] as $estatus): $elabel = getEInvoiceStatusLabel($estatus); ?>
+                <option value="<?= $estatus ?>" <?= ($facture['einvoice_statut'] ?? 'non_preparee') === $estatus ? 'selected' : '' ?>><?= e($elabel['label']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
+    </form>
+</div>
+
 <div class="doc-summary-grid mb-4">
     <div class="doc-summary-card">
         <small>Date d'émission</small>
@@ -366,6 +450,10 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     <div class="doc-summary-card <?= $resteAPayer > 0.01 ? 'doc-summary-card--alert' : '' ?>">
         <small>Reste à payer</small>
         <strong><?= formatMontant($resteAPayer) ?></strong>
+    </div>
+    <div class="doc-summary-card">
+        <small>Préparation e-facture</small>
+        <strong><?= e($eStatus['label']) ?></strong>
     </div>
 </div>
 
@@ -395,6 +483,86 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
         </div>
     </div>
 </div>
+
+<div class="card border-0 mt-4">
+    <div class="card-header"><i class="bi bi-cpu"></i> Préparation facturation électronique</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <small class="text-muted d-block">SIREN client</small>
+                <strong><?= e($facture['client_siren'] ?: ($facture['client_siren_source'] ?? 'Non renseigné')) ?></strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Type d'opération</small>
+                <strong><?= e(getFactureOperationTypeLabel($facture['type_operation'] ?? 'services')) ?></strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Circuit</small>
+                <strong><?= e(getFactureCircuitLabel($facture['circuit_facturation'] ?? 'b2b_france')) ?></strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Format cible</small>
+                <strong><?= e(strtoupper((string) ($pdpConfig['export_format'] ?: ($facture['einvoice_format'] ?? 'UBL')))) ?></strong>
+            </div>
+            <div class="col-md-8">
+                <small class="text-muted d-block">Adresse de livraison</small>
+                <strong>
+                    <?= e(trim(implode(' ', array_filter([
+                        $facture['adresse_livraison'] ?? '',
+                        $facture['code_postal_livraison'] ?? '',
+                        $facture['ville_livraison'] ?? '',
+                        $facture['pays_livraison'] ?? '',
+                    ])))) ?: 'Identique au client / non renseignée' ?>
+                </strong>
+            </div>
+            <div class="col-md-2">
+                <small class="text-muted d-block">Plateforme</small>
+                <strong><?= e($facture['einvoice_plateforme'] ?: ($pdpConfig['provider'] ?: 'À définir')) ?></strong>
+            </div>
+            <div class="col-md-2">
+                <small class="text-muted d-block">Référence</small>
+                <strong><?= e($facture['einvoice_reference'] ?: '—') ?></strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if ($pdpConfig['enabled']): ?>
+<div class="card border-0 mt-4">
+    <div class="card-header"><i class="bi bi-hdd-network"></i> Journal PDP</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Format</th>
+                        <th>Statut</th>
+                        <th>HTTP</th>
+                        <th>Payload</th>
+                        <th>Retour</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($transmissions)): ?>
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune transmission PDP enregistrée.</td></tr>
+                    <?php endif; ?>
+                    <?php foreach ($transmissions as $tx): ?>
+                    <tr>
+                        <td><?= e(formatDate($tx['created_at'])) ?></td>
+                        <td><?= e(strtoupper($tx['format'])) ?></td>
+                        <td><span class="badge bg-<?= $tx['statut'] === 'success' ? 'success' : ($tx['statut'] === 'error' ? 'danger' : 'warning text-dark') ?>"><?= e($tx['statut']) ?></span></td>
+                        <td><?= e((string) ($tx['http_code'] ?? '—')) ?></td>
+                        <td><small class="text-muted"><?= e($tx['payload_path'] ?? '—') ?></small></td>
+                        <td><small class="text-muted"><?= e($tx['response_excerpt'] ?? '—') ?></small></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Détail facture -->
 <div class="card border-0 mt-4 document-wrapper">
@@ -575,6 +743,16 @@ $echeanceJours = (int)getParam('validite_devis', '30');
 $generatedConditions = genererConditionsDocumentVente('facture', $facture ?? [
     'date_echeance' => date('Y-m-d', strtotime("+{$echeanceJours} days")),
 ]);
+$clientsById = [];
+foreach ($clientsList as $clientItem) {
+    $clientsById[(int) $clientItem['id']] = $clientItem;
+}
+$selectedClient = $clientsById[$preselectedClient] ?? null;
+$defaultClientSiren = $facture['client_siren'] ?? ($selectedClient['siren'] ?? '');
+$defaultAdresseLivraison = $facture['adresse_livraison'] ?? ($selectedClient['adresse'] ?? '');
+$defaultCodePostalLivraison = $facture['code_postal_livraison'] ?? ($selectedClient['code_postal'] ?? '');
+$defaultVilleLivraison = $facture['ville_livraison'] ?? ($selectedClient['ville'] ?? '');
+$defaultPaysLivraison = $facture['pays_livraison'] ?? ($selectedClient['pays'] ?? 'France');
 ?>
 
 <div class="hero-banner mb-4">
@@ -603,10 +781,16 @@ $generatedConditions = genererConditionsDocumentVente('facture', $facture ?? [
             <div class="row g-3 doc-meta-grid">
                 <div class="col-md-6">
                     <label class="form-label">Client *</label>
-                    <select name="client_id" class="form-select" required>
+                    <select name="client_id" id="clientSelectFacture" class="form-select" required>
                         <option value="">— Choisir un client —</option>
                         <?php foreach ($clientsList as $c): ?>
-                            <option value="<?= $c['id'] ?>" <?= $preselectedClient === $c['id'] ? 'selected' : '' ?>><?= e(clientNomComplet($c)) ?></option>
+                            <option value="<?= $c['id'] ?>"
+                                    data-siren="<?= e($c['siren'] ?? '') ?>"
+                                    data-adresse="<?= e($c['adresse'] ?? '') ?>"
+                                    data-cp="<?= e($c['code_postal'] ?? '') ?>"
+                                    data-ville="<?= e($c['ville'] ?? '') ?>"
+                                    data-pays="<?= e($c['pays'] ?? 'France') ?>"
+                                    <?= $preselectedClient === $c['id'] ? 'selected' : '' ?>><?= e(clientNomComplet($c)) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -629,6 +813,86 @@ $generatedConditions = genererConditionsDocumentVente('facture', $facture ?? [
                 <div class="col-md-9">
                     <label class="form-label">Objet *</label>
                     <input type="text" name="objet" class="form-control" required value="<?= e($facture['objet'] ?? '') ?>" placeholder="Description de la facture">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4 doc-form-section">
+        <div class="card-header doc-form-section__header">
+            <div>
+                <i class="bi bi-cpu"></i> Préparation facturation électronique
+                <small class="doc-form-section__subtitle">Champs utiles pour la réforme e-invoicing et l'intégration future PDP</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">SIREN client</label>
+                    <input type="text" name="client_siren" id="clientSirenField" class="form-control" maxlength="20"
+                           value="<?= e($defaultClientSiren) ?>" placeholder="SIREN du client">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type d'opération</label>
+                    <select name="type_operation" class="form-select">
+                        <option value="services" <?= ($facture['type_operation'] ?? 'services') === 'services' ? 'selected' : '' ?>>Prestations de services</option>
+                        <option value="biens" <?= ($facture['type_operation'] ?? '') === 'biens' ? 'selected' : '' ?>>Livraisons de biens</option>
+                        <option value="mixte" <?= ($facture['type_operation'] ?? '') === 'mixte' ? 'selected' : '' ?>>Mixte</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Circuit</label>
+                    <select name="circuit_facturation" class="form-select">
+                        <?php foreach (['b2b_france', 'b2c', 'international', 'secteur_public'] as $circuit): ?>
+                        <option value="<?= $circuit ?>" <?= ($facture['circuit_facturation'] ?? 'b2b_france') === $circuit ? 'selected' : '' ?>><?= e(getFactureCircuitLabel($circuit)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Format cible</label>
+                    <select name="einvoice_format" class="form-select">
+                        <option value="factur-x" <?= ($facture['einvoice_format'] ?? 'factur-x') === 'factur-x' ? 'selected' : '' ?>>Factur-X</option>
+                        <option value="ubl" <?= ($facture['einvoice_format'] ?? '') === 'ubl' ? 'selected' : '' ?>>UBL</option>
+                        <option value="cii" <?= ($facture['einvoice_format'] ?? '') === 'cii' ? 'selected' : '' ?>>CII</option>
+                        <option value="pdf" <?= ($facture['einvoice_format'] ?? '') === 'pdf' ? 'selected' : '' ?>>PDF simple</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Statut e-facture</label>
+                    <select name="einvoice_statut" class="form-select">
+                        <?php foreach (['non_preparee', 'prete', 'a_transmettre', 'transmise', 'rejetee'] as $estatus): $elabel = getEInvoiceStatusLabel($estatus); ?>
+                        <option value="<?= $estatus ?>" <?= ($facture['einvoice_statut'] ?? 'non_preparee') === $estatus ? 'selected' : '' ?>><?= e($elabel['label']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Plateforme / PDP</label>
+                    <input type="text" name="einvoice_plateforme" class="form-control" value="<?= e($facture['einvoice_plateforme'] ?? '') ?>" placeholder="Nom de la PDP ou solution cible">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Référence électronique</label>
+                    <input type="text" name="einvoice_reference" class="form-control" value="<?= e($facture['einvoice_reference'] ?? '') ?>" placeholder="Référence technique ou dépôt">
+                </div>
+                <div class="col-12"><hr class="my-1"></div>
+                <div class="col-md-6">
+                    <label class="form-label">Adresse de livraison</label>
+                    <input type="text" name="adresse_livraison" id="adresseLivraisonField" class="form-control"
+                           value="<?= e($defaultAdresseLivraison) ?>" placeholder="Adresse de livraison si différente">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Code postal</label>
+                    <input type="text" name="code_postal_livraison" id="cpLivraisonField" class="form-control"
+                           value="<?= e($defaultCodePostalLivraison) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ville</label>
+                    <input type="text" name="ville_livraison" id="villeLivraisonField" class="form-control"
+                           value="<?= e($defaultVilleLivraison) ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Pays</label>
+                    <input type="text" name="pays_livraison" id="paysLivraisonField" class="form-control"
+                           value="<?= e($defaultPaysLivraison) ?>">
                 </div>
             </div>
         </div>
@@ -781,6 +1045,29 @@ function calcTotal() {
 }
 
 document.addEventListener('DOMContentLoaded', calcTotal);
+
+document.addEventListener('DOMContentLoaded', function() {
+    const clientSelect = document.getElementById('clientSelectFacture');
+    const sirenField = document.getElementById('clientSirenField');
+    const adresseField = document.getElementById('adresseLivraisonField');
+    const cpField = document.getElementById('cpLivraisonField');
+    const villeField = document.getElementById('villeLivraisonField');
+    const paysField = document.getElementById('paysLivraisonField');
+
+    function hydrateClientFields() {
+        const option = clientSelect?.selectedOptions?.[0];
+        if (!option) return;
+
+        if (sirenField && !sirenField.value) sirenField.value = option.dataset.siren || '';
+        if (adresseField && !adresseField.value) adresseField.value = option.dataset.adresse || '';
+        if (cpField && !cpField.value) cpField.value = option.dataset.cp || '';
+        if (villeField && !villeField.value) villeField.value = option.dataset.ville || '';
+        if (paysField && !paysField.value) paysField.value = option.dataset.pays || 'France';
+    }
+
+    clientSelect?.addEventListener('change', hydrateClientFields);
+    hydrateClientFields();
+});
 </script>
 
 <?php endif; ?>

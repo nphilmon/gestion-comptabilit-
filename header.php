@@ -4,6 +4,8 @@
  */
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/functions_commercial.php';
+require_once __DIR__ . '/functions_cp.php';
+require_once __DIR__ . '/functions_paie.php';
 
 sendSecurityHeaders();
 requireLogin();
@@ -178,6 +180,22 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
                         </a>
                     </li>
 
+                    <?php if (isCpModuleEnabled()): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $page_courante === 'conges' ? 'active' : '' ?>" href="<?= BASE_URL ?>conges.php">
+                            <i class="bi bi-calendar2-check"></i> Congés payés
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
+                    <?php if (isPaieModuleEnabled()): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $page_courante === 'paie' ? 'active' : '' ?>" href="<?= BASE_URL ?>paie.php">
+                            <i class="bi bi-cash-coin"></i> Paie
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <!-- PARAMÈTRES -->
                     <li class="nav-item">
                         <a class="nav-link <?= $page_courante === 'parametres' ? 'active' : '' ?>" href="<?= BASE_URL ?>parametres.php">
@@ -199,6 +217,12 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= BASE_URL ?>clients.php?action=ajouter"><i class="bi bi-person-plus"></i> Nouveau client</a></li>
                                 <li><a class="dropdown-item" href="<?= BASE_URL ?>transactions.php?action=ajouter"><i class="bi bi-plus-lg"></i> Nouvelle transaction</a></li>
+                                <?php if (isCpModuleEnabled()): ?>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>conges.php?action=demande"><i class="bi bi-calendar2-plus"></i> Demande de CP</a></li>
+                                <?php endif; ?>
+                                <?php if (isPaieModuleEnabled()): ?>
+                                <li><a class="dropdown-item" href="<?= BASE_URL ?>paie.php"><i class="bi bi-cash-stack"></i> Nouveau bulletin de paie</a></li>
+                                <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= BASE_URL ?>caisse.php?action=liste"><i class="bi bi-cart3 text-warning"></i> Ouvrir la caisse</a></li>
                             </ul>
@@ -270,6 +294,8 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
             'inventaire' => ['label' => 'Inventaires', 'icon' => 'clipboard-check', 'parent' => 'caisse_parent'],
             'cloture_caisse' => ['label' => 'Clôture caisse', 'icon' => 'lock', 'parent' => 'caisse_parent'],
             'rapports' => ['label' => 'Rapports', 'icon' => 'bar-chart-line'],
+            'conges' => ['label' => 'Congés payés', 'icon' => 'calendar2-check'],
+            'paie' => ['label' => 'Bulletins de paye', 'icon' => 'cash-coin'],
             'parametres' => ['label' => 'Paramètres', 'icon' => 'gear'],
             'utilisateurs' => ['label' => 'Utilisateurs', 'icon' => 'people'],
             'profil' => ['label' => 'Mon profil', 'icon' => 'person-gear'],

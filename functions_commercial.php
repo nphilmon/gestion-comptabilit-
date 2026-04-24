@@ -6,6 +6,10 @@
 
 require_once __DIR__ . '/config.php';
 
+function safeXmlValue(?string $value): string {
+    return trim((string) $value);
+}
+
 // =============================================================
 // CLIENTS
 // =============================================================
@@ -300,7 +304,7 @@ function getFacturesList(array $filtres = []): array {
         $params = array_merge($params, [$like, $like, $like, $like]);
     }
 
-    $sql = "SELECT f.*, c.nom AS client_nom, c.prenom AS client_prenom, c.entreprise AS client_entreprise
+    $sql = "SELECT f.*, c.nom AS client_nom, c.prenom AS client_prenom, c.entreprise AS client_entreprise, c.siren AS client_siren_source
             FROM factures f
             JOIN clients c ON f.client_id = c.id
             WHERE " . implode(' AND ', $where) . "
@@ -314,12 +318,455 @@ function getFacture(int $id): ?array {
     $db = getDB();
     $stmt = $db->prepare('SELECT f.*, c.nom AS client_nom, c.prenom AS client_prenom, c.entreprise AS client_entreprise,
         c.adresse AS client_adresse, c.code_postal AS client_cp, c.ville AS client_ville,
-        c.email AS client_email, c.telephone AS client_telephone, c.siret AS client_siret, c.numero_tva AS client_tva,
+        c.email AS client_email, c.telephone AS client_telephone, c.siret AS client_siret, c.siren AS client_siren_source, c.numero_tva AS client_tva,
         c.type AS client_type
         FROM factures f JOIN clients c ON f.client_id = c.id WHERE f.id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
     return $row ?: null;
+}
+
+function getFactureOperationTypeLabel(string $type): string {
+    return match ($type) {
+        'biens' => 'Livraison de biens',
+        'mixte' => 'Biens et services',
+        default => 'Prestation de services',
+    };
+}
+
+function getFactureCircuitLabel(string $circuit): string {
+    return match ($circuit) {
+        'b2c' => 'B2C',
+        'international' => 'International',
+        'secteur_public' => 'Secteur public',
+        default => 'B2B France',
+    };
+}
+
+function getEInvoiceStatusLabel(string $status): array {
+    return match ($status) {
+        'prete' => ['label' => 'Prête', 'class' => 'info'],
+        'a_transmettre' => ['label' => 'À transmettre', 'class' => 'warning text-dark'],
+        'transmise' => ['label' => 'Transmise', 'class' => 'success'],
+        'rejetee' => ['label' => 'Rejetée', 'class' => 'danger'],
+        default => ['label' => 'Non préparée', 'class' => 'secondary'],
+    };
+}
+
+function getFactureEInvoiceMissingFields(array $facture): array {
+    $missing = [];
+
+    if (empty($facture['numero'])) {
+        $missing[] = 'numero';
+    }
+    if (empty($facture['date_facture'])) {
+        $missing[] = 'date_facture';
+    }
+    if (empty($facture['date_echeance'])) {
+        $missing[] = 'date_echeance';
+    }
+    if (empty($facture['objet'])) {
+        $missing[] = 'objet';
+    }
+    if ((float) ($facture['montant_ttc'] ?? 0) <= 0) {
+        $missing[] = 'montant_ttc';
+    }
+    if (empty($facture['client_id'])) {
+        $missing[] = 'client';
+    }
+
+    $circuit = $facture['circuit_facturation'] ?? 'b2b_france';
+    if ($circuit === 'b2b_france' && trim((string) ($facture['client_siren'] ?? $facture['client_siren_source'] ?? '')) === '') {
+        $missing[] = 'client_siren';
+    }
+
+    if (trim((string) ($facture['type_operation'] ?? '')) === '') {
+        $missing[] = 'type_operation';
+    }
+
+    if (trim((string) ($facture['einvoice_format'] ?? '')) === '') {
+        $missing[] = 'einvoice_format';
+    }
+
+    return $missing;
+}
+
+function isFactureReadyForEInvoice(array $facture): bool {
+    return getFactureEInvoiceMissingFields($facture) === [];
+}
+
+function setFactureEInvoiceStatus(int $factureId, string $status): void {
+    $allowed = ['non_preparee', 'prete', 'a_transmettre', 'transmise', 'rejetee'];
+    if (!in_array($status, $allowed, true)) {
+        throw new InvalidArgumentException('Statut e-facture invalide.');
+    }
+
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        throw new RuntimeException('Facture introuvable.');
+    }
+
+    if (in_array($status, ['prete', 'a_transmettre', 'transmise'], true) && !isFactureReadyForEInvoice($facture)) {
+        throw new RuntimeException('La facture n\'est pas prête pour la facturation électronique.');
+    }
+
+    $db = getDB();
+    $db->prepare('UPDATE factures SET einvoice_statut = ? WHERE id = ?')->execute([$status, $factureId]);
+}
+
+function buildFactureEInvoiceXml(int $factureId): string {
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        throw new RuntimeException('Facture introuvable.');
+    }
+
+    $lignes = getLignesFacture($factureId);
+    $missing = getFactureEInvoiceMissingFields($facture);
+
+    $xml = new DOMDocument('1.0', 'UTF-8');
+    $xml->formatOutput = true;
+
+    $root = $xml->createElement('gestionComptaEInvoice');
+    $root->setAttribute('version', '1.0');
+    $root->setAttribute('profile', 'preparation');
+    $xml->appendChild($root);
+
+    $meta = $xml->createElement('metadata');
+    $meta->appendChild($xml->createElement('generatedAt', date('c')));
+    $meta->appendChild($xml->createElement('targetFormat', (string) ($facture['einvoice_format'] ?? 'factur-x')));
+    $meta->appendChild($xml->createElement('status', (string) ($facture['einvoice_statut'] ?? 'non_preparee')));
+    $meta->appendChild($xml->createElement('circuit', (string) ($facture['circuit_facturation'] ?? 'b2b_france')));
+    $root->appendChild($meta);
+
+    $seller = $xml->createElement('seller');
+    $seller->appendChild($xml->createElement('name', getParam('nom_entreprise', 'Mon Activité')));
+    $seller->appendChild($xml->createElement('siret', getParam('siret', '')));
+    $seller->appendChild($xml->createElement('address', getParam('adresse_entreprise', '')));
+    $root->appendChild($seller);
+
+    $customer = $xml->createElement('customer');
+    $customer->appendChild($xml->createElement('name', (string) ($facture['client_entreprise'] ?: trim(($facture['client_prenom'] ?? '') . ' ' . ($facture['client_nom'] ?? '')))));
+    $customer->appendChild($xml->createElement('siren', (string) ($facture['client_siren'] ?: ($facture['client_siren_source'] ?? ''))));
+    $customer->appendChild($xml->createElement('siret', (string) ($facture['client_siret'] ?? '')));
+    $customer->appendChild($xml->createElement('vatNumber', (string) ($facture['client_tva'] ?? '')));
+    $customer->appendChild($xml->createElement('billingAddress', trim((string) (($facture['client_adresse'] ?? '') . ' ' . ($facture['client_cp'] ?? '') . ' ' . ($facture['client_ville'] ?? '')))));
+    $root->appendChild($customer);
+
+    $delivery = $xml->createElement('delivery');
+    $delivery->appendChild($xml->createElement('address', (string) ($facture['adresse_livraison'] ?? '')));
+    $delivery->appendChild($xml->createElement('postalCode', (string) ($facture['code_postal_livraison'] ?? '')));
+    $delivery->appendChild($xml->createElement('city', (string) ($facture['ville_livraison'] ?? '')));
+    $delivery->appendChild($xml->createElement('country', (string) ($facture['pays_livraison'] ?? '')));
+    $root->appendChild($delivery);
+
+    $invoice = $xml->createElement('invoice');
+    $invoice->appendChild($xml->createElement('number', (string) $facture['numero']));
+    $invoice->appendChild($xml->createElement('issueDate', (string) $facture['date_facture']));
+    $invoice->appendChild($xml->createElement('dueDate', (string) $facture['date_echeance']));
+    $invoice->appendChild($xml->createElement('businessStatus', (string) $facture['statut']));
+    $invoice->appendChild($xml->createElement('operationType', (string) ($facture['type_operation'] ?? 'services')));
+    $invoice->appendChild($xml->createElement('subject', (string) ($facture['objet'] ?? '')));
+    $invoice->appendChild($xml->createElement('notes', (string) ($facture['notes'] ?? '')));
+    $invoice->appendChild($xml->createElement('platform', (string) ($facture['einvoice_plateforme'] ?? '')));
+    $invoice->appendChild($xml->createElement('platformReference', (string) ($facture['einvoice_reference'] ?? '')));
+    $root->appendChild($invoice);
+
+    $totals = $xml->createElement('totals');
+    $totals->appendChild($xml->createElement('amountHT', number_format((float) ($facture['montant_ht'] ?? 0), 2, '.', '')));
+    $totals->appendChild($xml->createElement('amountTVA', number_format((float) ($facture['montant_tva'] ?? 0), 2, '.', '')));
+    $totals->appendChild($xml->createElement('amountTTC', number_format((float) ($facture['montant_ttc'] ?? 0), 2, '.', '')));
+    $totals->appendChild($xml->createElement('amountPaid', number_format((float) ($facture['montant_paye'] ?? 0), 2, '.', '')));
+    $root->appendChild($totals);
+
+    $linesNode = $xml->createElement('lines');
+    foreach ($lignes as $index => $ligne) {
+        $lineNode = $xml->createElement('line');
+        $lineNode->appendChild($xml->createElement('position', (string) ($index + 1)));
+        $lineNode->appendChild($xml->createElement('description', (string) ($ligne['description'] ?? '')));
+        $lineNode->appendChild($xml->createElement('quantity', number_format((float) ($ligne['quantite'] ?? 0), 3, '.', '')));
+        $lineNode->appendChild($xml->createElement('unit', (string) ($ligne['unite'] ?? 'unité')));
+        $lineNode->appendChild($xml->createElement('unitPriceHT', number_format((float) ($ligne['prix_unitaire_ht'] ?? 0), 2, '.', '')));
+        $lineNode->appendChild($xml->createElement('taxRate', number_format((float) ($ligne['taux_tva'] ?? 0), 2, '.', '')));
+        $lineNode->appendChild($xml->createElement('lineAmountHT', number_format((float) ($ligne['montant_ht'] ?? 0), 2, '.', '')));
+        $lineNode->appendChild($xml->createElement('lineAmountTTC', number_format((float) ($ligne['montant_ttc'] ?? 0), 2, '.', '')));
+        $linesNode->appendChild($lineNode);
+    }
+    $root->appendChild($linesNode);
+
+    if (!empty($missing)) {
+        $issues = $xml->createElement('issues');
+        foreach ($missing as $field) {
+            $issues->appendChild($xml->createElement('missingField', $field));
+        }
+        $root->appendChild($issues);
+    }
+
+    return $xml->saveXML();
+}
+
+function getPdpConfig(): array {
+    return [
+        'enabled' => getParam('pdp_enabled', '0') === '1',
+        'provider' => getParam('pdp_provider', 'generic_api'),
+        'auto_send' => getParam('pdp_auto_send', '0') === '1',
+        'endpoint_url' => trim(getParam('pdp_endpoint_url', '')),
+        'auth_type' => getParam('pdp_auth_type', 'bearer_env'),
+        'api_key_env' => trim(getParam('pdp_api_key_env', 'GESTION_COMPTA_PDP_API_KEY')),
+        'custom_header_name' => trim(getParam('pdp_custom_header_name', 'X-API-Key')),
+        'export_format' => getParam('pdp_export_format', 'ubl'),
+    ];
+}
+
+function einvoiceStorageBasePath(): string {
+    return __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'einvoices';
+}
+
+function ensureEinvoiceStorageBase(): void {
+    $base = einvoiceStorageBasePath();
+    if (!is_dir($base)) {
+        mkdir($base, 0775, true);
+    }
+}
+
+function getTransmissionHistory(int $factureId): array {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT * FROM einvoice_transmissions WHERE facture_id = ? ORDER BY created_at DESC, id DESC');
+    $stmt->execute([$factureId]);
+    return $stmt->fetchAll();
+}
+
+function writeEinvoicePayloadToDisk(string $filename, string $content): string {
+    ensureEinvoiceStorageBase();
+    $path = einvoiceStorageBasePath() . DIRECTORY_SEPARATOR . $filename;
+    file_put_contents($path, $content);
+    return $path;
+}
+
+function buildFactureUblXml(int $factureId): string {
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        throw new RuntimeException('Facture introuvable.');
+    }
+
+    $lignes = getLignesFacture($factureId);
+    $entreprise = [
+        'nom' => getParam('nom_entreprise', 'Mon Activité'),
+        'siret' => getParam('siret', ''),
+        'adresse' => getParam('adresse_entreprise', ''),
+        'pays' => 'FR',
+    ];
+
+    $doc = new DOMDocument('1.0', 'UTF-8');
+    $doc->formatOutput = true;
+
+    $invoice = $doc->createElementNS('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', 'Invoice');
+    $invoice->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
+    $invoice->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
+    $doc->appendChild($invoice);
+
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:CustomizationID', 'urn:cen.eu:en16931:2017'));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:ProfileID', 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0'));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:ID', safeXmlValue($facture['numero'] ?? '')));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:IssueDate', safeXmlValue($facture['date_facture'] ?? '')));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:DueDate', safeXmlValue($facture['date_echeance'] ?? '')));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:InvoiceTypeCode', '380'));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:DocumentCurrencyCode', 'EUR'));
+    $invoice->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:BuyerReference', safeXmlValue($facture['client_siren'] ?: ($facture['client_siren_source'] ?? 'CLIENT'))));
+
+    $supplierParty = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:AccountingSupplierParty');
+    $supplierPartyParty = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:Party');
+    $supplierName = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:PartyName');
+    $supplierName->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:Name', safeXmlValue($entreprise['nom'])));
+    $supplierPartyParty->appendChild($supplierName);
+    $supplierLegal = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:PartyLegalEntity');
+    $supplierLegal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:RegistrationName', safeXmlValue($entreprise['nom'])));
+    $supplierLegal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:CompanyID', safeXmlValue($entreprise['siret'])));
+    $supplierPartyParty->appendChild($supplierLegal);
+    $supplierParty->appendChild($supplierPartyParty);
+    $invoice->appendChild($supplierParty);
+
+    $customerParty = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:AccountingCustomerParty');
+    $customerPartyParty = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:Party');
+    $customerName = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:PartyName');
+    $customerName->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:Name', safeXmlValue($facture['client_entreprise'] ?: trim(($facture['client_prenom'] ?? '') . ' ' . ($facture['client_nom'] ?? '')))));
+    $customerPartyParty->appendChild($customerName);
+    $customerLegal = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:PartyLegalEntity');
+    $customerLegal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:RegistrationName', safeXmlValue($facture['client_entreprise'] ?: trim(($facture['client_prenom'] ?? '') . ' ' . ($facture['client_nom'] ?? '')))));
+    $customerLegal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:CompanyID', safeXmlValue($facture['client_siren'] ?: ($facture['client_siren_source'] ?? ''))));
+    $customerPartyParty->appendChild($customerLegal);
+    $customerParty->appendChild($customerPartyParty);
+    $invoice->appendChild($customerParty);
+
+    foreach ($lignes as $index => $ligne) {
+        $invoiceLine = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:InvoiceLine');
+        $invoiceLine->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:ID', (string) ($index + 1)));
+        $invoiceLine->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:InvoicedQuantity', number_format((float) ($ligne['quantite'] ?? 0), 3, '.', '')));
+        $invoiceLine->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:LineExtensionAmount', number_format((float) ($ligne['montant_ht'] ?? 0), 2, '.', '')));
+
+        $item = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:Item');
+        $item->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:Description', safeXmlValue($ligne['description'] ?? '')));
+        $invoiceLine->appendChild($item);
+
+        $price = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:Price');
+        $price->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:PriceAmount', number_format((float) ($ligne['prix_unitaire_ht'] ?? 0), 2, '.', '')));
+        $invoiceLine->appendChild($price);
+
+        $invoice->appendChild($invoiceLine);
+    }
+
+    $taxTotal = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:TaxTotal');
+    $taxTotal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:TaxAmount', number_format((float) ($facture['montant_tva'] ?? 0), 2, '.', '')));
+    $invoice->appendChild($taxTotal);
+
+    $monetaryTotal = $doc->createElementNS($invoice->lookupNamespaceURI('cac'), 'cac:LegalMonetaryTotal');
+    $monetaryTotal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:LineExtensionAmount', number_format((float) ($facture['montant_ht'] ?? 0), 2, '.', '')));
+    $monetaryTotal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:TaxExclusiveAmount', number_format((float) ($facture['montant_ht'] ?? 0), 2, '.', '')));
+    $monetaryTotal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:TaxInclusiveAmount', number_format((float) ($facture['montant_ttc'] ?? 0), 2, '.', '')));
+    $monetaryTotal->appendChild($doc->createElementNS($invoice->lookupNamespaceURI('cbc'), 'cbc:PayableAmount', number_format((float) ($facture['montant_ttc'] ?? 0), 2, '.', '')));
+    $invoice->appendChild($monetaryTotal);
+
+    return $doc->saveXML();
+}
+
+function getEinvoiceExportContent(int $factureId, ?string $format = null): array {
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        throw new RuntimeException('Facture introuvable.');
+    }
+
+    $format = $format ?: ($facture['einvoice_format'] ?? getPdpConfig()['export_format']);
+    if ($format === 'factur-x') {
+        return [
+            'format' => 'ubl',
+            'content' => buildFactureUblXml($factureId),
+            'extension' => 'xml',
+            'actual_format' => 'ubl',
+            'note' => 'Factur-X non encore supporté en sortie native ; export UBL généré à la place.',
+        ];
+    }
+
+    if ($format === 'ubl') {
+        return [
+            'format' => 'ubl',
+            'content' => buildFactureUblXml($factureId),
+            'extension' => 'xml',
+            'actual_format' => 'ubl',
+            'note' => null,
+        ];
+    }
+
+    return [
+        'format' => 'xml',
+        'content' => buildFactureEInvoiceXml($factureId),
+        'extension' => 'xml',
+        'actual_format' => 'xml',
+        'note' => null,
+    ];
+}
+
+function transmitFactureToPdp(int $factureId, bool $automatic = false): array {
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        throw new RuntimeException('Facture introuvable.');
+    }
+
+    if (!isFactureReadyForEInvoice($facture)) {
+        throw new RuntimeException('La facture n\'est pas prête pour une transmission PDP.');
+    }
+
+    $pdp = getPdpConfig();
+    if (!$pdp['enabled']) {
+        throw new RuntimeException('Le module PDP n\'est pas activé dans les paramètres.');
+    }
+    if ($pdp['endpoint_url'] === '') {
+        throw new RuntimeException('Aucune URL PDP configurée.');
+    }
+
+    $export = getEinvoiceExportContent($factureId, $pdp['export_format']);
+    $payloadName = 'einvoice-' . preg_replace('/[^A-Za-z0-9_.-]/', '_', $facture['numero'] ?? ('facture-' . $factureId)) . '.' . $export['extension'];
+    $payloadPath = writeEinvoicePayloadToDisk($payloadName, $export['content']);
+
+    $db = getDB();
+    $stmt = $db->prepare('INSERT INTO einvoice_transmissions (facture_id, format, endpoint, payload_path, statut) VALUES (?, ?, ?, ?, ?)');
+    $stmt->execute([$factureId, $export['actual_format'], $pdp['endpoint_url'], $payloadPath, 'pending']);
+    $transmissionId = (int) $db->lastInsertId();
+
+    $headers = ['Content-Type: application/xml; charset=utf-8'];
+    $apiKey = $pdp['api_key_env'] !== '' ? envValue($pdp['api_key_env'], '') : '';
+    if ($pdp['auth_type'] === 'bearer_env' && $apiKey !== '') {
+        $headers[] = 'Authorization: Bearer ' . $apiKey;
+    } elseif ($pdp['auth_type'] === 'header_env' && $apiKey !== '') {
+        $headers[] = ($pdp['custom_header_name'] ?: 'X-API-Key') . ': ' . $apiKey;
+    }
+
+    if (!function_exists('curl_init')) {
+        $db->prepare('UPDATE einvoice_transmissions SET statut = ?, response_excerpt = ? WHERE id = ?')
+            ->execute(['error', 'cURL indisponible sur le serveur.', $transmissionId]);
+        throw new RuntimeException('cURL est indisponible sur le serveur PHP.');
+    }
+
+    $ch = curl_init($pdp['endpoint_url']);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_POSTFIELDS => $export['content'],
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    $isSuccess = $curlError === '' && $httpCode >= 200 && $httpCode < 300;
+    $excerpt = mb_substr($curlError !== '' ? $curlError : (string) $response, 0, 400);
+
+    $db->prepare('UPDATE einvoice_transmissions SET statut = ?, http_code = ?, response_excerpt = ? WHERE id = ?')
+        ->execute([$isSuccess ? 'success' : 'error', $httpCode ?: null, $excerpt !== '' ? $excerpt : null, $transmissionId]);
+
+    if ($isSuccess) {
+        $db->prepare('UPDATE factures SET einvoice_statut = ?, einvoice_reference = COALESCE(NULLIF(einvoice_reference, \'\'), ?) WHERE id = ?')
+            ->execute(['transmise', 'TX-' . $transmissionId, $factureId]);
+    } elseif (!$automatic) {
+        throw new RuntimeException('Transmission PDP échouée' . ($excerpt !== '' ? ' : ' . $excerpt : '.'));
+    }
+
+    return [
+        'success' => $isSuccess,
+        'http_code' => $httpCode,
+        'response_excerpt' => $excerpt,
+        'transmission_id' => $transmissionId,
+        'payload_path' => $payloadPath,
+        'note' => $export['note'],
+    ];
+}
+
+function maybeAutoSendFactureToPdp(int $factureId): void {
+    $pdp = getPdpConfig();
+    if (!$pdp['enabled'] || !$pdp['auto_send']) {
+        return;
+    }
+
+    $facture = getFacture($factureId);
+    if (!$facture) {
+        return;
+    }
+
+    if (($facture['statut'] ?? '') !== 'envoyee') {
+        return;
+    }
+
+    $currentStatus = $facture['einvoice_statut'] ?? 'non_preparee';
+    if (!in_array($currentStatus, ['prete', 'a_transmettre'], true)) {
+        return;
+    }
+
+    try {
+        transmitFactureToPdp($factureId, true);
+    } catch (Throwable $e) {
+        // Ne jamais bloquer le parcours métier.
+    }
 }
 
 function getLignesFacture(int $factureId): array {
@@ -334,6 +781,24 @@ function sauvegarderFacture(array $data, array $lignes, ?int $id = null): int {
     $db->beginTransaction();
 
     try {
+        $client = getClient((int) $data['client_id']);
+        $clientSiren = trim((string) ($data['client_siren'] ?? ''));
+        if ($clientSiren === '' && $client) {
+            $clientSiren = trim((string) ($client['siren'] ?? ''));
+        }
+
+        $adresseLivraison = trim((string) ($data['adresse_livraison'] ?? ''));
+        $codePostalLivraison = trim((string) ($data['code_postal_livraison'] ?? ''));
+        $villeLivraison = trim((string) ($data['ville_livraison'] ?? ''));
+        $paysLivraison = trim((string) ($data['pays_livraison'] ?? ''));
+
+        if ($client && $adresseLivraison === '') {
+            $adresseLivraison = trim((string) ($client['adresse'] ?? ''));
+            $codePostalLivraison = trim((string) ($client['code_postal'] ?? ''));
+            $villeLivraison = trim((string) ($client['ville'] ?? ''));
+            $paysLivraison = trim((string) ($client['pays'] ?? 'France'));
+        }
+
         $totalHT = 0;
         $totalTVA = 0;
         foreach ($lignes as &$l) {
@@ -347,18 +812,40 @@ function sauvegarderFacture(array $data, array $lignes, ?int $id = null): int {
         $totalTTC = $totalHT + $totalTVA;
 
         if ($id) {
-            $stmt = $db->prepare('UPDATE factures SET client_id=?, devis_id=?, commande_id=?, date_facture=?, date_echeance=?, statut=?, objet=?, notes=?, conditions=?, montant_ht=?, montant_tva=?, montant_ttc=? WHERE id=?');
+            $stmt = $db->prepare('UPDATE factures SET client_id=?, devis_id=?, commande_id=?, client_siren=?, adresse_livraison=?, code_postal_livraison=?, ville_livraison=?, pays_livraison=?, type_operation=?, circuit_facturation=?, einvoice_format=?, einvoice_statut=?, einvoice_plateforme=?, einvoice_reference=?, date_facture=?, date_echeance=?, statut=?, objet=?, notes=?, conditions=?, montant_ht=?, montant_tva=?, montant_ttc=? WHERE id=?');
             $stmt->execute([
                 $data['client_id'], $data['devis_id'] ?: null, $data['commande_id'] ?: null,
+                $clientSiren !== '' ? $clientSiren : null,
+                $adresseLivraison !== '' ? $adresseLivraison : null,
+                $codePostalLivraison !== '' ? $codePostalLivraison : null,
+                $villeLivraison !== '' ? $villeLivraison : null,
+                $paysLivraison !== '' ? $paysLivraison : null,
+                $data['type_operation'] ?? 'services',
+                $data['circuit_facturation'] ?? 'b2b_france',
+                $data['einvoice_format'] ?? 'factur-x',
+                $data['einvoice_statut'] ?? 'non_preparee',
+                $data['einvoice_plateforme'] ?: null,
+                $data['einvoice_reference'] ?: null,
                 $data['date_facture'], $data['date_echeance'], $data['statut'],
                 $data['objet'], $data['notes'] ?: null, $data['conditions'] ?: null,
                 $totalHT, $totalTVA, $totalTTC, $id
             ]);
         } else {
-            $stmt = $db->prepare('INSERT INTO factures (numero, client_id, devis_id, commande_id, date_facture, date_echeance, statut, objet, notes, conditions, montant_ht, montant_tva, montant_ttc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt = $db->prepare('INSERT INTO factures (numero, client_id, devis_id, commande_id, client_siren, adresse_livraison, code_postal_livraison, ville_livraison, pays_livraison, type_operation, circuit_facturation, einvoice_format, einvoice_statut, einvoice_plateforme, einvoice_reference, date_facture, date_echeance, statut, objet, notes, conditions, montant_ht, montant_tva, montant_ttc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([
                 $data['numero'] ?? genererNumero('facture'),
                 $data['client_id'], $data['devis_id'] ?: null, $data['commande_id'] ?: null,
+                $clientSiren !== '' ? $clientSiren : null,
+                $adresseLivraison !== '' ? $adresseLivraison : null,
+                $codePostalLivraison !== '' ? $codePostalLivraison : null,
+                $villeLivraison !== '' ? $villeLivraison : null,
+                $paysLivraison !== '' ? $paysLivraison : null,
+                $data['type_operation'] ?? 'services',
+                $data['circuit_facturation'] ?? 'b2b_france',
+                $data['einvoice_format'] ?? 'factur-x',
+                $data['einvoice_statut'] ?? 'non_preparee',
+                $data['einvoice_plateforme'] ?: null,
+                $data['einvoice_reference'] ?: null,
                 $data['date_facture'], $data['date_echeance'],
                 $data['statut'] ?? 'brouillon', $data['objet'], $data['notes'] ?: null,
                 $data['conditions'] ?: null, $totalHT, $totalTVA, $totalTTC
