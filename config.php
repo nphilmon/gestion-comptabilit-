@@ -19,7 +19,7 @@ define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
 define('APP_NAME', 'Gestion Comptabilité');
 define('APP_VERSION', '2.1.0');
 
-$baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
+$baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/'));
 if ($baseUrl === '') {
     $baseUrl = '/';
 } elseif ($baseUrl[0] !== '/') {

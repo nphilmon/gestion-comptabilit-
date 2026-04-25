@@ -21,9 +21,9 @@ DirectoryIndex index.php
     Header always unset X-Powered-By
 </IfModule>
 
-# Exemple de configuration cPanel (à adapter si votre hébergement autorise SetEnv)
+# Configuration cPanel / Apache (décommenter et adapter selon votre hébergement)
 # SetEnv GESTION_COMPTA_DB_HOST localhost
 # SetEnv GESTION_COMPTA_DB_NAME votre_base
 # SetEnv GESTION_COMPTA_DB_USER votre_user
 # SetEnv GESTION_COMPTA_DB_PASS votre_mot_de_passe
-# SetEnv GESTION_COMPTA_BASE_URL /
+SetEnv GESTION_COMPTA_BASE_URL /

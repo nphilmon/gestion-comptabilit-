@@ -41,7 +41,7 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
 1. **Cloner le projet** dans le dossier web de votre serveur :
    ```
    cd C:\wamp64\www
-   git clone <url> "gestion comptabilité"
+   git clone <url> gestion-comptabilit-
    ```
 
 2. **Créer la base de données** MySQL :
@@ -63,12 +63,12 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
    $env:GESTION_COMPTA_DB_NAME='gestion_compta'
    $env:GESTION_COMPTA_DB_USER='root'
    $env:GESTION_COMPTA_DB_PASS=''
-   $env:GESTION_COMPTA_BASE_URL='/gestion%20comptabilit%C3%A9/'
+   $env:GESTION_COMPTA_BASE_URL='/'
    ```
 
 5. **Accéder à l'application** :
    ```
-   http://localhost/gestion%20comptabilit%C3%A9/
+   http://localhost/gestion-comptabilit-/
    ```
 
 6. **Premier lancement** — L'assistant de configuration (`setup.php`) vous guidera pour créer le compte administrateur, renseigner les informations de l'entreprise et choisir le régime fiscal.
