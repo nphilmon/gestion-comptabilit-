@@ -6,6 +6,7 @@ require_once __DIR__ . '/functions.php';
 
 sendSecurityHeaders();
 header('Content-Type: application/json; charset=utf-8');
+ignore_user_abort(false);
 
 const API_ENTREPRISE_MAX_RESULTS = 8;
 const API_ENTREPRISE_TIMEOUT = 8;
@@ -44,6 +45,13 @@ function fetchEntrepriseJson(string $url, bool $allowInsecureLocalFallback): str
                 CURLOPT_SSL_VERIFYPEER => $verifySsl,
                 CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
             ]);
+
+            if (defined('CURLOPT_NOPROGRESS') && defined('CURLOPT_XFERINFOFUNCTION')) {
+                curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+                curl_setopt($ch, CURLOPT_XFERINFOFUNCTION, static function () {
+                    return connection_aborted() ? 1 : 0;
+                });
+            }
 
             $json = curl_exec($ch);
             $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

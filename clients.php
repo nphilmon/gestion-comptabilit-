@@ -564,6 +564,9 @@ if ($action === 'modifier') {
                         <button type="button" class="btn btn-outline-primary" id="btnRechercheSiret" title="Rechercher">
                             <i class="bi bi-building"></i> Rechercher
                         </button>
+                        <button type="button" class="btn btn-outline-secondary d-none" id="btnAnnulerRechercheSiret" title="Annuler la recherche">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
                     <div id="resultsSiret" class="list-group position-absolute shadow-lg w-100" style="z-index:1050; display:none; max-height:300px; overflow-y:auto; left:0; right:0; top:100%; margin-top:4px;"></div>
                     <div class="form-text"><i class="bi bi-info-circle"></i> Recherche sécurisée via le serveur local et les données publiques de l'État.</div>
@@ -629,6 +632,7 @@ if ($action === 'modifier') {
     const input = document.getElementById('rechercheSiret');
     const entrepriseInput = document.getElementById('entrepriseField');
     const btn = document.getElementById('btnRechercheSiret');
+    const cancelBtn = document.getElementById('btnAnnulerRechercheSiret');
     const resultsDiv = document.getElementById('resultsSiret');
     if (!input || !resultsDiv) return;
 
@@ -654,14 +658,34 @@ if ($action === 'modifier') {
         return s.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
     }
 
-    async function searchEntreprise(query) {
+    function setSearching(isSearching) {
+        if (btn) btn.disabled = isSearching;
+        if (cancelBtn) cancelBtn.classList.toggle('d-none', !isSearching);
+    }
+
+    function cancelActiveSearch(clearResults = false) {
+        clearTimeout(debounceTimer);
         if (searchController) {
             searchController.abort();
             searchController = null;
         }
+        searchSeq++;
+        setSearching(false);
+        if (clearResults) {
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = '';
+        }
+    }
+
+    async function searchEntreprise(query) {
+        cancelActiveSearch(false);
         const seq = ++searchSeq;
-        if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
+        if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
         searchController = new AbortController();
+        setSearching(true);
 
         resultsDiv.innerHTML = '<div class="list-group-item text-muted py-2"><i class="bi bi-arrow-repeat"></i> Recherche en cours...</div>';
         resultsDiv.style.display = 'block';
@@ -713,6 +737,11 @@ if ($action === 'modifier') {
             const message = err && err.message ? err.message : 'Erreur de connexion à l\'API';
             resultsDiv.innerHTML = `<div class="list-group-item text-danger py-2"><i class="bi bi-exclamation-triangle"></i> ${escHtml(message)}</div>`;
             resultsDiv.style.display = 'block';
+        } finally {
+            if (seq === searchSeq) {
+                searchController = null;
+                setSearching(false);
+            }
         }
     }
 
@@ -724,6 +753,10 @@ if ($action === 'modifier') {
                 input.value = value;
             }
             clearTimeout(debounceTimer);
+            if (value.length < 2) {
+                cancelActiveSearch(true);
+                return;
+            }
             debounceTimer = setTimeout(() => searchEntreprise(value), 350);
         });
 
@@ -740,11 +773,16 @@ if ($action === 'modifier') {
         btn.addEventListener('click', () => searchEntreprise((input.value || (entrepriseInput ? entrepriseInput.value : '')).trim()));
     }
 
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => cancelActiveSearch(true));
+    }
+
     // Sélection d'un résultat → remplir les champs du formulaire
     resultsDiv.addEventListener('click', function(e) {
         const item = e.target.closest('.result-siret');
         if (!item) return;
         e.preventDefault();
+        cancelActiveSearch(false);
 
         const siren = item.dataset.siren || '';
         const siret = item.dataset.siret || '';
@@ -791,10 +829,12 @@ if ($action === 'modifier') {
 
     // Fermer les résultats quand on clique ailleurs
     document.addEventListener('click', function(e) {
-        if (!resultsDiv.contains(e.target) && e.target !== input && e.target !== btn) {
+        if (!resultsDiv.contains(e.target) && e.target !== input && e.target !== btn && e.target !== cancelBtn) {
             resultsDiv.style.display = 'none';
         }
     });
+
+    window.addEventListener('beforeunload', () => cancelActiveSearch(false));
 })();
 </script>
 
