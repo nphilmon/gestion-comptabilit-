@@ -95,6 +95,8 @@ function calculatePaieBulletinTotals(array $data): array {
     $prime = (float) ($data['prime'] ?? 0);
     $bonus = (float) ($data['bonus'] ?? 0);
     $indemnites = (float) ($data['indemnites'] ?? 0);
+    $indemnite_sante = (float) ($data['indemnite_sante'] ?? 0);
+    $ancv_ce = (float) ($data['ancv_ce'] ?? 0);
     $retenues = max(0.0, (float) ($data['retenues'] ?? 0));
     $cotisationsSalariales = max(0.0, (float) ($data['cotisations_salariales'] ?? 0));
     $cotisationsPatronales = max(0.0, (float) ($data['cotisations_patronales'] ?? 0));
@@ -104,7 +106,7 @@ function calculatePaieBulletinTotals(array $data): array {
         $montantHeuresSupp = $heuresSupp * $tauxHoraireMajore;
     }
 
-    $salaireBrut = $salaireBase + $montantHeuresSupp + $prime + $bonus + $indemnites;
+    $salaireBrut = $salaireBase + $montantHeuresSupp + $prime + $bonus + $indemnites + $indemnite_sante + $ancv_ce;
     $netImposable = max(0.0, $salaireBrut - $cotisationsSalariales);
     $netAPayer = max(0.0, $netImposable - $retenues);
     $coutTotal = max(0.0, $salaireBrut + $cotisationsPatronales);
@@ -134,6 +136,8 @@ function buildPaieDraftFromProfile(array $profile, string $period): array {
         'prime' => 0.0,
         'bonus' => 0.0,
         'indemnites' => 0.0,
+        'indemnite_sante' => 0.0,
+        'ancv_ce' => 0.0,
         'retenues' => 0.0,
         'cotisations_salariales' => $chargesSalariales,
         'cotisations_patronales' => $chargesPatronales,
@@ -211,7 +215,8 @@ function getPaieBulletins(array $filters = []): array {
 
 function getPaieBulletin(int $id): ?array {
     $db = getDB();
-    $stmt = $db->prepare('SELECT b.*, u.nom AS user_nom, u.email AS user_email, p.poste, p.matricule, p.iban, p.numero_securite_sociale
+    $stmt = $db->prepare('SELECT b.*, u.nom AS user_nom, u.email AS user_email,
+            p.poste, p.matricule, p.iban, p.numero_securite_sociale, p.date_entree, p.taux_horaire
         FROM bulletins_paie b
         JOIN users u ON u.id = b.user_id
         LEFT JOIN paie_profils p ON p.user_id = b.user_id

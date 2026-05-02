@@ -78,9 +78,10 @@ if ($stats['plafond_ca'] > 0 && $stats['pct_plafond'] > 80) {
 }
 
 // Produits en stock faible
+$stockFaible = 0;
 try {
     $db = getDB();
-    $stockFaible = $db->query("SELECT COUNT(*) FROM produits WHERE gestion_stock = 1 AND actif = 1 AND stock_actuel <= seuil_alerte AND seuil_alerte > 0")->fetchColumn();
+    $stockFaible = (int) $db->query("SELECT COUNT(*) FROM produits WHERE gestion_stock = 1 AND actif = 1 AND stock_actuel <= seuil_alerte AND seuil_alerte > 0")->fetchColumn();
     if ($stockFaible > 0) {
         $notifications[] = [
             'type' => 'warning',
@@ -90,6 +91,162 @@ try {
         ];
     }
 } catch (\PDOException $e) {}
+
+$actionsPrioritaires = [];
+
+if ($statsCommerciales['factures_en_retard'] > 0) {
+    $actionsPrioritaires[] = [
+        'tone' => 'danger',
+        'icon' => 'exclamation-triangle-fill',
+        'title' => 'Relancer les factures en retard',
+        'text' => $statsCommerciales['factures_en_retard'] . ' facture(s) nécessitent une relance.',
+        'button' => 'Voir les factures',
+        'link' => BASE_URL . 'factures.php',
+    ];
+}
+
+if ($statsCommerciales['en_attente_paiement'] > 0) {
+    $actionsPrioritaires[] = [
+        'tone' => 'warning',
+        'icon' => 'clock-history',
+        'title' => 'Suivre les paiements',
+        'text' => formatMontant($statsCommerciales['en_attente_paiement']) . ' restent à encaisser.',
+        'button' => 'Ouvrir les paiements',
+        'link' => BASE_URL . 'paiements.php',
+    ];
+}
+
+if ($stats['plafond_ca'] > 0 && $stats['pct_plafond'] > 80) {
+    $actionsPrioritaires[] = [
+        'tone' => $stats['pct_plafond'] > 95 ? 'danger' : 'warning',
+        'icon' => 'speedometer2',
+        'title' => 'Surveiller le plafond',
+        'text' => 'Le chiffre d\'affaires atteint ' . $stats['pct_plafond'] . '% du plafond.',
+        'button' => 'Voir le rapport',
+        'link' => BASE_URL . 'rapports.php?annee=' . $annee,
+    ];
+}
+
+if ($stockFaible > 0) {
+    $actionsPrioritaires[] = [
+        'tone' => 'warning',
+        'icon' => 'box-seam',
+        'title' => 'Réapprovisionner le stock',
+        'text' => $stockFaible . ' produit(s) sont sous le seuil d\'alerte.',
+        'button' => 'Voir les produits',
+        'link' => BASE_URL . 'produits.php',
+    ];
+}
+
+if (empty($dernieres)) {
+    $actionsPrioritaires[] = [
+        'tone' => 'success',
+        'icon' => 'plus-circle',
+        'title' => 'Ajouter la première transaction',
+        'text' => 'Commencez par enregistrer une recette ou une dépense.',
+        'button' => 'Ajouter',
+        'link' => BASE_URL . 'transactions.php?action=ajouter',
+    ];
+}
+
+if ($statsCommerciales['clients_actifs'] === 0) {
+    $actionsPrioritaires[] = [
+        'tone' => 'info',
+        'icon' => 'person-plus',
+        'title' => 'Créer un client',
+        'text' => 'Ajoutez vos contacts pour préparer devis et factures.',
+        'button' => 'Nouveau client',
+        'link' => BASE_URL . 'clients.php?action=nouveau',
+    ];
+}
+
+if (empty($derniersDevis)) {
+    $actionsPrioritaires[] = [
+        'tone' => 'primary',
+        'icon' => 'file-earmark-text',
+        'title' => 'Préparer un devis',
+        'text' => 'Créez une proposition commerciale prête à envoyer.',
+        'button' => 'Nouveau devis',
+        'link' => BASE_URL . 'devis.php?action=nouveau',
+    ];
+}
+
+if (count($actionsPrioritaires) < 3) {
+    $actionsPrioritaires[] = [
+        'tone' => 'secondary',
+        'icon' => 'gear',
+        'title' => 'Compléter les paramètres',
+        'text' => 'Vérifiez les informations de l\'entreprise et les options fiscales.',
+        'button' => 'Paramètres',
+        'link' => BASE_URL . 'parametres.php',
+    ];
+}
+
+$insights = [
+    [
+        'tone' => ($tresorerie['solde_actuel'] ?? 0) >= 0 ? 'success' : 'danger',
+        'icon' => 'wallet2',
+        'label' => 'Solde estimé',
+        'value' => formatMontant((float)($tresorerie['solde_actuel'] ?? 0)),
+    ],
+    [
+        'tone' => $statsCommerciales['en_attente_paiement'] > 0 ? 'warning' : 'success',
+        'icon' => 'receipt',
+        'label' => 'À encaisser',
+        'value' => formatMontant($statsCommerciales['en_attente_paiement']),
+    ],
+    [
+        'tone' => ($projectionCA['projection_lineaire'] ?? 0) > 0 ? 'info' : 'secondary',
+        'icon' => 'graph-up-arrow',
+        'label' => 'Projection CA',
+        'value' => formatMontant((float)($projectionCA['projection_lineaire'] ?? 0)),
+    ],
+];
+
+$assistantScore = 100;
+$assistantScore -= min(25, count($notifications) * 8);
+if ($statsCommerciales['factures_en_retard'] > 0) $assistantScore -= 20;
+if ($statsCommerciales['en_attente_paiement'] > 0) $assistantScore -= 10;
+if ($stats['plafond_ca'] > 0 && $stats['pct_plafond'] > 90) $assistantScore -= 15;
+if (($tresorerie['solde_actuel'] ?? 0) < 0) $assistantScore -= 20;
+$assistantScore = max(0, min(100, $assistantScore));
+
+$assistantTone = $assistantScore >= 75 ? 'success' : ($assistantScore >= 50 ? 'warning' : 'danger');
+$assistantHeadline = $assistantScore >= 75
+    ? 'Situation sous contrôle'
+    : ($assistantScore >= 50 ? 'Quelques points à suivre' : 'Priorités à traiter rapidement');
+$assistantSummary = empty($notifications)
+    ? 'Aucune alerte critique détectée pour le moment.'
+    : count($notifications) . ' point(s) demandent votre attention.';
+
+$assistantTrendTone = ($projectionCA['tendance'] ?? 'stable') === 'hausse'
+    ? 'success'
+    : ((($projectionCA['tendance'] ?? 'stable') === 'baisse') ? 'warning' : 'info');
+$assistantTrendLabel = 'Tendance CA';
+$assistantTrendValue = ucfirst((string)($projectionCA['tendance'] ?? 'stable'));
+
+$assistantFactors = [
+    ['tone' => 'success', 'label' => 'CA encaissé', 'value' => formatMontant($stats['total_recettes'])],
+    ['tone' => 'info', 'label' => 'CA projeté', 'value' => formatMontant((float)($projectionCA['projection_lineaire'] ?? 0))],
+    ['tone' => $statsCommerciales['en_attente_paiement'] > 0 ? 'warning' : 'success', 'label' => 'Paiements ouverts', 'value' => formatMontant($statsCommerciales['en_attente_paiement'])],
+    ['tone' => ($stats['pct_plafond'] ?? 0) > 80 ? 'warning' : 'info', 'label' => 'Plafond utilisé', 'value' => ($stats['pct_plafond'] ?? 0) . '%'],
+];
+
+$assistantRecommendations = array_map(static function (array $action): array {
+    return [
+        'text' => $action['title'],
+        'button' => $action['button'],
+        'link' => $action['link'],
+    ];
+}, array_slice($actionsPrioritaires, 0, 3));
+
+if (empty($assistantRecommendations)) {
+    $assistantRecommendations[] = [
+        'text' => 'Continuer la saisie comptable',
+        'button' => 'Ajouter',
+        'link' => BASE_URL . 'transactions.php?action=ajouter',
+    ];
+}
 
 include 'header.php';
 ?>

@@ -23,7 +23,8 @@ if ($nbUsers > 0 && isLoggedIn()) {
     }
 }
 
-$step = max(1, min(3, (int)($_GET['step'] ?? 1)));
+$requestedStep = max(1, min(3, (int)($_GET['step'] ?? 1)));
+$step = $nbUsers === 0 ? 1 : max(2, $requestedStep);
 $errors = [];
 $success = false;
 
@@ -49,6 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Erreur de sécurité.';
     } else {
         $postStep = (int) ($_POST['step'] ?? 1);
+
+        if ($postStep > 1 && $nbUsers === 0) {
+            header('Location: ' . BASE_URL . 'setup.php');
+            exit;
+        }
+
+        if ($postStep === 1 && $nbUsers > 0) {
+            header('Location: ' . BASE_URL . 'setup.php?step=2');
+            exit;
+        }
 
         // Étape 1 : Créer le compte administrateur
         if ($postStep === 1 && $nbUsers === 0) {
@@ -122,120 +133,330 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuration initiale - <?= APP_NAME ?></title>
+    <title>Configuration initiale - <?= e(APP_NAME) ?></title>
+    <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>assets/favicon.svg?v=<?= e(APP_VERSION) ?>">
+    <link rel="shortcut icon" type="image/svg+xml" href="<?= BASE_URL ?>assets/favicon.svg?v=<?= e(APP_VERSION) ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --md-primary: #1565C0;
-            --md-on-primary: #FFFFFF;
-            --md-primary-container: #D1E4FF;
-            --md-on-primary-container: #001D36;
-            --md-surface: #FAFAFA;
-            --md-on-surface: #191C20;
-            --md-on-surface-variant: #43474E;
-            --md-outline: #73777F;
-            --md-outline-variant: #C3C7CF;
-            --md-surface-container: #ECEEF0;
-            --md-surface-container-lowest: #FFFFFF;
-            --md-error-container: #FFDAD6;
-            --md-on-error-container: #410002;
-            --md-success: #1B8D40;
-            --md-elevation-2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
-            --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.3);
+            --setup-primary: #1957A6;
+            --setup-primary-dark: #123E75;
+            --setup-accent: #0F766E;
+            --setup-accent-soft: #DDF7F2;
+            --setup-surface: #F5F7FB;
+            --setup-card: #FFFFFF;
+            --setup-text: #172033;
+            --setup-muted: #667085;
+            --setup-border: #D7DDEA;
+            --setup-danger-bg: #FFE7E3;
+            --setup-danger-text: #8F1D13;
+            --setup-shadow: 0 22px 55px rgba(23,32,51,0.14);
         }
+        * { box-sizing: border-box; }
         body {
-            background: var(--md-surface);
+            background:
+                linear-gradient(180deg, #EEF5FF 0%, var(--setup-surface) 42%, #FFFFFF 100%);
             min-height: 100vh;
             font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+            color: var(--setup-text);
+            margin: 0;
         }
-        .setup-container { max-width: 680px; margin: 2rem auto; padding: 0 1rem; }
+        .setup-container {
+            max-width: 760px;
+            margin: 2.5rem auto 1.5rem;
+            padding: 0 1rem;
+        }
         .setup-header {
-            background: var(--md-primary);
-            color: var(--md-on-primary);
-            border-radius: 28px 28px 0 0;
-            padding: 2.5rem 2rem 2rem;
-            text-align: center;
+            background: linear-gradient(135deg, var(--setup-primary) 0%, var(--setup-primary-dark) 100%);
+            color: #FFFFFF;
+            border-radius: 22px 22px 0 0;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
         }
-        .setup-header .material-symbols-outlined { font-size: 48px; font-variation-settings: 'FILL' 1; }
-        .setup-header h1 { font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0 0; }
+        .setup-header::after {
+            content: '';
+            position: absolute;
+            inset: auto 0 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--setup-accent), #7DD3FC, #FBBF24);
+        }
+        .setup-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .setup-brand-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.24);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+        .setup-brand-icon i {
+            font-size: 1.9rem;
+            line-height: 1;
+        }
+        .setup-kicker {
+            margin: 0 0 0.2rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            opacity: 0.78;
+        }
+        .setup-header h1 {
+            font-size: clamp(1.55rem, 3.4vw, 2.35rem);
+            line-height: 1.1;
+            font-weight: 800;
+            margin: 0;
+        }
+        .setup-subtitle {
+            margin: 0.55rem 0 0;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.95rem;
+        }
         .setup-card {
-            background: var(--md-surface-container-lowest);
-            border-radius: 0 0 28px 28px;
-            box-shadow: var(--md-elevation-3);
+            background: var(--setup-card);
+            border: 1px solid rgba(215,221,234,0.8);
+            border-radius: 0 0 22px 22px;
+            box-shadow: var(--setup-shadow);
             padding: 2rem;
         }
         .step-indicator {
             display: flex;
             justify-content: center;
             gap: 0;
-            margin-bottom: 2rem;
+            margin-bottom: 2.1rem;
         }
         .step-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.45rem 0.85rem;
             font-size: 0.85rem;
-            color: var(--md-on-surface-variant);
+            color: var(--setup-muted);
             position: relative;
         }
-        .step-item.active { color: var(--md-primary); font-weight: 700; }
-        .step-item.done { color: var(--md-success); }
+        .step-item.active { color: var(--setup-primary); font-weight: 800; }
+        .step-item.done { color: var(--setup-accent); }
         .step-num {
-            width: 28px; height: 28px;
+            width: 30px; height: 30px;
             border-radius: 50%;
-            background: var(--md-surface-container);
+            background: #EEF2F7;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 0.8rem;
+            border: 1px solid transparent;
         }
-        .step-item.active .step-num { background: var(--md-primary); color: var(--md-on-primary); }
-        .step-item.done .step-num { background: var(--md-success); color: #fff; }
-        .step-connector { width: 40px; height: 2px; background: var(--md-outline-variant); align-self: center; }
-        .step-connector.done { background: var(--md-success); }
+        .step-item.active .step-num {
+            background: var(--setup-primary);
+            color: #FFFFFF;
+            box-shadow: 0 8px 16px rgba(25,87,166,0.22);
+        }
+        .step-item.done .step-num { background: var(--setup-accent); color: #fff; }
+        .step-connector {
+            width: 52px;
+            height: 2px;
+            background: var(--setup-border);
+            align-self: center;
+        }
+        .step-connector.done { background: var(--setup-accent); }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.4rem;
+        }
+        .section-title i {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--setup-accent-soft);
+            color: var(--setup-accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .section-title h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .section-intro {
+            color: var(--setup-muted);
+            font-size: 0.92rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            color: var(--setup-text);
+            font-size: 0.88rem;
+            margin-bottom: 0.45rem;
+        }
         .form-control, .form-select {
-            border: 1px solid var(--md-outline);
-            border-radius: 4px;
-            font-size: 0.875rem;
-            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--setup-border);
+            border-radius: 12px;
+            font-size: 0.93rem;
+            padding: 0.72rem 0.9rem;
+            color: var(--setup-text);
+            background-color: #FFFFFF;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .form-control:focus, .form-select:focus {
-            border-color: var(--md-primary);
-            box-shadow: 0 0 0 1px var(--md-primary);
+            border-color: var(--setup-primary);
+            box-shadow: 0 0 0 0.2rem rgba(25,87,166,0.12);
+        }
+        .form-control::placeholder { color: #8B95A7; }
+        .input-group {
+            border: 1px solid var(--setup-border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #FFFFFF;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .input-group:focus-within {
+            border-color: var(--setup-primary);
+            box-shadow: 0 0 0 0.2rem rgba(25,87,166,0.12);
+        }
+        .input-group .form-control {
+            border: 0;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        .input-group-text {
+            width: 44px;
+            justify-content: center;
+            background: #F7F9FC;
+            color: var(--setup-muted);
+            border: 0;
+            border-right: 1px solid var(--setup-border);
         }
         .btn-setup {
-            background: var(--md-primary);
+            background: var(--setup-primary);
             border: none;
-            font-weight: 500;
+            font-weight: 700;
             border-radius: 9999px;
-            box-shadow: var(--md-elevation-2);
+            padding: 0.82rem 1.25rem;
+            box-shadow: 0 10px 22px rgba(25,87,166,0.22);
+            transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
         }
-        .btn-setup:hover { box-shadow: var(--md-elevation-3); }
-        .success-screen { text-align: center; padding: 2rem 0; }
-        .success-screen .material-symbols-outlined { font-size: 64px; color: var(--md-success); font-variation-settings: 'FILL' 1; }
-        .input-group-text { background: var(--md-surface-container); color: var(--md-on-surface-variant); border: 1px solid var(--md-outline); }
+        .btn-setup:hover {
+            background: var(--setup-primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px rgba(25,87,166,0.26);
+        }
+        .btn-outline-secondary {
+            border-color: var(--setup-border);
+            color: var(--setup-muted);
+            border-radius: 9999px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .alert-danger {
+            background: var(--setup-danger-bg);
+            color: var(--setup-danger-text);
+            border: 0;
+            border-radius: 14px;
+        }
+        hr {
+            border-color: var(--setup-border);
+            opacity: 1;
+            margin: 1.4rem 0;
+        }
+        .form-check-input:checked {
+            background-color: var(--setup-accent);
+            border-color: var(--setup-accent);
+        }
+        .success-screen {
+            text-align: center;
+            padding: 2rem 0 1rem;
+        }
+        .success-icon {
+            width: 76px;
+            height: 76px;
+            border-radius: 24px;
+            background: var(--setup-accent-soft);
+            color: var(--setup-accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+        .setup-version {
+            color: var(--setup-muted);
+            font-size: 0.8rem;
+        }
+        @media (max-width: 575.98px) {
+            .setup-container {
+                margin-top: 1rem;
+                padding: 0 0.75rem;
+            }
+            .setup-header,
+            .setup-card {
+                border-radius: 18px;
+            }
+            .setup-card {
+                margin-top: 0.75rem;
+                padding: 1.25rem;
+            }
+            .setup-brand {
+                align-items: flex-start;
+            }
+            .setup-brand-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 16px;
+            }
+            .setup-brand-icon i {
+                font-size: 1.55rem;
+            }
+            .step-item {
+                padding-left: 0.35rem;
+                padding-right: 0.35rem;
+            }
+            .step-connector {
+                width: 28px;
+            }
+            .d-flex.gap-2 {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="setup-container">
         <div class="setup-header">
-            <span class="material-symbols-outlined">settings_applications</span>
-            <h1><?= $success ? 'Configuration terminée !' : 'Assistant de configuration' ?></h1>
-            <p class="mb-0 opacity-75"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></p>
+            <div class="setup-brand">
+                <div class="setup-brand-icon" aria-hidden="true">
+                    <i class="bi bi-clipboard2-check-fill"></i>
+                </div>
+                <div>
+                    <p class="setup-kicker">Assistant de démarrage</p>
+                    <h1><?= $success ? 'Configuration terminée !' : 'Configurer ' . e(APP_NAME) ?></h1>
+                    <p class="setup-subtitle"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></p>
+                </div>
+            </div>
         </div>
 
         <div class="setup-card">
             <?php if ($success): ?>
                 <!-- Écran de fin -->
                 <div class="success-screen">
-                    <span class="material-symbols-outlined">check_circle</span>
+                    <span class="success-icon" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
                     <h2 class="mt-3 mb-2">Tout est prêt !</h2>
-                    <p class="text-muted mb-4">Votre application est configurée et opérationnelle.</p>
+                    <p class="text-muted mb-4">La configuration de <?= e(APP_NAME) ?> est terminée.</p>
                     <div class="d-flex flex-column gap-2 mx-auto" style="max-width: 300px;">
                         <a href="<?= BASE_URL ?>" class="btn btn-primary btn-setup btn-lg">
                             <i class="bi bi-speedometer2"></i> Accéder au tableau de bord
@@ -274,10 +495,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php if ($step === 1): ?>
                     <!-- ÉTAPE 1 : Compte administrateur -->
-                    <h5 class="mb-3"><i class="bi bi-person-badge"></i> Créer le compte administrateur</h5>
-                    <p class="text-muted small mb-4">Ce compte aura tous les droits sur l'application.</p>
+                    <div class="section-title">
+                        <i class="bi bi-person-badge"></i>
+                        <h2>Créer le compte administrateur</h2>
+                    </div>
+                    <p class="section-intro">Ce compte aura tous les droits sur l'application.</p>
 
-                    <form method="POST">
+                    <form method="POST" action="<?= BASE_URL ?>setup.php">
                         <?= csrfField() ?>
                         <input type="hidden" name="step" value="1">
 
@@ -286,7 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
                                 <input type="text" class="form-control" name="nom" required
-                                       value="<?= e($_POST['nom'] ?? '') ?>" placeholder="Jean Dupont">
+                                       value="<?= e($_POST['nom'] ?? '') ?>" placeholder="Jean Dupont" autocomplete="name">
                             </div>
                         </div>
 
@@ -295,7 +519,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                 <input type="email" class="form-control" name="email" required
-                                       value="<?= e($_POST['email'] ?? '') ?>" placeholder="admin@exemple.com">
+                                       value="<?= e($_POST['email'] ?? '') ?>" placeholder="admin@exemple.com" autocomplete="email">
                             </div>
                         </div>
 
@@ -305,7 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                                     <input type="password" class="form-control" name="password" required minlength="6"
-                                           placeholder="6 caractères min.">
+                                           placeholder="6 caractères min." autocomplete="new-password">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -313,7 +537,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
                                     <input type="password" class="form-control" name="password_confirm" required
-                                           placeholder="Retapez le mot de passe">
+                                           placeholder="Retapez le mot de passe" autocomplete="new-password">
                                 </div>
                             </div>
                         </div>
@@ -325,10 +549,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php elseif ($step === 2): ?>
                     <!-- ÉTAPE 2 : Informations entreprise -->
-                    <h5 class="mb-3"><i class="bi bi-building"></i> Informations de votre entreprise</h5>
-                    <p class="text-muted small mb-4">Ces informations apparaîtront sur vos documents (factures, devis...).</p>
+                    <div class="section-title">
+                        <i class="bi bi-building"></i>
+                        <h2>Informations de votre entreprise</h2>
+                    </div>
+                    <p class="section-intro">Ces informations apparaîtront sur vos documents (factures, devis...).</p>
 
-                    <form method="POST">
+                    <form method="POST" action="<?= BASE_URL ?>setup.php?step=2">
                         <?= csrfField() ?>
                         <input type="hidden" name="step" value="2">
 
@@ -386,10 +613,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php elseif ($step === 3): ?>
                     <!-- ÉTAPE 3 : Régime fiscal -->
-                    <h5 class="mb-3"><i class="bi bi-bank"></i> Régime fiscal et options</h5>
-                    <p class="text-muted small mb-4">Configurez votre statut juridique et fiscal. Modifiable dans Paramètres.</p>
+                    <div class="section-title">
+                        <i class="bi bi-bank"></i>
+                        <h2>Régime fiscal et options</h2>
+                    </div>
+                    <p class="section-intro">Configurez votre statut juridique et fiscal. Modifiable dans Paramètres.</p>
 
-                    <form method="POST">
+                    <form method="POST" action="<?= BASE_URL ?>setup.php?step=3">
                         <?= csrfField() ?>
                         <input type="hidden" name="step" value="3">
 
@@ -474,7 +704,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
         </div>
 
-        <div class="text-center mt-3 text-muted" style="font-size: 0.8rem;">
+        <div class="text-center mt-3 setup-version">
             <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?>
         </div>
     </div>

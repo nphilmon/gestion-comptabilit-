@@ -16,7 +16,7 @@ define('DB_PASS', envValue('GESTION_COMPTA_DB_PASS', ''));
 define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
 
 // --- Configuration application ---
-define('APP_NAME', 'Gestion Comptabilité');
+define('APP_NAME', 'Gestion Comptable Pro');
 define('APP_VERSION', '2.1.0');
 
 $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
@@ -49,6 +49,40 @@ function indexExists(PDO $pdo, string $table, string $index): bool {
     return (bool) $stmt->fetchColumn();
 }
 
+function applySqlMigrationIfMissing(PDO $pdo, string $relativePath, array $requiredTables): void {
+    $missingTable = false;
+    foreach ($requiredTables as $table) {
+        if (!tableExists($pdo, $table)) {
+            $missingTable = true;
+            break;
+        }
+    }
+
+    if (!$missingTable) {
+        return;
+    }
+
+    $path = __DIR__ . '/' . ltrim($relativePath, '/\\');
+    if (!is_file($path)) {
+        return;
+    }
+
+    $sql = file_get_contents($path);
+    if ($sql === false) {
+        return;
+    }
+
+    $sql = preg_replace('/^\s*USE\s+`?[^`;]+`?\s*;\s*/mi', '', $sql);
+    $sql = preg_replace('/^\s*ALTER\s+TABLE\s+`[^`]+`\s+ADD\s+INDEX\s+`[^`]+`\s+\([^)]+\)\s*;\s*/mi', '', $sql);
+    $pdo->exec($sql);
+}
+
+function ensureIndex(PDO $pdo, string $table, string $index, string $definition): void {
+    if (tableExists($pdo, $table) && !indexExists($pdo, $table, $index)) {
+        $pdo->exec("ALTER TABLE `$table` ADD INDEX `$index` ($definition)");
+    }
+}
+
 function initializeDatabaseSchema(PDO $pdo): void {
     static $initialized = false;
     if ($initialized) {
@@ -78,6 +112,23 @@ function initializeDatabaseSchema(PDO $pdo): void {
             UNIQUE KEY `uk_exercices_periode` (`date_debut`, `date_fin`),
             INDEX `idx_exercices_statut` (`statut`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        applySqlMigrationIfMissing($pdo, 'database/migration_commercial.sql', [
+            'clients', 'devis', 'lignes_devis', 'factures', 'lignes_factures',
+            'commandes', 'lignes_commandes', 'paiements'
+        ]);
+        applySqlMigrationIfMissing($pdo, 'database/migration_caisse.sql', [
+            'categories_produits', 'produits', 'moyens_paiement_caisse',
+            'notes_caisse', 'lignes_notes_caisse', 'paiements_caisse',
+            'mouvements_stock', 'inventaires', 'lignes_inventaire', 'clotures_caisse'
+        ]);
+
+        ensureIndex($pdo, 'devis', 'idx_devis_client', '`client_id`');
+        ensureIndex($pdo, 'devis', 'idx_devis_statut', '`statut`');
+        ensureIndex($pdo, 'factures', 'idx_factures_client', '`client_id`');
+        ensureIndex($pdo, 'factures', 'idx_factures_statut', '`statut`');
+        ensureIndex($pdo, 'commandes', 'idx_commandes_client', '`client_id`');
+        ensureIndex($pdo, 'paiements', 'idx_paiements_facture', '`facture_id`');
 
         $pdo->exec("CREATE TABLE IF NOT EXISTS `cp_profils` (
             `user_id` INT UNSIGNED PRIMARY KEY,
@@ -172,6 +223,15 @@ function initializeDatabaseSchema(PDO $pdo): void {
             CONSTRAINT `fk_bulletins_paie_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
             CONSTRAINT `fk_bulletins_paie_created_by` FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        if (tableExists($pdo, 'bulletins_paie')) {
+            if (!columnExists($pdo, 'bulletins_paie', 'indemnite_sante')) {
+                $pdo->exec("ALTER TABLE `bulletins_paie` ADD COLUMN `indemnite_sante` DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER `indemnites`");
+            }
+            if (!columnExists($pdo, 'bulletins_paie', 'ancv_ce')) {
+                $pdo->exec("ALTER TABLE `bulletins_paie` ADD COLUMN `ancv_ce` DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER `indemnite_sante`");
+            }
+        }
 
         if (tableExists($pdo, 'clients') && !columnExists($pdo, 'clients', 'siren')) {
             $pdo->exec("ALTER TABLE `clients` ADD COLUMN `siren` VARCHAR(20) DEFAULT NULL AFTER `siret`");

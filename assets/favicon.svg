@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gestion Comptable Pro">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="18" y1="8" x2="48" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".32"/>
+      <stop offset=".55" stop-color="#ffffff" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <path d="M11 18c7-8 25-12 42 2v34H11V18Z" fill="url(#shine)"/>
+  <path d="M24 24v-3.5c0-2 1.6-3.5 3.5-3.5h9c1.9 0 3.5 1.5 3.5 3.5V24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <rect x="16" y="24" width="32" height="24" rx="5" fill="#fff" opacity=".96"/>
+  <path d="M16 33h32" stroke="#dbeafe" stroke-width="3"/>
+  <path d="M22 42l6-6 5 4 9-10" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="22" cy="42" r="2.2" fill="#2563eb"/>
+  <circle cx="28" cy="36" r="2.2" fill="#2563eb"/>
+  <circle cx="33" cy="40" r="2.2" fill="#2563eb"/>
+  <circle cx="42" cy="30" r="2.2" fill="#2563eb"/>
+</svg>

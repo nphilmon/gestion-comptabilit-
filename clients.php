@@ -634,6 +634,8 @@ if ($action === 'modifier') {
 
     const searchInputs = [input, entrepriseInput].filter(Boolean);
     let debounceTimer;
+    let searchController;
+    let searchSeq = 0;
     const API_URL = 'api_entreprise.php';
 
     function escHtml(s) {
@@ -653,7 +655,13 @@ if ($action === 'modifier') {
     }
 
     async function searchEntreprise(query) {
+        if (searchController) {
+            searchController.abort();
+            searchController = null;
+        }
+        const seq = ++searchSeq;
         if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
+        searchController = new AbortController();
 
         resultsDiv.innerHTML = '<div class="list-group-item text-muted py-2"><i class="bi bi-arrow-repeat"></i> Recherche en cours...</div>';
         resultsDiv.style.display = 'block';
@@ -662,9 +670,11 @@ if ($action === 'modifier') {
             const url = `${API_URL}?q=${encodeURIComponent(query)}&per_page=8`;
             const resp = await fetch(url, {
                 headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin'
+                credentials: 'same-origin',
+                signal: searchController.signal
             });
             const data = await resp.json();
+            if (seq !== searchSeq) return;
             if (!resp.ok || !data.success) throw new Error(data.message || 'Erreur API');
 
             if (!data.results || data.results.length === 0) {
@@ -698,6 +708,8 @@ if ($action === 'modifier') {
                 </a>`;
             }).join('');
         } catch (err) {
+            if (err && err.name === 'AbortError') return;
+            if (seq !== searchSeq) return;
             const message = err && err.message ? err.message : 'Erreur de connexion à l\'API';
             resultsDiv.innerHTML = `<div class="list-group-item text-danger py-2"><i class="bi bi-exclamation-triangle"></i> ${escHtml(message)}</div>`;
             resultsDiv.style.display = 'block';

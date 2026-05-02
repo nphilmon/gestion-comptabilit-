@@ -1,5 +1,5 @@
 -- =============================================================
--- Gestion Comptabilité - Multi-régimes (Auto-entrepreneur, EI, EURL, SARL, SAS, SASU)
+-- Gestion Comptable Pro - Multi-régimes (Auto-entrepreneur, EI, EURL, SARL, SAS, SASU)
 -- Script de création de la base de données
 -- =============================================================
 

@@ -1,5 +1,5 @@
 /**
- * Gestion Comptabilité - Scripts
+ * Gestion Comptable Pro - Scripts
  */
 
 document.addEventListener('DOMContentLoaded', function() {

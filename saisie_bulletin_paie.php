@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'prime'                          => (float) ($_POST['prime'] ?? 0),
         'bonus'                          => (float) ($_POST['bonus'] ?? 0),
         'indemnites'                     => (float) ($_POST['indemnites'] ?? 0),
+        'indemnite_sante'                => (float) ($_POST['indemnite_sante'] ?? 0),
+        'ancv_ce'                        => (float) ($_POST['ancv_ce'] ?? 0),
         'retenues'                       => max(0.0, (float) ($_POST['retenues'] ?? 0)),
         'cotisations_salariales'         => max(0.0, (float) ($_POST['cotisations_salariales'] ?? 0)),
         'cotisations_patronales'         => max(0.0, (float) ($_POST['cotisations_patronales'] ?? 0)),
@@ -76,17 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare('INSERT INTO bulletins_paie (
                 user_id, periode, date_paiement, statut, salaire_base_brut, heures_travaillees,
                 heures_supplementaires, taux_horaire_majore, montant_heures_supplementaires,
-                prime, bonus, indemnites, retenues, cotisations_salariales, cotisations_patronales,
+                prime, bonus, indemnites, indemnite_sante, ancv_ce, retenues, cotisations_salariales, cotisations_patronales,
                 salaire_brut, net_imposable, net_a_payer, cout_total_employeur,
                 mode_paiement, reference_paiement, notes, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $userId, $periode, $datePaiement, $statut,
             round($payload['salaire_base_brut'], 2), round($payload['heures_travaillees'], 2),
             round($payload['heures_supplementaires'], 2), round($payload['taux_horaire_majore'], 2),
             $payload['montant_heures_supplementaires'],
             round($payload['prime'], 2), round($payload['bonus'], 2),
-            round($payload['indemnites'], 2), round($payload['retenues'], 2),
+            round($payload['indemnites'], 2), round($payload['indemnite_sante'], 2), round($payload['ancv_ce'], 2),
+            round($payload['retenues'], 2),
             round($payload['cotisations_salariales'], 2), round($payload['cotisations_patronales'], 2),
             $payload['salaire_brut'], $payload['net_imposable'],
             $payload['net_a_payer'], $payload['cout_total_employeur'],
@@ -111,9 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare('UPDATE bulletins_paie SET
                 date_paiement=?, statut=?, salaire_base_brut=?, heures_travaillees=?,
                 heures_supplementaires=?, taux_horaire_majore=?, montant_heures_supplementaires=?,
-                prime=?, bonus=?, indemnites=?, retenues=?, cotisations_salariales=?,
-                cotisations_patronales=?, salaire_brut=?, net_imposable=?, net_a_payer=?,
-                cout_total_employeur=?, mode_paiement=?, reference_paiement=?, notes=?
+                prime=?, bonus=?, indemnites=?, indemnite_sante=?, ancv_ce=?, retenues=?,
+                cotisations_salariales=?, cotisations_patronales=?, salaire_brut=?, net_imposable=?,
+                net_a_payer=?, cout_total_employeur=?, mode_paiement=?, reference_paiement=?, notes=?
             WHERE id=?');
         $stmt->execute([
             $datePaiement, $statut,
@@ -121,7 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             round($payload['heures_supplementaires'], 2), round($payload['taux_horaire_majore'], 2),
             $payload['montant_heures_supplementaires'],
             round($payload['prime'], 2), round($payload['bonus'], 2),
-            round($payload['indemnites'], 2), round($payload['retenues'], 2),
+            round($payload['indemnites'], 2), round($payload['indemnite_sante'], 2), round($payload['ancv_ce'], 2),
+            round($payload['retenues'], 2),
             round($payload['cotisations_salariales'], 2), round($payload['cotisations_patronales'], 2),
             $payload['salaire_brut'], $payload['net_imposable'],
             $payload['net_a_payer'], $payload['cout_total_employeur'],
@@ -761,6 +765,18 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                                    value="<?= $fn('indemnites') ?>" oninput="recalc()">
                         </div>
                     </div>
+                    <div class="paie-field-row">
+                        <div class="paie-field">
+                            <label>Indem. compl. santé <span class="paie-field-hint">€ — part patronale mutuelle</span></label>
+                            <input type="number" name="indemnite_sante" id="inp_indem_sante" step="0.01"
+                                   value="<?= $fn('indemnite_sante') ?>" oninput="recalc()">
+                        </div>
+                        <div class="paie-field">
+                            <label>ANCV / CE <span class="paie-field-hint">€ — chèques vacances</span></label>
+                            <input type="number" name="ancv_ce" id="inp_ancv_ce" step="0.01"
+                                   value="<?= $fn('ancv_ce') ?>" oninput="recalc()">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -994,13 +1010,15 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         var prime   = parseFloat(document.getElementById('inp_prime').value) || 0;
         var bonus   = parseFloat(document.getElementById('inp_bonus').value) || 0;
         var indem   = parseFloat(document.getElementById('inp_indem').value) || 0;
+        var indemSante = parseFloat(document.getElementById('inp_indem_sante').value) || 0;
+        var ancvCe     = parseFloat(document.getElementById('inp_ancv_ce').value) || 0;
         var cotsal  = v('inp_cotsal');
         var cotpat  = v('inp_cotpat');
         var ret     = v('inp_ret');
 
         if (mhs <= 0 && hs > 0 && tauxMaj > 0) mhs = hs * tauxMaj;
 
-        var brut    = base + mhs + prime + bonus + indem;
+        var brut    = base + mhs + prime + bonus + indem + indemSante + ancvCe;
         var netimp  = Math.max(0, brut - cotsal);
         var netpay  = Math.max(0, netimp - ret);
         var cout    = Math.max(0, brut + cotpat);
@@ -1008,7 +1026,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         var tauxSal = brut > 0 ? (cotsal / brut * 100) : 0;
         var tauxPat = brut > 0 ? (cotpat / brut * 100) : 0;
 
-        return { base, ht, hs, tauxMaj, mhs, prime, bonus, indem, cotsal, cotpat, ret, brut, netimp, netpay, cout, tauxH, tauxSal, tauxPat };
+        return { base, ht, hs, tauxMaj, mhs, prime, bonus, indem, indemSante, ancvCe, cotsal, cotpat, ret, brut, netimp, netpay, cout, tauxH, tauxSal, tauxPat };
     }
 
     // ---- Mise à jour panneau résumé gauche ----
@@ -1050,6 +1068,8 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         if (t.prime !== 0) rows += '<tr><td>Prime</td><td></td><td></td><td>' + fmt(t.prime) + '</td></tr>';
         if (t.bonus !== 0) rows += '<tr><td>Bonus</td><td></td><td></td><td>' + fmt(t.bonus) + '</td></tr>';
         if (t.indem !== 0) rows += '<tr><td>Indemnit\u00e9s</td><td></td><td></td><td>' + fmt(t.indem) + '</td></tr>';
+        if (t.indemSante !== 0) rows += '<tr><td>Indem. compl. sant\u00e9</td><td></td><td></td><td>' + fmt(t.indemSante) + '</td></tr>';
+        if (t.ancvCe !== 0) rows += '<tr><td>ANCV / Comit\u00e9 d\u2019entreprise</td><td></td><td></td><td>' + fmt(t.ancvCe) + '</td></tr>';
 
         rows += '<tr class="fp-subtotal"><td colspan="3">Salaire brut</td><td>' + fmt(t.brut) + '</td></tr>';
 

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `bulletins_paie` (
     `prime` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `bonus` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `indemnites` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `indemnite_sante` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `ancv_ce` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `retenues` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `cotisations_salariales` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `cotisations_patronales` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
