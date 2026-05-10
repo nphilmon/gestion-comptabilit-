@@ -10,7 +10,9 @@ function envValue(string $key, string $default = ''): string {
 
 function ensureDirectoryExists(string $path): void {
     if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
-        error_log('Impossible de créer le répertoire: ' . $path);
+        $lastError = error_get_last();
+        $reason = $lastError['message'] ?? 'raison inconnue';
+        error_log('Impossible de créer le répertoire ' . $path . ': ' . $reason);
     }
 }
 

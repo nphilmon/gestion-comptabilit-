@@ -13,6 +13,6 @@ $sanitized = sanitizeLogContextValue([
     'nested' => ['flag' => true],
 ]);
 
-assertTrue(mb_strlen($sanitized['message']) > APP_LOG_MAX_STRING_LENGTH, 'Long log values must be truncated and marked.');
+assertTrue(mb_strlen($sanitized['message']) <= APP_LOG_MAX_STRING_LENGTH + 1, 'Long log values must respect the configured size plus ellipsis.');
 assertTrue(mb_substr($sanitized['message'], -1) === '…', 'Truncated log values must end with an ellipsis.');
 assertSame(true, $sanitized['nested']['flag'], 'Nested log context must be preserved.');
