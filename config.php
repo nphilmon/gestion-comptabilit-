@@ -26,6 +26,7 @@ define('APP_NAME', 'Gestion Comptable Pro');
 define('APP_VERSION', '2.1.0');
 define('APP_STORAGE_DIR', __DIR__ . '/storage');
 define('APP_LOG_DIR', APP_STORAGE_DIR . '/logs');
+define('APP_LOG_MAX_STRING_LENGTH', 500);
 
 $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
 if ($baseUrl === '') {
@@ -48,7 +49,9 @@ function sanitizeLogContextValue(mixed $value): mixed {
     }
 
     if (is_string($value)) {
-        return mb_strlen($value) > 500 ? mb_substr($value, 0, 500) . '…' : $value;
+        return mb_strlen($value) > APP_LOG_MAX_STRING_LENGTH
+            ? mb_substr($value, 0, APP_LOG_MAX_STRING_LENGTH) . '…'
+            : $value;
     }
 
     if ($value instanceof Throwable) {

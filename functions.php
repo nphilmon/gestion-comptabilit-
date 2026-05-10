@@ -807,7 +807,7 @@ function validateExerciceData(array $data, ?int $excludeId = null): array {
 
     if (!$dateDebutValide || !$dateFinValide) {
         $errors[] = 'Les dates de l\'exercice sont invalides.';
-    } elseif ($dateFin <= $dateDebut) {
+    } elseif ($fin <= $debut) {
         $errors[] = 'La date de fin doit être postérieure à la date de début.';
     }
 
