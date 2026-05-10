@@ -360,6 +360,12 @@ function getCategorie(int $id): ?array {
 }
 
 // --- Transactions ---
+
+/**
+ * Construit la clause WHERE + tableau de paramètres PDO pour les filtres de transactions.
+ *
+ * @internal Helper partagé par getTransactions(), countTransactions() et sumTransactions().
+ */
 function _buildTransactionWhere(array $filtres): array {
     $where = ['1=1'];
     $params = [];
@@ -428,6 +434,32 @@ function countTransactions(array $filtres = []): int {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     return (int) $stmt->fetchColumn();
+}
+
+/**
+ * Retourne les totaux recettes/dépenses/solde pour l'ensemble des transactions
+ * correspondant aux filtres (sans limitation de page).
+ */
+function sumTransactions(array $filtres = []): array {
+    $db = getDB();
+    [$where, $params] = _buildTransactionWhere($filtres);
+
+    $sql = "SELECT
+                COALESCE(SUM(CASE WHEN t.type = 'recette' THEN t.montant ELSE 0 END), 0) AS total_recettes,
+                COALESCE(SUM(CASE WHEN t.type = 'depense' THEN t.montant ELSE 0 END), 0) AS total_depenses
+            FROM transactions t
+            WHERE " . implode(' AND ', $where);
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    $totalR = (float) ($row['total_recettes'] ?? 0);
+    $totalD = (float) ($row['total_depenses'] ?? 0);
+    return [
+        'total_recettes' => $totalR,
+        'total_depenses' => $totalD,
+        'solde'          => $totalR - $totalD,
+    ];
 }
 
 function getTransaction(int $id): ?array {

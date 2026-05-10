@@ -105,6 +105,9 @@ $offset = ($pageNum - 1) * $parPage;
 $transactions = ($action === 'liste')
     ? getTransactions($filtres, $parPage, $offset)
     : [];
+// Totaux sur l'ensemble des transactions filtrées (pas seulement la page courante)
+$totauxFiltres = ($action === 'liste') ? sumTransactions($filtres) : ['total_recettes' => 0, 'total_depenses' => 0, 'solde' => 0];
+
 $categoriesRecette = getCategories('recette');
 $categoriesDepense = getCategories('depense');
 $toutesCategories = getCategories();
@@ -252,10 +255,9 @@ include 'header.php';
 
     <!-- Stat cards résumé -->
     <?php
-    // Stats sur la page courante uniquement
-    $totalR = array_sum(array_map(fn($t) => $t['type'] === 'recette' ? $t['montant'] : 0, $transactions));
-    $totalD = array_sum(array_map(fn($t) => $t['type'] === 'depense' ? $t['montant'] : 0, $transactions));
-    $solde = $totalR - $totalD;
+    $totalR = $totauxFiltres['total_recettes'];
+    $totalD = $totauxFiltres['total_depenses'];
+    $solde  = $totauxFiltres['solde'];
     ?>
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
@@ -457,7 +459,7 @@ include 'header.php';
             'recherche'   => $filtres['recherche'] ?? '',
         ]);
         $baseQs = http_build_query($qp);
-        $pageUrl = fn(int $p) => 'transactions.php?' . ($baseQs ? $baseQs . '&' : '') . 'page=' . $p;
+        $pageUrl = fn(int $p) => e('transactions.php?' . ($baseQs ? $baseQs . '&' : '') . 'page=' . $p);
         ?>
         <ul class="pagination pagination-sm justify-content-center">
             <li class="page-item <?= $pageNum <= 1 ? 'disabled' : '' ?>">
