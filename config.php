@@ -10,7 +10,7 @@ function envValue(string $key, string $default = ''): string {
 
 function ensureDirectoryExists(string $path): void {
     if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
-        error_log('Impossible de créer le répertoire runtime: ' . $path);
+        error_log('Impossible de créer le répertoire: ' . $path);
     }
 }
 
@@ -93,7 +93,7 @@ function writeAppLogEntry(string $level, string $message, array $context = []): 
         $line = json_encode([
             'timestamp' => date('c'),
             'level' => strtoupper($level),
-            'message' => 'Unable to encode log entry',
+            'message' => 'Impossible d\'encoder l\'entrée de log',
         ]);
     }
 
