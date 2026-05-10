@@ -22,6 +22,8 @@ cache/
 tmp/
 sessions/
 uploads/
+storage/logs/*.log
+!storage/logs/.gitkeep
 
 # Dependencies
 vendor/

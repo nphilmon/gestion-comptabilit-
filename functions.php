@@ -34,6 +34,10 @@ function sendSecurityHeaders(): void {
     header("Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data:; connect-src 'self' https://recherche-entreprises.api.gouv.fr;");
 }
 
+function appLog(string $level, string $message, array $context = []): void {
+    writeAppLogEntry($level, $message, $context);
+}
+
 // --- Timeout de session (30 minutes d'inactivité) ---
 function checkSessionTimeout(): void {
     $timeout = 1800; // 30 minutes
@@ -731,54 +735,135 @@ function getAnneesDisponibles(): array {
 // --- Exercices comptables ---
 function getExercices(): array {
     $db = getDB();
-    return $db->query('SELECT * FROM exercices ORDER BY date_debut DESC')->fetchAll();
+    $rows = $db->query('SELECT * FROM exercices ORDER BY date_debut DESC')->fetchAll();
+    return array_map('normalizeExerciceRow', $rows);
 }
 
 function getExercice(int $id): ?array {
     $db = getDB();
     $stmt = $db->prepare('SELECT * FROM exercices WHERE id = ?');
     $stmt->execute([$id]);
-    $row = $stmt->fetch();
-    return $row ?: null;
+    return normalizeExerciceRow($stmt->fetch() ?: null);
 }
 
 function getExerciceEnCours(): ?array {
     $db = getDB();
     $stmt = $db->prepare("SELECT * FROM exercices WHERE statut = 'ouvert' AND date_debut <= CURDATE() AND date_fin >= CURDATE() LIMIT 1");
     $stmt->execute();
-    $row = $stmt->fetch();
-    return $row ?: null;
+    return normalizeExerciceRow($stmt->fetch() ?: null);
+}
+
+function normalizeExerciceStatut(?string $statut): string {
+    $normalized = mb_strtolower(trim((string) $statut));
+    return in_array($normalized, ['clos', 'cloture'], true) ? 'clos' : 'ouvert';
+}
+
+function isExerciceClosed(?string $statut): bool {
+    return normalizeExerciceStatut($statut) === 'clos';
+}
+
+function normalizeExerciceRow(?array $row): ?array {
+    if (!$row) {
+        return null;
+    }
+
+    $row['statut'] = normalizeExerciceStatut($row['statut'] ?? 'ouvert');
+    return $row;
+}
+
+function findOpenExerciceOverlap(string $dateDebut, string $dateFin, ?int $excludeId = null): ?array {
+    $db = getDB();
+    $sql = "SELECT * FROM exercices
+            WHERE statut = 'ouvert'
+              AND date_debut <= ?
+              AND date_fin >= ?";
+    $params = [$dateFin, $dateDebut];
+
+    if ($excludeId !== null) {
+        $sql .= ' AND id <> ?';
+        $params[] = $excludeId;
+    }
+
+    $sql .= ' ORDER BY date_debut ASC LIMIT 1';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    return normalizeExerciceRow($stmt->fetch() ?: null);
+}
+
+function validateExerciceData(array $data, ?int $excludeId = null): array {
+    $errors = [];
+    $nom = trim((string) ($data['nom'] ?? ''));
+    $dateDebut = (string) ($data['date_debut'] ?? '');
+    $dateFin = (string) ($data['date_fin'] ?? '');
+
+    if ($nom === '' || $dateDebut === '' || $dateFin === '') {
+        $errors[] = 'Tous les champs obligatoires doivent être remplis.';
+    }
+
+    $debut = DateTimeImmutable::createFromFormat('Y-m-d', $dateDebut);
+    $fin = DateTimeImmutable::createFromFormat('Y-m-d', $dateFin);
+    $dateDebutValide = $debut && $debut->format('Y-m-d') === $dateDebut;
+    $dateFinValide = $fin && $fin->format('Y-m-d') === $dateFin;
+
+    if (!$dateDebutValide || !$dateFinValide) {
+        $errors[] = 'Les dates de l\'exercice sont invalides.';
+    } elseif ($dateFin <= $dateDebut) {
+        $errors[] = 'La date de fin doit être postérieure à la date de début.';
+    }
+
+    if (empty($errors)) {
+        $conflict = findOpenExerciceOverlap($dateDebut, $dateFin, $excludeId);
+        if ($conflict) {
+            $errors[] = 'La période chevauche un exercice ouvert existant : ' . $conflict['nom'] . '.';
+        }
+    }
+
+    return $errors;
 }
 
 function ajouterExercice(array $data): int {
     $db = getDB();
     $stmt = $db->prepare('INSERT INTO exercices (nom, date_debut, date_fin, notes) VALUES (?, ?, ?, ?)');
     $stmt->execute([$data['nom'], $data['date_debut'], $data['date_fin'], $data['notes'] ?? null]);
-    return (int) $db->lastInsertId();
+    $id = (int) $db->lastInsertId();
+    appLog('info', 'Exercice créé', ['exercice_id' => $id, 'nom' => $data['nom']]);
+    return $id;
 }
 
 function modifierExercice(int $id, array $data): void {
     $db = getDB();
     $stmt = $db->prepare('UPDATE exercices SET nom=?, date_debut=?, date_fin=?, notes=? WHERE id=?');
     $stmt->execute([$data['nom'], $data['date_debut'], $data['date_fin'], $data['notes'] ?? null, $id]);
+    appLog('info', 'Exercice modifié', ['exercice_id' => $id, 'nom' => $data['nom']]);
 }
 
 function cloturerExercice(int $id): void {
     $db = getDB();
-    $stmt = $db->prepare("UPDATE exercices SET statut = 'cloture' WHERE id = ?");
+    $stmt = $db->prepare("UPDATE exercices SET statut = 'clos' WHERE id = ?");
     $stmt->execute([$id]);
+    appLog('info', 'Exercice clôturé', ['exercice_id' => $id]);
 }
 
 function rouvrirExercice(int $id): void {
     $db = getDB();
+    $exercice = getExercice($id);
+    if (!$exercice) {
+        return;
+    }
+    $conflict = findOpenExerciceOverlap($exercice['date_debut'], $exercice['date_fin'], $id);
+    if ($conflict) {
+        throw new RuntimeException('Impossible de rouvrir cet exercice tant qu\'un autre exercice ouvert chevauche la même période.');
+    }
     $stmt = $db->prepare("UPDATE exercices SET statut = 'ouvert' WHERE id = ?");
     $stmt->execute([$id]);
+    appLog('info', 'Exercice rouvert', ['exercice_id' => $id]);
 }
 
 function supprimerExercice(int $id): void {
     $db = getDB();
     $stmt = $db->prepare('DELETE FROM exercices WHERE id = ?');
     $stmt->execute([$id]);
+    appLog('warning', 'Exercice supprimé', ['exercice_id' => $id]);
 }
 
 function getStatsExercice(array $exercice): array {

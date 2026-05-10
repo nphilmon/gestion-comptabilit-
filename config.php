@@ -8,6 +8,12 @@ function envValue(string $key, string $default = ''): string {
     return $value !== false ? $value : $default;
 }
 
+function ensureDirectoryExists(string $path): void {
+    if (!is_dir($path)) {
+        @mkdir($path, 0775, true);
+    }
+}
+
 // --- Configuration BDD ---
 define('DB_HOST', envValue('GESTION_COMPTA_DB_HOST', 'localhost'));
 define('DB_NAME', envValue('GESTION_COMPTA_DB_NAME', 'gestion_compta'));
@@ -18,6 +24,8 @@ define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
 // --- Configuration application ---
 define('APP_NAME', 'Gestion Comptable Pro');
 define('APP_VERSION', '2.1.0');
+define('APP_STORAGE_DIR', __DIR__ . '/storage');
+define('APP_LOG_DIR', APP_STORAGE_DIR . '/logs');
 
 $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
 if ($baseUrl === '') {
@@ -30,6 +38,126 @@ define('BASE_URL', rtrim($baseUrl, '/') . '/');
 // --- Timezone ---
 date_default_timezone_set('Europe/Paris');
 setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'fr');
+
+ensureDirectoryExists(APP_STORAGE_DIR);
+ensureDirectoryExists(APP_LOG_DIR);
+
+function sanitizeLogContextValue(mixed $value): mixed {
+    if (is_null($value) || is_bool($value) || is_int($value) || is_float($value)) {
+        return $value;
+    }
+
+    if (is_string($value)) {
+        return mb_strlen($value) > 500 ? mb_substr($value, 0, 500) . '…' : $value;
+    }
+
+    if ($value instanceof Throwable) {
+        return [
+            'type' => get_class($value),
+            'message' => $value->getMessage(),
+            'file' => basename($value->getFile()),
+            'line' => $value->getLine(),
+        ];
+    }
+
+    if (is_array($value)) {
+        $sanitized = [];
+        foreach ($value as $key => $item) {
+            $sanitized[(string) $key] = sanitizeLogContextValue($item);
+        }
+        return $sanitized;
+    }
+
+    if (is_object($value)) {
+        return ['object' => get_class($value)];
+    }
+
+    return (string) $value;
+}
+
+function writeAppLogEntry(string $level, string $message, array $context = []): void {
+    ensureDirectoryExists(APP_LOG_DIR);
+
+    $entry = [
+        'timestamp' => date('c'),
+        'level' => strtoupper($level),
+        'message' => $message,
+        'context' => sanitizeLogContextValue($context),
+    ];
+
+    $line = json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($line === false) {
+        $line = json_encode([
+            'timestamp' => date('c'),
+            'level' => strtoupper($level),
+            'message' => 'Unable to encode log entry',
+        ]);
+    }
+
+    @file_put_contents(APP_LOG_DIR . '/app.log', $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+}
+
+function bootstrapErrorMonitoring(): void {
+    static $bootstrapped = false;
+    if ($bootstrapped) {
+        return;
+    }
+    $bootstrapped = true;
+
+    $phpErrorLog = APP_LOG_DIR . '/php-error.log';
+    @ini_set('log_errors', '1');
+    @ini_set('error_log', $phpErrorLog);
+
+    set_error_handler(static function (int $severity, string $message, string $file = '', int $line = 0): bool {
+        if (!(error_reporting() & $severity)) {
+            return false;
+        }
+
+        writeAppLogEntry('error', 'PHP runtime warning', [
+            'severity' => $severity,
+            'message' => $message,
+            'file' => basename($file),
+            'line' => $line,
+        ]);
+
+        return false;
+    });
+
+    set_exception_handler(static function (Throwable $exception): void {
+        writeAppLogEntry('critical', 'Unhandled exception', [
+            'exception' => $exception,
+        ]);
+
+        if (PHP_SAPI === 'cli') {
+            fwrite(STDERR, '[gestion-compta] ' . $exception->getMessage() . PHP_EOL);
+            return;
+        }
+
+        if (!headers_sent()) {
+            http_response_code(500);
+        }
+
+        echo 'Une erreur interne est survenue.';
+    });
+
+    register_shutdown_function(static function (): void {
+        $error = error_get_last();
+        if (!$error || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+            return;
+        }
+
+        writeAppLogEntry('critical', 'Fatal shutdown error', [
+            'type' => $error['type'],
+            'message' => $error['message'] ?? '',
+            'file' => isset($error['file']) ? basename($error['file']) : '',
+            'line' => $error['line'] ?? 0,
+        ]);
+    });
+}
+
+if (envValue('GESTION_COMPTA_DISABLE_ERROR_HANDLERS', '0') !== '1') {
+    bootstrapErrorMonitoring();
+}
 
 function tableExists(PDO $pdo, string $table): bool {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?');

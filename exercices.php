@@ -25,16 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'date_fin' => $_POST['date_fin'] ?? '',
             'notes' => trim($_POST['notes'] ?? ''),
         ];
+        $redirectAction = $postAction === 'modifier'
+            ? 'modifier&id=' . (int) ($_POST['id'] ?? 0)
+            : 'nouveau';
 
-        if (empty($data['nom']) || empty($data['date_debut']) || empty($data['date_fin'])) {
-            setFlash('danger', 'Tous les champs obligatoires doivent être remplis.');
-            header('Location: exercices.php?action=' . ($postAction === 'modifier' ? 'modifier&id=' . (int)$_POST['id'] : 'nouveau'));
-            exit;
-        }
-
-        if ($data['date_fin'] <= $data['date_debut']) {
-            setFlash('danger', 'La date de fin doit être postérieure à la date de début.');
-            header('Location: exercices.php?action=nouveau');
+        $errors = validateExerciceData($data, $postAction === 'modifier' ? (int) ($_POST['id'] ?? 0) : null);
+        if (!empty($errors)) {
+            setFlash('danger', $errors[0]);
+            header('Location: exercices.php?action=' . $redirectAction);
             exit;
         }
 
@@ -57,8 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($postAction === 'rouvrir') {
-        rouvrirExercice((int)$_POST['id']);
-        setFlash('success', 'Exercice réouvert.');
+        try {
+            rouvrirExercice((int)$_POST['id']);
+            setFlash('success', 'Exercice réouvert.');
+        } catch (RuntimeException $e) {
+            setFlash('danger', $e->getMessage());
+        }
         header('Location: exercices.php');
         exit;
     }
@@ -221,7 +223,7 @@ include 'header.php';
                                     <small><?= formatDate($ex['date_debut']) ?> → <?= formatDate($ex['date_fin']) ?></small>
                                 </td>
                                 <td>
-                                    <?php if ($ex['statut'] === 'ouvert'): ?>
+                                    <?php if (!isExerciceClosed($ex['statut'])): ?>
                                         <span class="badge bg-success">Ouvert</span>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Clôturé</span>
@@ -238,7 +240,7 @@ include 'header.php';
                                         <a href="?action=modifier&id=<?= $ex['id'] ?>" class="btn btn-outline-primary" title="Modifier">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <?php if ($ex['statut'] === 'ouvert'): ?>
+                                        <?php if (!isExerciceClosed($ex['statut'])): ?>
                                             <form method="POST" class="d-inline" onsubmit="return confirm('Clôturer cet exercice ?')">
                                                 <?= csrfField() ?>
                                                 <input type="hidden" name="action" value="cloturer">

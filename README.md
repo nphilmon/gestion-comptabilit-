@@ -148,6 +148,22 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
 - Contrôles de rôles sur les pages sensibles (admin / comptable / lecteur)
 - Script `install.php` verrouillé pour une utilisation locale uniquement
 
+## Qualité & exploitation
+
+- **Tests PHP sans dépendance externe** : `php tests/run.php`
+- **Validation syntaxique** : `find . -name '*.php' -print0 | xargs -0 -n1 php -l`
+- **CI GitHub Actions** : workflow `PHP CI`
+- **Logs applicatifs** : `storage/logs/app.log`
+- **Logs erreurs PHP** : `storage/logs/php-error.log`
+
+## Sauvegarde & restauration
+
+Consultez `docs/OPERATIONS.md` pour :
+
+- sauvegarder la base via `mysqldump`
+- restaurer une sauvegarde SQL
+- vérifier les logs applicatifs après incident
+
 ## Publication sur GitHub
 
 1. Initialiser le dépôt local :
