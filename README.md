@@ -1,4 +1,4 @@
-# Gestion Comptable Pro v2.1.0
+# Gestion Comptable Pro v2.1.1
 
 Application web de gestion comptable et commerciale pour auto-entrepreneurs, micro-entreprises et PME françaises. Fonctionne comme un **expert-comptable virtuel** avec gestion complète des documents commerciaux, caisse, comptabilité et rapports.
 
@@ -154,7 +154,7 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
    ```bash
    git init
    git add .
-   git commit -m "feat: release Gestion Comptable Pro v2.1.0"
+   git commit -m "feat: release Gestion Comptable Pro v2.1.1"
    ```
 2. Créer un dépôt vide sur GitHub
 3. Lier puis pousser :
@@ -181,6 +181,21 @@ Application web de gestion comptable et commerciale pour auto-entrepreneurs, mic
 6. **Supprimer ou bloquer** tout accès public à `install.php` après import.
 
 > Pour un déploiement Git via cPanel, liez le dépôt GitHub puis publiez le contenu du dépôt vers `public_html`.
+
+## Changelog
+
+### v2.1.1 (2026-05-10)
+
+- **Mode sombre** — Bascule d'un clic via le bouton 🌙 dans la barre de navigation ; préférence persistante entre les sessions (localStorage).
+- **Performance** — `getParam()` charge désormais tous les paramètres en **une seule requête SQL** (preload + cache statique), éliminant les N appels individuels par requête HTTP.
+- **Pagination des transactions** — La liste des transactions affiche 50 lignes par page avec navigation complète (première, précédente, numéros, suivante, dernière), évitant le chargement de l'intégralité du livre comptable.
+- **Export CSV amélioré** — Le fichier `transactions.csv` contient maintenant les colonnes **Type**, **Client/Fournisseur**, **Référence** et **Notes** (colonnes manquantes en v2.1.0).
+- **Sécurité — journalisation IP** — `logActivity()` utilise `getClientIp()` (validation proxy-safe) au lieu de `$_SERVER['REMOTE_ADDR']` brut.
+
+### v2.1.0
+
+- Factures électroniques (Factur-X / UBL), module Congés payés, module Paie
+- Recherche SIREN/SIRET, génération PDF, interface Material Design 3
 
 ## Licence
 

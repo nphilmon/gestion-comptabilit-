@@ -17,7 +17,7 @@ define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
 
 // --- Configuration application ---
 define('APP_NAME', 'Gestion Comptable Pro');
-define('APP_VERSION', '2.1.0');
+define('APP_VERSION', '2.1.1');
 
 $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
 if ($baseUrl === '') {

@@ -39,16 +39,19 @@ $db = getDB();
 
 switch ($type) {
     case 'transactions':
-        fputcsv($output, ['Date', 'Description', 'Catégorie', 'Type', 'Montant', 'Mode de paiement'], ';');
+        fputcsv($output, ['Date', 'Type', 'Description', 'Client / Fournisseur', 'Catégorie', 'Montant', 'Mode de paiement', 'Référence', 'Notes'], ';');
         $rows = getTransactions(['annee' => $annee]);
         foreach ($rows as $r) {
             fputcsv($output, [
                 $r['date_transaction'],
-                $r['description'],
-                $r['categorie_nom'] ?? '',
                 $r['type'] ?? '',
+                $r['description'],
+                $r['client_fournisseur'] ?? '',
+                $r['categorie_nom'] ?? '',
                 number_format((float)$r['montant'], 2, ',', ''),
-                $r['mode_paiement'] ?? ''
+                $r['mode_paiement'] ?? '',
+                $r['reference'] ?? '',
+                $r['notes'] ?? '',
             ], ';');
         }
         break;

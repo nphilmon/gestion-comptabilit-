@@ -26,6 +26,13 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>assets/style.css" rel="stylesheet">
+    <!-- Anti-flash dark mode: appliquer le thème avant le rendu -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('gestionCompta.theme');
+            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
 </head>
 <body>
     <nav class="navbar navbar-expand-xxl navbar-dark navbar-blue app-navbar-sticky">
@@ -246,6 +253,10 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
                     </form>
 
                     <div class="navbar-text text-light d-flex align-items-center gap-2 app-navbar-user">
+                        <!-- Dark mode toggle -->
+                        <button class="btn btn-sm btn-outline-secondary" id="darkModeToggle" title="Mode sombre / clair" aria-label="Basculer le mode sombre">
+                            <i class="bi bi-moon-stars" id="darkModeIcon"></i>
+                        </button>
                         <div class="dropdown">
                             <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle"></i> <?= e($currentUser['nom'] ?? '') ?>

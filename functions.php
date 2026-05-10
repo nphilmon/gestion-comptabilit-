@@ -230,7 +230,7 @@ function logActivity(int $userId, string $action, string $details = '', ?string 
     try {
         $db = getDB();
         $stmt = $db->prepare('INSERT INTO activity_log (user_id, action, details, cible, ip_address) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $action, $details, $cible, $_SERVER['REMOTE_ADDR'] ?? '']);
+        $stmt->execute([$userId, $action, $details, $cible, getClientIp()]);
     } catch (\PDOException $e) {
         // Silencieux — le log ne doit pas bloquer l'application
     }
@@ -305,12 +305,32 @@ function isRegistrationOpen(): bool {
 }
 
 // --- Paramètres ---
+
+/**
+ * Charge tous les paramètres en une seule requête et les met en cache
+ * pour toute la durée de la requête HTTP (évite N requêtes individuelles).
+ */
+function _getAllParamsCache(): array {
+    static $cache = null;
+    if ($cache === null) {
+        $cache = [];
+        try {
+            $db = getDB();
+            $rows = $db->query('SELECT cle, valeur FROM parametres')->fetchAll(\PDO::FETCH_KEY_PAIR);
+            if (is_array($rows)) {
+                $cache = $rows;
+            }
+        } catch (\Throwable $e) {
+            // En cas d'erreur BDD, on retourne un cache vide ; les valeurs
+            // par défaut seront utilisées par les appelants.
+        }
+    }
+    return $cache;
+}
+
 function getParam(string $cle, string $defaut = ''): string {
-    $db = getDB();
-    $stmt = $db->prepare('SELECT valeur FROM parametres WHERE cle = ?');
-    $stmt->execute([$cle]);
-    $row = $stmt->fetch();
-    return $row ? $row['valeur'] : $defaut;
+    $cache = _getAllParamsCache();
+    return array_key_exists($cle, $cache) ? $cache[$cle] : $defaut;
 }
 
 function setParam(string $cle, string $valeur): void {
@@ -340,8 +360,7 @@ function getCategorie(int $id): ?array {
 }
 
 // --- Transactions ---
-function getTransactions(array $filtres = []): array {
-    $db = getDB();
+function _buildTransactionWhere(array $filtres): array {
     $where = ['1=1'];
     $params = [];
 
@@ -377,15 +396,38 @@ function getTransactions(array $filtres = []): array {
         $params[] = $like;
     }
 
+    return [$where, $params];
+}
+
+function getTransactions(array $filtres = [], ?int $limit = null, int $offset = 0): array {
+    $db = getDB();
+    [$where, $params] = _buildTransactionWhere($filtres);
+
     $sql = "SELECT t.*, c.nom AS categorie_nom, c.couleur AS categorie_couleur
             FROM transactions t
             LEFT JOIN categories c ON t.categorie_id = c.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY t.date_transaction DESC, t.id DESC";
 
+    if ($limit !== null) {
+        $sql .= ' LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+    }
+
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+function countTransactions(array $filtres = []): int {
+    $db = getDB();
+    [$where, $params] = _buildTransactionWhere($filtres);
+
+    $sql = "SELECT COUNT(*) FROM transactions t
+            WHERE " . implode(' AND ', $where);
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    return (int) $stmt->fetchColumn();
 }
 
 function getTransaction(int $id): ?array {

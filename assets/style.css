@@ -86,7 +86,206 @@
     --font-mono: 'JetBrains Mono', 'Roboto Mono', 'Fira Code', monospace;
 }
 
-/* ── Global ─────────────────────────────────────────────────── */
+/* ── Dark Mode Tokens ────────────────────────────────────────── */
+[data-theme="dark"] {
+    --md-primary: #93C5FD;
+    --md-on-primary: #1E3A5F;
+    --md-primary-container: #1E3A5F;
+    --md-on-primary-container: #DBEAFE;
+
+    --md-secondary: #94A3B8;
+    --md-on-secondary: #1E293B;
+    --md-secondary-container: #334155;
+    --md-on-secondary-container: #E2E8F0;
+
+    --md-tertiary: #C4B5FD;
+    --md-on-tertiary: #3B0764;
+    --md-tertiary-container: #4C1D95;
+    --md-on-tertiary-container: #EDE9FE;
+
+    --md-error: #FCA5A5;
+    --md-on-error: #7F1D1D;
+    --md-error-container: #7F1D1D;
+    --md-on-error-container: #FEE2E2;
+
+    --md-surface: #0F172A;
+    --md-on-surface: #E2E8F0;
+    --md-surface-dim: #020617;
+    --md-surface-bright: #1E293B;
+    --md-surface-variant: #1E293B;
+    --md-on-surface-variant: #94A3B8;
+    --md-outline: #475569;
+    --md-outline-variant: #334155;
+
+    --md-surface-container-lowest: #020617;
+    --md-surface-container-low: #0F172A;
+    --md-surface-container: #1E293B;
+    --md-surface-container-high: #334155;
+    --md-surface-container-highest: #475569;
+
+    --md-inverse-surface: #E2E8F0;
+    --md-inverse-on-surface: #1E293B;
+    --md-inverse-primary: #2563EB;
+
+    --md-success: #4ADE80;
+    --md-success-container: #14532D;
+    --md-warning: #FB923C;
+    --md-warning-container: #431407;
+    --md-info: #38BDF8;
+    --md-info-container: #0C4A6E;
+
+    --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --md-elevation-2: 0 4px 6px -1px rgba(0,0,0,0.35), 0 2px 4px -2px rgba(0,0,0,0.25);
+    --md-elevation-3: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.3);
+}
+
+/* Dark mode — overrides component styles */
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .navbar-blue {
+    background: #1E293B !important;
+    border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .navbar-brand,
+[data-theme="dark"] .nav-link,
+[data-theme="dark"] .navbar .nav-link {
+    color: #E2E8F0 !important;
+}
+[data-theme="dark"] .navbar .navbar-toggler-icon {
+    filter: invert(1);
+}
+[data-theme="dark"] .offcanvas,
+[data-theme="dark"] .app-navbar-panel {
+    background: #1E293B !important;
+    color: #E2E8F0;
+}
+[data-theme="dark"] .dropdown-menu {
+    background-color: #1E293B;
+    border-color: #334155;
+}
+[data-theme="dark"] .dropdown-item {
+    color: #E2E8F0;
+}
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: #334155;
+    color: #F1F5F9;
+}
+[data-theme="dark"] .card {
+    background-color: #1E293B;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] .card-header {
+    background-color: #334155;
+    border-bottom-color: #475569;
+    color: #E2E8F0;
+}
+[data-theme="dark"] .table {
+    color: #E2E8F0;
+    border-color: #334155;
+}
+[data-theme="dark"] .table > :not(caption) > * > * {
+    background-color: transparent;
+    color: #E2E8F0;
+    border-bottom-color: #334155;
+}
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255,255,255,0.04);
+}
+[data-theme="dark"] .table-light {
+    background-color: #334155 !important;
+    color: #CBD5E1;
+}
+[data-theme="dark"] .table-light th {
+    background-color: #334155 !important;
+    color: #CBD5E1;
+}
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #1E293B;
+    border-color: #475569;
+    color: #E2E8F0;
+}
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: #1E293B;
+    border-color: #93C5FD;
+    color: #E2E8F0;
+}
+[data-theme="dark"] .form-control::placeholder {
+    color: #64748B;
+}
+[data-theme="dark"] .modal-content {
+    background-color: #1E293B;
+    border-color: #334155;
+    color: #E2E8F0;
+}
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: #334155;
+}
+[data-theme="dark"] .alert-info {
+    background-color: #0C4A6E;
+    border-color: #0369A1;
+    color: #BAE6FD;
+}
+[data-theme="dark"] .alert-success {
+    background-color: #14532D;
+    border-color: #16A34A;
+    color: #BBF7D0;
+}
+[data-theme="dark"] .alert-warning {
+    background-color: #431407;
+    border-color: #EA580C;
+    color: #FED7AA;
+}
+[data-theme="dark"] .alert-danger {
+    background-color: #7F1D1D;
+    border-color: #DC2626;
+    color: #FECACA;
+}
+[data-theme="dark"] .hero-banner {
+    background: #1E293B;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] .footer-blue {
+    background: #1E293B !important;
+    border-top-color: #334155 !important;
+}
+[data-theme="dark"] .stat-card {
+    background: #1E293B;
+}
+[data-theme="dark"] .text-muted {
+    color: #94A3B8 !important;
+}
+[data-theme="dark"] .border-top,
+[data-theme="dark"] .border-bottom,
+[data-theme="dark"] .border {
+    border-color: #334155 !important;
+}
+[data-theme="dark"] .pagination .page-link {
+    background-color: #1E293B;
+    border-color: #334155;
+    color: #93C5FD;
+}
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: #2563EB;
+    border-color: #2563EB;
+    color: #fff;
+}
+[data-theme="dark"] .pagination .page-item.disabled .page-link {
+    background-color: #0F172A;
+    color: #475569;
+}
+[data-theme="dark"] .user-info-block {
+    background-color: #334155;
+}
+[data-theme="dark"] hr,
+[data-theme="dark"] .dropdown-divider {
+    border-color: #334155;
+}
+[data-theme="dark"] .app-navbar-scrolled {
+    background: rgba(30,41,59,0.98) !important;
+}
 body {
     background-color: var(--md-surface);
     font-family: var(--font-body);
@@ -495,6 +694,28 @@ body {
 
 .app-navbar-user {
     margin-left: auto;
+}
+
+/* Dark mode toggle button */
+#darkModeToggle {
+    border-color: #CBD5E1;
+    color: #475569;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+#darkModeToggle:hover {
+    border-color: var(--md-primary);
+    color: var(--md-primary);
+    background-color: transparent;
+}
+[data-theme="dark"] #darkModeToggle {
+    border-color: #475569;
+    color: #CBD5E1;
+}
+[data-theme="dark"] #darkModeToggle:hover {
+    border-color: #93C5FD;
+    color: #93C5FD;
 }
 
 .app-navbar-panel {
