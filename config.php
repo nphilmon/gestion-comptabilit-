@@ -9,8 +9,8 @@ function envValue(string $key, string $default = ''): string {
 }
 
 function ensureDirectoryExists(string $path): void {
-    if (!is_dir($path)) {
-        @mkdir($path, 0775, true);
+    if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
+        error_log('Impossible de créer le répertoire runtime: ' . $path);
     }
 }
 
@@ -97,7 +97,10 @@ function writeAppLogEntry(string $level, string $message, array $context = []): 
         ]);
     }
 
-    @file_put_contents(APP_LOG_DIR . '/app.log', $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+    $result = file_put_contents(APP_LOG_DIR . '/app.log', $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+    if ($result === false) {
+        error_log('[gestion-compta] ' . $line);
+    }
 }
 
 function bootstrapErrorMonitoring(): void {

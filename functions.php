@@ -771,7 +771,7 @@ function normalizeExerciceRow(?array $row): ?array {
     return $row;
 }
 
-function findOpenExerciceOverlap(string $dateDebut, string $dateFin, ?int $excludeId = null): ?array {
+function findOpenExerciceOverlap(string $dateDebut, string $dateFin, ?int $excludeExerciceId = null): ?array {
     $db = getDB();
     $sql = "SELECT * FROM exercices
             WHERE statut = 'ouvert'
@@ -779,9 +779,9 @@ function findOpenExerciceOverlap(string $dateDebut, string $dateFin, ?int $exclu
               AND date_fin >= ?";
     $params = [$dateFin, $dateDebut];
 
-    if ($excludeId !== null) {
+    if ($excludeExerciceId !== null) {
         $sql .= ' AND id <> ?';
-        $params[] = $excludeId;
+        $params[] = $excludeExerciceId;
     }
 
     $sql .= ' ORDER BY date_debut ASC LIMIT 1';
@@ -790,7 +790,7 @@ function findOpenExerciceOverlap(string $dateDebut, string $dateFin, ?int $exclu
     return normalizeExerciceRow($stmt->fetch() ?: null);
 }
 
-function validateExerciceData(array $data, ?int $excludeId = null): array {
+function validateExerciceData(array $data, ?int $excludeExerciceId = null): array {
     $errors = [];
     $nom = trim((string) ($data['nom'] ?? ''));
     $dateDebut = (string) ($data['date_debut'] ?? '');
@@ -812,7 +812,7 @@ function validateExerciceData(array $data, ?int $excludeId = null): array {
     }
 
     if (empty($errors)) {
-        $conflict = findOpenExerciceOverlap($dateDebut, $dateFin, $excludeId);
+        $conflict = findOpenExerciceOverlap($dateDebut, $dateFin, $excludeExerciceId);
         if ($conflict) {
             $errors[] = 'La période chevauche un exercice ouvert existant : ' . $conflict['nom'] . '.';
         }
