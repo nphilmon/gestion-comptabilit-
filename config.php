@@ -155,7 +155,7 @@ function bootstrapErrorMonitoring(): void {
         writeAppLogEntry('critical', 'Fatal shutdown error', [
             'type' => $error['type'],
             'message' => $error['message'] ?? '',
-            'file' => isset($error['file']) ? basename($error['file']) : '',
+            'file' => !empty($error['file']) ? basename($error['file']) : '',
             'line' => $error['line'] ?? 0,
         ]);
     });
