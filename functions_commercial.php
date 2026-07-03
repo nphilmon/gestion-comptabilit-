@@ -10,6 +10,32 @@ function safeXmlValue(?string $value): string {
     return trim((string) $value);
 }
 
+/**
+ * Calcule les montants HT/TVA/TTC de chaque ligne d'un document (devis,
+ * facture, commande) ainsi que les totaux du document. Fonction pure,
+ * sans accès base de données.
+ */
+function calculerLignesDocument(array $lignes): array {
+    $totalHT = 0.0;
+    $totalTVA = 0.0;
+
+    foreach ($lignes as &$l) {
+        $l['montant_ht'] = round((float) $l['quantite'] * (float) $l['prix_unitaire_ht'], 2);
+        $l['montant_tva'] = round($l['montant_ht'] * ((float) $l['taux_tva'] / 100), 2);
+        $l['montant_ttc'] = $l['montant_ht'] + $l['montant_tva'];
+        $totalHT += $l['montant_ht'];
+        $totalTVA += $l['montant_tva'];
+    }
+    unset($l);
+
+    return [
+        'lignes' => $lignes,
+        'total_ht' => round($totalHT, 2),
+        'total_tva' => round($totalTVA, 2),
+        'total_ttc' => round($totalHT + $totalTVA, 2),
+    ];
+}
+
 // =============================================================
 // CLIENTS
 // =============================================================
@@ -226,17 +252,11 @@ function sauvegarderDevis(array $data, array $lignes, ?int $id = null): int {
     $db->beginTransaction();
 
     try {
-        $totalHT = 0;
-        $totalTVA = 0;
-        foreach ($lignes as &$l) {
-            $l['montant_ht'] = round($l['quantite'] * $l['prix_unitaire_ht'], 2);
-            $l['montant_tva'] = round($l['montant_ht'] * ($l['taux_tva'] / 100), 2);
-            $l['montant_ttc'] = $l['montant_ht'] + $l['montant_tva'];
-            $totalHT += $l['montant_ht'];
-            $totalTVA += $l['montant_tva'];
-        }
-        unset($l);
-        $totalTTC = $totalHT + $totalTVA;
+        $calcul = calculerLignesDocument($lignes);
+        $lignes = $calcul['lignes'];
+        $totalHT = $calcul['total_ht'];
+        $totalTVA = $calcul['total_tva'];
+        $totalTTC = $calcul['total_ttc'];
 
         if ($id) {
             $stmt = $db->prepare('UPDATE devis SET client_id=?, date_devis=?, date_validite=?, statut=?, objet=?, notes=?, conditions=?, montant_ht=?, montant_tva=?, montant_ttc=? WHERE id=?');
@@ -799,17 +819,11 @@ function sauvegarderFacture(array $data, array $lignes, ?int $id = null): int {
             $paysLivraison = trim((string) ($client['pays'] ?? 'France'));
         }
 
-        $totalHT = 0;
-        $totalTVA = 0;
-        foreach ($lignes as &$l) {
-            $l['montant_ht'] = round($l['quantite'] * $l['prix_unitaire_ht'], 2);
-            $l['montant_tva'] = round($l['montant_ht'] * ($l['taux_tva'] / 100), 2);
-            $l['montant_ttc'] = $l['montant_ht'] + $l['montant_tva'];
-            $totalHT += $l['montant_ht'];
-            $totalTVA += $l['montant_tva'];
-        }
-        unset($l);
-        $totalTTC = $totalHT + $totalTVA;
+        $calcul = calculerLignesDocument($lignes);
+        $lignes = $calcul['lignes'];
+        $totalHT = $calcul['total_ht'];
+        $totalTVA = $calcul['total_tva'];
+        $totalTTC = $calcul['total_ttc'];
 
         if ($id) {
             $stmt = $db->prepare('UPDATE factures SET client_id=?, devis_id=?, commande_id=?, client_siren=?, adresse_livraison=?, code_postal_livraison=?, ville_livraison=?, pays_livraison=?, type_operation=?, circuit_facturation=?, einvoice_format=?, einvoice_statut=?, einvoice_plateforme=?, einvoice_reference=?, date_facture=?, date_echeance=?, statut=?, objet=?, notes=?, conditions=?, montant_ht=?, montant_tva=?, montant_ttc=? WHERE id=?');
@@ -952,17 +966,11 @@ function sauvegarderCommande(array $data, array $lignes, ?int $id = null): int {
     $db->beginTransaction();
 
     try {
-        $totalHT = 0;
-        $totalTVA = 0;
-        foreach ($lignes as &$l) {
-            $l['montant_ht'] = round($l['quantite'] * $l['prix_unitaire_ht'], 2);
-            $l['montant_tva'] = round($l['montant_ht'] * ($l['taux_tva'] / 100), 2);
-            $l['montant_ttc'] = $l['montant_ht'] + $l['montant_tva'];
-            $totalHT += $l['montant_ht'];
-            $totalTVA += $l['montant_tva'];
-        }
-        unset($l);
-        $totalTTC = $totalHT + $totalTVA;
+        $calcul = calculerLignesDocument($lignes);
+        $lignes = $calcul['lignes'];
+        $totalHT = $calcul['total_ht'];
+        $totalTVA = $calcul['total_tva'];
+        $totalTTC = $calcul['total_ttc'];
 
         if ($id) {
             $stmt = $db->prepare('UPDATE commandes SET client_id=?, devis_id=?, date_commande=?, statut=?, objet=?, notes=?, montant_ht=?, montant_tva=?, montant_ttc=? WHERE id=?');

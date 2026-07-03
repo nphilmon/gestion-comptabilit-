@@ -573,18 +573,39 @@ function getStatsAnnee(int $annee): array {
     $stmt->execute([$annee]);
     $totalDepenses = (float) $stmt->fetchColumn();
 
-    $plafondCA = (float) getParam('plafond_ca', '0');
-    $tauxAbattement = (float) getParam('taux_abattement', '0');
-    $tauxCotisations = (float) getParam('taux_cotisations_sociales', '0');
-    $tauxCfp = (float) getParam('taux_cfp', '0');
-    $vlActif = (bool) getParam('versement_liberatoire_actif', '0');
-    $tauxVL = (float) getParam('taux_versement_liberatoire', '0');
-    $tvaApplicable = (bool) getParam('tva_applicable', '0');
-    $tauxTva = (float) getParam('taux_tva', '20');
-    $tauxIS = (float) getParam('taux_is', '15');
+    $params = [
+        'plafond_ca' => (float) getParam('plafond_ca', '0'),
+        'taux_abattement' => (float) getParam('taux_abattement', '0'),
+        'taux_cotisations_sociales' => (float) getParam('taux_cotisations_sociales', '0'),
+        'taux_cfp' => (float) getParam('taux_cfp', '0'),
+        'versement_liberatoire_actif' => (bool) getParam('versement_liberatoire_actif', '0'),
+        'taux_versement_liberatoire' => (float) getParam('taux_versement_liberatoire', '0'),
+        'tva_applicable' => (bool) getParam('tva_applicable', '0'),
+        'taux_tva' => (float) getParam('taux_tva', '20'),
+        'taux_is' => (float) getParam('taux_is', '15'),
+    ];
+
+    return ['annee' => $annee] + calculerStatsRegime($conf, $totalRecettes, $totalDepenses, $params);
+}
+
+/**
+ * Calcule le résultat fiscal (micro-entreprise ou régime réel) à partir des
+ * totaux de l'année et des taux de paramétrage. Fonction pure, sans accès
+ * base de données, pour permettre des tests unitaires sur les calculs
+ * fiscaux/comptables.
+ */
+function calculerStatsRegime(array $conf, float $totalRecettes, float $totalDepenses, array $params): array {
+    $plafondCA = $params['plafond_ca'] ?? 0.0;
+    $tauxAbattement = $params['taux_abattement'] ?? 0.0;
+    $tauxCotisations = $params['taux_cotisations_sociales'] ?? 0.0;
+    $tauxCfp = $params['taux_cfp'] ?? 0.0;
+    $vlActif = $params['versement_liberatoire_actif'] ?? false;
+    $tauxVL = $params['taux_versement_liberatoire'] ?? 0.0;
+    $tvaApplicable = $params['tva_applicable'] ?? false;
+    $tauxTva = $params['taux_tva'] ?? 20.0;
+    $tauxIS = $params['taux_is'] ?? 15.0;
 
     $result = [
-        'annee' => $annee,
         'total_recettes' => $totalRecettes,
         'total_depenses' => $totalDepenses,
         'regime' => $conf,
