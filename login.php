@@ -82,102 +82,158 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: var(--md-surface);
             min-height: 100vh;
             display: flex;
+            font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+        }
+
+        .login-page {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* ── Panneau de marque (gauche, masqué en mobile) ── */
+        .login-visual {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem 3.5rem;
+            background: linear-gradient(135deg, var(--md-primary) 0%, var(--md-primary-dark) 100%);
+            color: var(--md-on-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-visual::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -15%;
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .login-visual::after {
+            content: '';
+            position: absolute;
+            bottom: -25%;
+            left: -10%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .login-visual-content {
+            position: relative;
+            z-index: 1;
+            max-width: 460px;
+        }
+
+        .login-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 18px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Inter', 'Roboto', system-ui, sans-serif;
-            padding: 1rem;
+            margin-bottom: 1.75rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .login-icon i {
+            font-size: 1.75rem;
+            color: var(--md-on-primary);
+        }
+
+        .login-visual h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            font-family: 'Inter', system-ui, sans-serif;
+            margin-bottom: 0.75rem;
+        }
+
+        .login-visual p.lead {
+            font-size: 1rem;
+            font-weight: 300;
+            opacity: 0.85;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .login-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            opacity: 0.95;
+        }
+
+        .login-features li i {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 0.05rem;
+        }
+
+        /* ── Panneau formulaire (droite) ── */
+        .login-form-side {
+            flex: 1 1 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--md-surface-container-lowest);
         }
 
         .login-wrapper {
             width: 100%;
-            max-width: 440px;
+            max-width: 400px;
         }
 
-        .login-card {
-            background: var(--md-surface-container-lowest);
-            border-radius: 28px;
-            box-shadow: 0 2px 6px 2px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.12);
-            overflow: hidden;
-            transition: box-shadow 0.3s cubic-bezier(0.2, 0, 0, 1);
-        }
-
-        .login-card:hover {
-            box-shadow: 0 6px 16px 4px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.15);
-        }
-
-        /* ── Header avec motif ── */
-        .login-header {
-            background: linear-gradient(135deg, var(--md-primary) 0%, var(--md-primary-dark) 100%);
-            color: var(--md-on-primary);
-            padding: 2.75rem 2rem 2.25rem;
+        .login-form-top {
             text-align: center;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 1.75rem;
         }
 
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: -40%;
-            right: -20%;
-            width: 260px;
-            height: 260px;
-            background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .login-header::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -15%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .login-icon {
-            width: 72px;
-            height: 72px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(4px);
-            position: relative;
-            z-index: 1;
-        }
-
-        .login-icon i {
-            font-size: 2rem;
-            color: var(--md-on-primary);
-        }
-
-        .login-header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
+        .login-form-top h2 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--md-on-surface);
             letter-spacing: -0.01em;
-            position: relative;
-            z-index: 1;
         }
 
-        .login-header p {
-            margin: 0.5rem 0 0;
-            opacity: 0.8;
+        .login-form-top p {
+            margin-top: 0.375rem;
             font-size: 0.875rem;
-            font-weight: 300;
-            letter-spacing: 0.02em;
-            position: relative;
-            z-index: 1;
+            color: var(--md-on-surface-variant);
         }
 
-        /* ── Body ── */
+        @media (max-width: 900px) {
+            .login-visual { display: none; }
+            .login-form-side { padding: 1.5rem; }
+        }
+
+        /* ── Body (contenu formulaire) ── */
         .login-body {
-            padding: 2rem 2rem 1.5rem;
+            padding: 0;
         }
 
         .form-label {
@@ -260,7 +316,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* ── Footer ── */
         .login-footer {
             text-align: center;
-            padding: 0 2rem 1.75rem;
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--md-outline-variant);
             color: var(--md-on-surface-variant);
             font-size: 0.8rem;
         }
@@ -332,62 +390,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="login-card">
-            <div class="login-header">
+    <div class="login-page">
+        <div class="login-visual">
+            <div class="login-visual-content">
                 <div class="login-icon">
                     <i class="bi bi-bar-chart-line-fill"></i>
                 </div>
                 <h1><?= e(APP_NAME) ?></h1>
-                <p>Expert-comptable virtuel</p>
+                <p class="lead">Votre expert-comptable virtuel : suivi financier, paie et conformité légale réunis dans une seule application.</p>
+                <ul class="login-features">
+                    <li><i class="bi bi-shield-check"></i> Conforme au Code du travail et aux obligations comptables françaises</li>
+                    <li><i class="bi bi-graph-up-arrow"></i> Suivi en temps réel de votre trésorerie et de vos recettes</li>
+                    <li><i class="bi bi-file-earmark-richtext"></i> Devis, factures et bulletins de paie générés automatiquement</li>
+                </ul>
             </div>
+        </div>
 
-            <div class="login-body">
-                <?php if ($expired): ?>
-                    <div class="md-alert md-alert-warning">
-                        <i class="bi bi-clock-history"></i> Session expirée. Veuillez vous reconnecter.
-                    </div>
-                <?php endif; ?>
+        <div class="login-form-side">
+            <div class="login-wrapper">
+                <div class="login-form-top">
+                    <h2>Connexion</h2>
+                    <p>Accédez à votre espace de gestion</p>
+                </div>
 
-                <?php if ($error): ?>
-                    <div class="md-alert md-alert-error">
-                        <i class="bi bi-exclamation-triangle-fill"></i> <?= e($error) ?>
-                    </div>
-                <?php endif; ?>
-
-                <form method="POST" autocomplete="on">
-                    <?= csrfField() ?>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="email">Adresse email</label>
-                        <div class="md-input-group">
-                            <span class="input-icon"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control" id="email" name="email"
-                                   value="<?= e($_POST['email'] ?? '') ?>"
-                                   placeholder="nom@exemple.com" required autofocus>
+                <div class="login-body">
+                    <?php if ($expired): ?>
+                        <div class="md-alert md-alert-warning">
+                            <i class="bi bi-clock-history"></i> Session expirée. Veuillez vous reconnecter.
                         </div>
-                    </div>
+                    <?php endif; ?>
 
-                    <div class="mb-4">
-                        <label class="form-label" for="password">Mot de passe</label>
-                        <div class="md-input-group">
-                            <span class="input-icon"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="password" name="password"
-                                   placeholder="••••••••" required>
+                    <?php if ($error): ?>
+                        <div class="md-alert md-alert-error">
+                            <i class="bi bi-exclamation-triangle-fill"></i> <?= e($error) ?>
                         </div>
-                    </div>
+                    <?php endif; ?>
 
-                    <button type="submit" class="btn btn-login w-100">
-                        Se connecter
-                    </button>
-                </form>
-            </div>
+                    <form method="POST" autocomplete="on">
+                        <?= csrfField() ?>
 
-            <div class="login-footer">
-                <?php if ($inscriptionOuverte): ?>
-                    <a href="<?= BASE_URL ?>register.php"><i class="bi bi-person-plus"></i> Créer un compte</a>
-                <?php endif; ?>
-                <div class="login-version"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Adresse email</label>
+                            <div class="md-input-group">
+                                <span class="input-icon"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="<?= e($_POST['email'] ?? '') ?>"
+                                       placeholder="nom@exemple.com" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="password">Mot de passe</label>
+                            <div class="md-input-group">
+                                <span class="input-icon"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-login w-100">
+                            Se connecter
+                        </button>
+                    </form>
+                </div>
+
+                <div class="login-footer">
+                    <?php if ($inscriptionOuverte): ?>
+                        <a href="<?= BASE_URL ?>register.php"><i class="bi bi-person-plus"></i> Créer un compte</a>
+                    <?php endif; ?>
+                    <div class="login-version"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></div>
+                </div>
             </div>
         </div>
     </div>

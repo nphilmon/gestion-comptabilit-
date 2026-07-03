@@ -332,7 +332,7 @@ include 'header.php';
             <a href="transactions.php?action=ajouter&type=recette" class="btn btn-sm btn-primary">
                 <i class="bi bi-plus-lg"></i> Nouvelle recette
             </a>
-            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+            <a href="livre_pdf.php?onglet=recettes&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -413,7 +413,7 @@ include 'header.php';
         </div>
         <div class="d-flex gap-2">
             <a href="transactions.php?action=ajouter&type=depense" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Nouvel achat</a>
-            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+            <a href="livre_pdf.php?onglet=achats&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -519,7 +519,7 @@ if (!empty($depensesParCat)):
         </div>
         <div class="d-flex gap-2">
             <a href="transactions.php?action=ajouter" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Nouvelle écriture</a>
-            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+            <a href="livre_pdf.php?onglet=journal&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -609,7 +609,7 @@ if (!empty($depensesParCat)):
             <strong><i class="bi bi-book-half"></i> Grand livre <?= $annee ?></strong>
             <small class="text-muted ms-2">(Écritures groupées par compte / catégorie)</small>
         </div>
-        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+        <a href="livre_pdf.php?onglet=grandlivre&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
     </div>
     <div class="card-body p-0">
         <?php if (empty($grandLivre)): ?>
@@ -675,7 +675,7 @@ if (!empty($depensesParCat)):
             <strong><i class="bi bi-clipboard-data"></i> Balance générale <?= $annee ?></strong>
             <small class="text-muted ms-2">(Synthèse débit / crédit par compte)</small>
         </div>
-        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+        <a href="livre_pdf.php?onglet=balance&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
     </div>
     <div class="card-body p-0">
         <?php if (empty($balance)): ?>
@@ -767,7 +767,7 @@ $tauxTva = (float) getParam('taux_tva', '20');
             <strong><i class="bi bi-cash-stack"></i> Suivi de trésorerie <?= $annee ?></strong>
             <small class="text-muted ms-2">(<?= e(getRegimeLabel()) ?>)</small>
         </div>
-        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
+        <a href="livre_pdf.php?onglet=tresorerie&annee=<?= $annee ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
