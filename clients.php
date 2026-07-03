@@ -634,6 +634,7 @@ if ($action === 'modifier') {
     const prenomLabel = document.getElementById('prenomLabel');
     const nomField = document.getElementById('nomField');
     const prenomField = document.getElementById('prenomField');
+    const entrepriseField = document.getElementById('entrepriseField');
     if (!typeSelect || !nomLabel || !prenomLabel) return;
 
     function updateNomLabels() {
@@ -642,6 +643,7 @@ if ($action === 'modifier') {
         prenomLabel.textContent = isPro ? 'Prénom du contact' : 'Prénom';
         if (nomField) nomField.placeholder = isPro ? 'Nom du référent dans l\'entreprise' : '';
         if (prenomField) prenomField.placeholder = isPro ? 'Prénom du référent' : '';
+        if (entrepriseField) entrepriseField.disabled = !isPro;
     }
 
     typeSelect.addEventListener('change', updateNomLabels);
