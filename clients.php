@@ -488,7 +488,7 @@ if ($action === 'modifier') {
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <label class="form-label">Type de client *</label>
-                    <select name="type" class="form-select">
+                    <select name="type" id="clientTypeSelect" class="form-select">
                         <option value="professionnel" <?= ($client['type'] ?? '') === 'professionnel' ? 'selected' : '' ?>>Professionnel</option>
                         <option value="particulier" <?= ($client['type'] ?? '') === 'particulier' ? 'selected' : '' ?>>Particulier</option>
                     </select>
@@ -499,12 +499,12 @@ if ($action === 'modifier') {
                     <div class="form-text">Vous pouvez saisir ici le nom de la société pour lancer la recherche automatique.</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Nom *</label>
-                    <input type="text" name="nom" class="form-control" required value="<?= e($client['nom'] ?? '') ?>">
+                    <label class="form-label" id="nomLabel">Nom *</label>
+                    <input type="text" name="nom" id="nomField" class="form-control" required value="<?= e($client['nom'] ?? '') ?>">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Prénom</label>
-                    <input type="text" name="prenom" class="form-control" value="<?= e($client['prenom'] ?? '') ?>">
+                    <label class="form-label" id="prenomLabel">Prénom</label>
+                    <input type="text" name="prenom" id="prenomField" class="form-control" value="<?= e($client['prenom'] ?? '') ?>">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Email</label>
@@ -625,6 +625,29 @@ if ($action === 'modifier') {
 </form>
 
 <?php endif; ?>
+
+<!-- Libellés Nom/Prénom adaptés au type de client -->
+<script>
+(function() {
+    const typeSelect = document.getElementById('clientTypeSelect');
+    const nomLabel = document.getElementById('nomLabel');
+    const prenomLabel = document.getElementById('prenomLabel');
+    const nomField = document.getElementById('nomField');
+    const prenomField = document.getElementById('prenomField');
+    if (!typeSelect || !nomLabel || !prenomLabel) return;
+
+    function updateNomLabels() {
+        const isPro = typeSelect.value === 'professionnel';
+        nomLabel.textContent = isPro ? 'Nom du contact *' : 'Nom *';
+        prenomLabel.textContent = isPro ? 'Prénom du contact' : 'Prénom';
+        if (nomField) nomField.placeholder = isPro ? 'Nom du référent dans l\'entreprise' : '';
+        if (prenomField) prenomField.placeholder = isPro ? 'Prénom du référent' : '';
+    }
+
+    typeSelect.addEventListener('change', updateNomLabels);
+    updateNomLabels();
+})();
+</script>
 
 <!-- Script recherche SIREN/SIRET via API gouv.fr -->
 <script>
