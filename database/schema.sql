@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Utilisateur admin par défaut (mot de passe: admin)
-INSERT INTO `users` (`nom`, `email`, `password_hash`, `role`) VALUES
-('Administrateur', 'admin@compta.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+-- Aucun utilisateur par défaut : setup.php détecte une base sans
+-- utilisateur et guide la création du premier compte administrateur
+-- avec un mot de passe choisi par l'installateur.
 
 -- -------------------------------------------------------------
 -- Table des logs d'activité
