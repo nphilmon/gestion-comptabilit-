@@ -8,24 +8,49 @@ function envValue(string $key, string $default = ''): string {
     return $value !== false ? $value : $default;
 }
 
+// --- Configuration locale optionnelle ---
+// Sur certains hébergements mutualisés (dont cPanel en PHP-FPM), les
+// directives SetEnv du .htaccess ne sont pas transmises à getenv(). Créez
+// un fichier config.local.php (non versionné, voir config.local.php.example)
+// qui définit directement les constantes ci-dessous si les variables
+// d'environnement ne fonctionnent pas chez votre hébergeur.
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+
+// --- Environnement ---
+// Par défaut "production" : les erreurs PHP ne sont jamais affichées aux
+// visiteurs. Définissez GESTION_COMPTA_ENV=development (ou APP_ENV dans
+// config.local.php) pour les afficher en local pendant le développement.
+if (!defined('APP_ENV')) {
+    define('APP_ENV', envValue('GESTION_COMPTA_ENV', 'production'));
+}
+if (APP_ENV !== 'development') {
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+}
+error_reporting(E_ALL);
+
 // --- Configuration BDD ---
-define('DB_HOST', envValue('GESTION_COMPTA_DB_HOST', 'localhost'));
-define('DB_NAME', envValue('GESTION_COMPTA_DB_NAME', 'gestion_compta'));
-define('DB_USER', envValue('GESTION_COMPTA_DB_USER', 'root'));
-define('DB_PASS', envValue('GESTION_COMPTA_DB_PASS', ''));
-define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
+if (!defined('DB_HOST')) define('DB_HOST', envValue('GESTION_COMPTA_DB_HOST', 'localhost'));
+if (!defined('DB_NAME')) define('DB_NAME', envValue('GESTION_COMPTA_DB_NAME', 'gestion_compta'));
+if (!defined('DB_USER')) define('DB_USER', envValue('GESTION_COMPTA_DB_USER', 'root'));
+if (!defined('DB_PASS')) define('DB_PASS', envValue('GESTION_COMPTA_DB_PASS', ''));
+if (!defined('DB_CHARSET')) define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHARSET', 'utf8mb4'));
 
 // --- Configuration application ---
 define('APP_NAME', 'Gestion Comptable Pro');
 define('APP_VERSION', '2.1.0');
 
-$baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
-if ($baseUrl === '') {
-    $baseUrl = '/';
-} elseif ($baseUrl[0] !== '/') {
-    $baseUrl = '/' . $baseUrl;
+if (!defined('BASE_URL')) {
+    $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
+    if ($baseUrl === '') {
+        $baseUrl = '/';
+    } elseif ($baseUrl[0] !== '/') {
+        $baseUrl = '/' . $baseUrl;
+    }
+    define('BASE_URL', rtrim($baseUrl, '/') . '/');
 }
-define('BASE_URL', rtrim($baseUrl, '/') . '/');
 
 // --- Timezone ---
 date_default_timezone_set('Europe/Paris');

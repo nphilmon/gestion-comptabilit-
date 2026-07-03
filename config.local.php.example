@@ -1,0 +1,27 @@
+<?php
+/**
+ * Exemple de configuration locale pour hébergements où les variables
+ * d'environnement ne sont pas transmises à PHP (ex. cPanel en PHP-FPM,
+ * où les directives SetEnv du .htaccess sont ignorées par getenv()).
+ *
+ * Copiez ce fichier en "config.local.php" (à la racine, à côté de
+ * config.php) et renseignez vos propres valeurs. Ce fichier n'est
+ * jamais utile si vos variables d'environnement fonctionnent déjà.
+ *
+ * config.local.php est ignoré par git (voir .gitignore) : ne committez
+ * jamais vos identifiants de production.
+ */
+
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'gestion_compta');
+define('DB_USER', 'votre_user_cpanel');
+define('DB_PASS', 'votre_mot_de_passe');
+define('DB_CHARSET', 'utf8mb4');
+
+// Chemin de l'application si elle n'est pas à la racine du domaine,
+// par exemple '/gestion-compta/'. Utilisez '/' si elle est à la racine.
+define('BASE_URL', '/');
+
+// 'production' (défaut) masque les erreurs PHP aux visiteurs.
+// Ne mettez 'development' qu'en local, jamais en production.
+define('APP_ENV', 'production');
