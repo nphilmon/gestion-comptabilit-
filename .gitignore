@@ -22,6 +22,7 @@ cache/
 tmp/
 sessions/
 uploads/
+sess_*
 
 # Dependencies
 vendor/
