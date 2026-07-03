@@ -24,7 +24,7 @@ $depensesParCat = getStatsParCategorie($annee, 'depense');
 $statsCommerciales = getStatsCommerciales();
 
 // Dernières transactions
-$dernieres = array_slice(getTransactions(['annee' => $annee]), 0, 8);
+$dernieres = getTransactions(['annee' => $annee], 8);
 
 // Derniers devis/factures
 $derniersDevis = array_slice(getDevisList(), 0, 5);

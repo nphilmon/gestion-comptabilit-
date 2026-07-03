@@ -4,6 +4,41 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    // =============================================================
+    // DARK MODE — toggle persistant via localStorage
+    // =============================================================
+    const darkToggleBtn  = document.getElementById('darkModeToggle');
+    const darkModeIcon   = document.getElementById('darkModeIcon');
+    const themeKey       = 'gestionCompta.theme';
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (darkModeIcon) {
+                darkModeIcon.classList.remove('bi-moon-stars');
+                darkModeIcon.classList.add('bi-sun');
+            }
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            if (darkModeIcon) {
+                darkModeIcon.classList.remove('bi-sun');
+                darkModeIcon.classList.add('bi-moon-stars');
+            }
+        }
+    }
+
+    // Sync icon with current theme on page load
+    applyTheme(localStorage.getItem(themeKey) || 'light');
+
+    if (darkToggleBtn) {
+        darkToggleBtn.addEventListener('click', function() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            const next    = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem(themeKey, next);
+            applyTheme(next);
+        });
+    }
+
     // === Chart.js — Global defaults ===
     if (typeof Chart !== 'undefined') {
         Chart.defaults.font.family = "'Inter', 'Roboto', system-ui, sans-serif";

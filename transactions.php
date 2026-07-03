@@ -94,7 +94,20 @@ if (!empty($_GET['annee'])) {
     $filtres['annee'] = (int) date('Y');
 }
 
-$transactions = getTransactions($filtres);
+// --- Pagination ---
+$parPage = 50;
+$pageNum = max(1, (int) ($_GET['page'] ?? 1));
+$totalTransactions = ($action === 'liste') ? countTransactions($filtres) : 0;
+$totalPages = $totalTransactions > 0 ? (int) ceil($totalTransactions / $parPage) : 1;
+$pageNum = min($pageNum, $totalPages);
+$offset = ($pageNum - 1) * $parPage;
+
+$transactions = ($action === 'liste')
+    ? getTransactions($filtres, $parPage, $offset)
+    : [];
+// Totaux sur l'ensemble des transactions filtrées (pas seulement la page courante)
+$totauxFiltres = ($action === 'liste') ? sumTransactions($filtres) : ['total_recettes' => 0, 'total_depenses' => 0, 'solde' => 0];
+
 $categoriesRecette = getCategories('recette');
 $categoriesDepense = getCategories('depense');
 $toutesCategories = getCategories();
@@ -229,7 +242,10 @@ include 'header.php';
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="mb-1"><i class="bi bi-list-ul"></i> Transactions <?= $filtres['annee'] ?></h2>
-                <p class="text-muted mb-0"><?= count($transactions) ?> transaction<?= count($transactions) > 1 ? 's' : '' ?> enregistrée<?= count($transactions) > 1 ? 's' : '' ?></p>
+                <p class="text-muted mb-0">
+                    <?= $totalTransactions ?> transaction<?= $totalTransactions > 1 ? 's' : '' ?> enregistrée<?= $totalTransactions > 1 ? 's' : '' ?>
+                    <?php if ($totalPages > 1): ?> — Page <?= $pageNum ?>/<?= $totalPages ?><?php endif; ?>
+                </p>
             </div>
             <a href="transactions.php?action=ajouter" class="btn btn-primary">
                 <i class="bi bi-plus-lg"></i> Nouvelle transaction
@@ -239,9 +255,9 @@ include 'header.php';
 
     <!-- Stat cards résumé -->
     <?php
-    $totalR = array_sum(array_map(fn($t) => $t['type'] === 'recette' ? $t['montant'] : 0, $transactions));
-    $totalD = array_sum(array_map(fn($t) => $t['type'] === 'depense' ? $t['montant'] : 0, $transactions));
-    $solde = $totalR - $totalD;
+    $totalR = $totauxFiltres['total_recettes'];
+    $totalD = $totauxFiltres['total_depenses'];
+    $solde  = $totauxFiltres['solde'];
     ?>
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
@@ -250,7 +266,7 @@ include 'header.php';
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <div class="text-muted small text-uppercase">Transactions</div>
-                            <div class="fs-4 fw-bold"><?= count($transactions) ?></div>
+                            <div class="fs-4 fw-bold"><?= $totalTransactions ?></div>
                         </div>
                         <div class="stat-icon bg-secondary bg-opacity-10 text-secondary">
                             <i class="bi bi-arrow-left-right"></i>
@@ -430,6 +446,50 @@ include 'header.php';
             <?php endif; ?>
         </div>
     </div>
+
+    <?php if ($totalPages > 1): ?>
+    <nav class="mt-3" aria-label="Navigation des transactions">
+        <?php
+        // Build query string preserving filters but without page
+        $qp = array_filter([
+            'annee'       => $filtres['annee'] ?? '',
+            'type'        => $filtres['type'] ?? '',
+            'mois'        => $filtres['mois'] ?? '',
+            'categorie_id' => $filtres['categorie_id'] ?? '',
+            'recherche'   => $filtres['recherche'] ?? '',
+        ]);
+        $baseQs = http_build_query($qp);
+        $pageUrl = fn(int $p) => e('transactions.php?' . ($baseQs ? $baseQs . '&' : '') . 'page=' . $p);
+        ?>
+        <ul class="pagination pagination-sm justify-content-center">
+            <li class="page-item <?= $pageNum <= 1 ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= $pageUrl(1) ?>"><i class="bi bi-chevron-double-left"></i></a>
+            </li>
+            <li class="page-item <?= $pageNum <= 1 ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= $pageUrl($pageNum - 1) ?>"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            <?php
+            $start = max(1, $pageNum - 2);
+            $end   = min($totalPages, $pageNum + 2);
+            for ($p = $start; $p <= $end; $p++):
+            ?>
+            <li class="page-item <?= $p === $pageNum ? 'active' : '' ?>">
+                <a class="page-link" href="<?= $pageUrl($p) ?>"><?= $p ?></a>
+            </li>
+            <?php endfor; ?>
+            <li class="page-item <?= $pageNum >= $totalPages ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= $pageUrl($pageNum + 1) ?>"><i class="bi bi-chevron-right"></i></a>
+            </li>
+            <li class="page-item <?= $pageNum >= $totalPages ? 'disabled' : '' ?>">
+                <a class="page-link" href="<?= $pageUrl($totalPages) ?>"><i class="bi bi-chevron-double-right"></i></a>
+            </li>
+        </ul>
+        <p class="text-center text-muted small">
+            Affichage <?= $offset + 1 ?>–<?= min($offset + $parPage, $totalTransactions) ?> sur <?= $totalTransactions ?> transactions
+        </p>
+    </nav>
+    <?php endif; ?>
+
 <?php endif; ?>
 
 <?php include 'footer.php'; ?>

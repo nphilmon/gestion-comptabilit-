@@ -29,13 +29,14 @@
                 <div class="modal-body pt-2">
                     <p class="text-muted">Voici les dernières améliorations disponibles :</p>
                     <ul class="news-list">
-                        <li><i class="bi bi-shield-check text-success"></i> Sécurité renforcée : CSRF, rate limiting, rôles et installation protégée</li>
-                        <li><i class="bi bi-receipt text-primary"></i> Interface modernisée pour les factures, devis et commandes</li>
-                        <li><i class="bi bi-building-check text-info"></i> Recherche SIREN / SIRET et configuration métier améliorées</li>
-                        <li><i class="bi bi-github text-dark"></i> Version prête pour une publication GitHub plus propre</li>
+                        <li><i class="bi bi-moon-stars text-primary"></i> Mode sombre — bascule en un clic, persistant entre les sessions</li>
+                        <li><i class="bi bi-speedometer2 text-success"></i> Performance — les paramètres sont désormais chargés en une seule requête (cache interne)</li>
+                        <li><i class="bi bi-list-pagination text-info"></i> Pagination des transactions — affichage de 50 lignes par page pour les grands volumes</li>
+                        <li><i class="bi bi-filetype-csv text-warning"></i> Export CSV amélioré — le fichier transactions inclut maintenant Client/Fournisseur, Référence et Notes</li>
+                        <li><i class="bi bi-shield-check text-danger"></i> Sécurité renforcée — l'IP enregistrée dans le journal d'activité est désormais validée (proxy-safe)</li>
                     </ul>
                     <div class="alert alert-info border-0 mb-0">
-                        <i class="bi bi-lightbulb"></i> Pensez à vérifier vos paramètres d'entreprise et à tester votre compte admin avant mise en ligne.
+                        <i class="bi bi-lightbulb"></i> Le mode sombre est accessible via le bouton <i class="bi bi-moon-stars"></i> en haut à droite de la barre de navigation.
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
