@@ -493,7 +493,7 @@ if ($action === 'modifier') {
                         <option value="particulier" <?= ($client['type'] ?? '') === 'particulier' ? 'selected' : '' ?>>Particulier</option>
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-5 position-relative">
                     <label class="form-label">Entreprise / Société</label>
                     <input type="text" name="entreprise" id="entrepriseField" class="form-control" value="<?= e($client['entreprise'] ?? '') ?>" placeholder="Nom de l'entreprise">
                     <div class="form-text">Vous pouvez saisir ici le nom de la société pour lancer la recherche automatique.</div>
@@ -677,8 +677,18 @@ if ($action === 'modifier') {
         }
     }
 
-    async function searchEntreprise(query) {
+    function anchorResultsTo(field) {
+        const target = field || input;
+        if (!target) return;
+        const container = target.parentElement;
+        if (container && container !== resultsDiv.parentElement) {
+            container.appendChild(resultsDiv);
+        }
+    }
+
+    async function searchEntreprise(query, field) {
         cancelActiveSearch(false);
+        anchorResultsTo(field);
         const seq = ++searchSeq;
         if (query.length < 2) {
             resultsDiv.style.display = 'none';
@@ -757,20 +767,20 @@ if ($action === 'modifier') {
                 cancelActiveSearch(true);
                 return;
             }
-            debounceTimer = setTimeout(() => searchEntreprise(value), 350);
+            debounceTimer = setTimeout(() => searchEntreprise(value, field), 350);
         });
 
         field.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                searchEntreprise(this.value.trim());
+                searchEntreprise(this.value.trim(), this);
             }
         });
     });
 
     // Bouton recherche
     if (btn) {
-        btn.addEventListener('click', () => searchEntreprise((input.value || (entrepriseInput ? entrepriseInput.value : '')).trim()));
+        btn.addEventListener('click', () => searchEntreprise((input.value || (entrepriseInput ? entrepriseInput.value : '')).trim(), input));
     }
 
     if (cancelBtn) {
@@ -829,7 +839,7 @@ if ($action === 'modifier') {
 
     // Fermer les résultats quand on clique ailleurs
     document.addEventListener('click', function(e) {
-        if (!resultsDiv.contains(e.target) && e.target !== input && e.target !== btn && e.target !== cancelBtn) {
+        if (!resultsDiv.contains(e.target) && e.target !== input && e.target !== entrepriseInput && e.target !== btn && e.target !== cancelBtn) {
             resultsDiv.style.display = 'none';
         }
     });
