@@ -48,9 +48,14 @@ include 'header.php';
 <?php if ($action === 'liste'): ?>
     <?php $clotures = getCloturesCaisse(); ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-lock"></i> Clôtures de caisse</h2>
-        <a href="?action=nouvelle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nouvelle clôture</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-lock"></i> Clôtures de caisse</h2>
+                <p class="text-muted mb-0">Bilans journaliers de la caisse</p>
+            </div>
+            <a href="?action=nouvelle" class="btn btn-primary document-action-btn"><i class="bi bi-plus-lg"></i> Nouvelle clôture</a>
+        </div>
     </div>
 
     <div class="card">
@@ -104,9 +109,13 @@ include 'header.php';
     $stats = getStatsCaisseJour($date);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-lock"></i> Clôture de caisse</h2>
-        <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-lock"></i> Clôture de caisse</h2>
+            </div>
+            <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
     </div>
 
     <!-- Choix de date -->
@@ -221,9 +230,13 @@ include 'header.php';
     if (!$cloture) { header('Location: ' . BASE_URL . 'cloture_caisse.php'); exit; }
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-lock-fill"></i> Clôture du <?= formatDate($cloture['date_cloture']) ?></h2>
-        <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-lock-fill"></i> Clôture du <?= formatDate($cloture['date_cloture']) ?></h2>
+            </div>
+            <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
     </div>
 
     <div class="row g-4">
