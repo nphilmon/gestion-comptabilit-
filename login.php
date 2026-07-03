@@ -59,11 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --md-primary: #1565C0;
-            --md-primary-dark: #0D47A1;
+            --md-primary: #2563EB;
+            --md-primary-dark: #1E3A5F;
             --md-on-primary: #FFFFFF;
-            --md-primary-container: #D1E4FF;
-            --md-on-primary-container: #001D36;
+            --md-primary-container: #DBEAFE;
+            --md-on-primary-container: #1E3A5F;
             --md-surface: #F0F2F5;
             --md-on-surface: #191C20;
             --md-on-surface-variant: #43474E;

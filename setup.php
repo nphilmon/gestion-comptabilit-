@@ -141,8 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --setup-primary: #1957A6;
-            --setup-primary-dark: #123E75;
+            --setup-primary: #2563EB;
+            --setup-primary-dark: #1E3A5F;
             --setup-accent: #0F766E;
             --setup-accent-soft: #DDF7F2;
             --setup-surface: #F5F7FB;

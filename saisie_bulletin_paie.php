@@ -193,8 +193,8 @@ include __DIR__ . '/header.php';
    Interface saisie bulletin de paie — plein écran
    ===================================================================== */
 :root {
-    --paie-bleu:        #003366;
-    --paie-bleu-clair:  #dce4f0;
+    --paie-bleu:        #2563EB;
+    --paie-bleu-clair:  #dbeafe;
     --paie-bg:          #f0f2f5;
     --paie-card:        #fff;
     --paie-border:      #d0d7e3;
@@ -471,7 +471,7 @@ include __DIR__ . '/header.php';
 .fiche-paie .fp-table tbody tr:nth-child(even)   { background: #f9fafb; }
 
 .fiche-paie .fp-section-lbl {
-    background: #dce4f0; color: var(--paie-bleu);
+    background: var(--paie-bleu-clair); color: var(--paie-bleu);
     font-weight: 800; font-size: 0.67rem;
     text-transform: uppercase; letter-spacing: .5px;
     padding: 4px 10px;

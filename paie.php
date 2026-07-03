@@ -359,13 +359,13 @@ $entConv      = getParam('convention_collective', '');
     justify-content: space-between;
     align-items: flex-start;
     padding: 18px 24px 10px;
-    border-bottom: 3px solid #003366;
+    border-bottom: 3px solid #2563EB;
     background: #f5f7fa;
 }
 .fiche-paie .fp-header .fp-emp-nom {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #003366;
+    color: #2563EB;
     margin-bottom: 2px;
 }
 .fiche-paie .fp-header .fp-info-line {
@@ -382,7 +382,7 @@ $entConv      = getParam('convention_collective', '');
 .fiche-paie .fp-titre-doc .fp-doc-title {
     font-size: 1.3rem;
     font-weight: 800;
-    color: #003366;
+    color: #2563EB;
     letter-spacing: 1px;
     text-transform: uppercase;
 }
@@ -417,7 +417,7 @@ $entConv      = getParam('convention_collective', '');
 }
 .fiche-paie .fp-section-title {
     background: #dce4f0;
-    color: #003366;
+    color: #2563EB;
     font-weight: 700;
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -431,7 +431,7 @@ $entConv      = getParam('convention_collective', '');
     font-size: 0.77rem;
 }
 .fiche-paie .fp-table thead th {
-    background: #003366;
+    background: #2563EB;
     color: #fff;
     font-weight: 700;
     padding: 5px 10px;
@@ -460,13 +460,13 @@ $entConv      = getParam('convention_collective', '');
 .fiche-paie .fp-total-row td {
     font-weight: 700;
     font-size: 0.82rem;
-    color: #003366;
+    color: #2563EB;
     background: #e8eef7 !important;
-    border-top: 2px solid #003366;
+    border-top: 2px solid #2563EB;
     padding: 6px 10px;
 }
 .fiche-paie .fp-net-row td {
-    background: #003366 !important;
+    background: #2563EB !important;
     color: #fff !important;
     font-weight: 800;
     font-size: 0.92rem;
@@ -479,7 +479,7 @@ $entConv      = getParam('convention_collective', '');
 .fiche-paie .fp-footer-bloc {
     display: flex;
     gap: 0;
-    border-top: 2px solid #003366;
+    border-top: 2px solid #2563EB;
     background: #f5f7fa;
 }
 .fiche-paie .fp-footer-bloc .fp-footer-col {
@@ -504,7 +504,7 @@ $entConv      = getParam('convention_collective', '');
 }
 .fiche-paie .fp-footer-bloc .fp-footer-value.big {
     font-size: 1.1rem;
-    color: #003366;
+    color: #2563EB;
 }
 .fiche-paie .fp-footer-bloc .fp-recap-table {
     width: 100%;
@@ -822,7 +822,7 @@ if ($existingBulletin):
                     <?php if ($bpRetenues > 0): ?>
                     <tr><td class="text-muted">Retenues</td><td style="color:#c0392b">- <?= e(number_format($bpRetenues, 2, ',', ' ')) ?> €</td></tr>
                     <?php endif; ?>
-                    <tr style="border-top:1px solid #ccc;font-size:0.8rem"><td class="fw-bold" style="color:#003366">Net à payer</td><td class="fw-bold" style="color:#003366"><?= e(number_format($bpNetPay, 2, ',', ' ')) ?> €</td></tr>
+                    <tr style="border-top:1px solid #ccc;font-size:0.8rem"><td class="fw-bold" style="color:#2563EB">Net à payer</td><td class="fw-bold" style="color:#2563EB"><?= e(number_format($bpNetPay, 2, ',', ' ')) ?> €</td></tr>
                 </table>
             </div>
             <div class="fp-footer-col" style="text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center">
