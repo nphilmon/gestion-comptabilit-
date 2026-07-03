@@ -346,7 +346,7 @@ include 'header.php';
                     Enregistre une première recette pour alimenter le livre des recettes et suivre ton chiffre d’affaires annuel.
                 </p>
                 <div class="empty-state-actions">
-                    <a href="transactions.php?action=ajouter&type=recette" class="btn btn-success empty-state-btn"><i class="bi bi-plus-lg"></i> Enregistrer une recette</a>
+                    <a href="transactions.php?action=ajouter&type=recette" class="btn btn-primary empty-state-btn"><i class="bi bi-plus-lg"></i> Enregistrer une recette</a>
                 </div>
             </div>
         <?php else: ?>
