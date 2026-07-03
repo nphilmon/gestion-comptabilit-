@@ -1723,12 +1723,40 @@ body {
 }
 
 .hero-banner h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
     font-size: 1.5rem;
     font-weight: 800;
     color: #fff;
     font-family: var(--font-display);
     letter-spacing: 0;
     text-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+}
+
+.hero-banner h2 i,
+.hero-banner h2 .bi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: var(--md-shape-md);
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+    font-size: 1.1rem;
+    text-shadow: none;
+}
+
+@media (max-width: 575.98px) {
+    .hero-banner h2 i,
+    .hero-banner h2 .bi {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.95rem;
+    }
 }
 
 .hero-banner .text-muted {
