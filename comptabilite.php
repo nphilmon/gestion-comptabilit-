@@ -329,7 +329,7 @@ include 'header.php';
             <small class="text-muted ms-2">(Art. L123-28 du Code de Commerce)</small>
         </div>
         <div class="d-flex gap-2">
-            <a href="transactions.php?action=ajouter&type=recette" class="btn btn-sm btn-success">
+            <a href="transactions.php?action=ajouter&type=recette" class="btn btn-sm btn-primary">
                 <i class="bi bi-plus-lg"></i> Nouvelle recette
             </a>
             <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
@@ -412,7 +412,7 @@ include 'header.php';
             <strong><i class="bi bi-cart"></i> Registre des achats <?= $annee ?></strong>
         </div>
         <div class="d-flex gap-2">
-            <a href="transactions.php?action=ajouter&type=depense" class="btn btn-sm btn-danger"><i class="bi bi-plus-lg"></i> Nouvel achat</a>
+            <a href="transactions.php?action=ajouter&type=depense" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Nouvel achat</a>
             <button onclick="window.print()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></button>
         </div>
     </div>
