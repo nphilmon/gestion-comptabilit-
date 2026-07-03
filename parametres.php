@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'acompte_commande_pct', 'garantie_sav_mois',
         'delai_livraison_jours', 'clause_chantier_livraison',
         'module_cp_actif', 'cp_mode_decompte', 'cp_reference_start_month',
-        'cp_reference_start_day', 'cp_acquisition_rate', 'cp_annual_cap',
+        'cp_reference_start_day', 'cp_acquisition_rate', 'cp_annual_cap', 'cp_fractionnement_actif',
         'module_paie_actif', 'paie_jours_travail_mensuel',
         'paie_taux_charges_patronales', 'paie_taux_charges_salariales',
         'pdp_enabled', 'pdp_provider', 'pdp_auto_send', 'pdp_endpoint_url',
@@ -63,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!isset($_POST['module_cp_actif'])) {
         setParam('module_cp_actif', '0');
+    }
+    if (!isset($_POST['cp_fractionnement_actif'])) {
+        setParam('cp_fractionnement_actif', '0');
     }
     if (!isset($_POST['module_paie_actif'])) {
         setParam('module_paie_actif', '0');
@@ -215,12 +218,21 @@ include 'header.php';
                     <input type="number" name="cp_annual_cap" class="form-control" min="0" step="0.01"
                            value="<?= e(getParam('cp_annual_cap', '30')) ?>">
                 </div>
-                <div class="col-md-10">
+                <div class="col-md-3">
+                    <label class="form-label d-block">Jours de fractionnement</label>
+                    <div class="form-check form-switch">
+                        <input type="hidden" name="cp_fractionnement_actif" value="0">
+                        <input class="form-check-input" type="checkbox" name="cp_fractionnement_actif" value="1"
+                               id="cpFractionnementSwitch" <?= getParam('cp_fractionnement_actif', '1') === '1' ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="cpFractionnementSwitch">Appliquer L3141-23</label>
+                    </div>
+                </div>
+                <div class="col-md-7">
                     <div class="alert alert-light border-0 mb-0">
                         <i class="bi bi-info-circle text-primary"></i>
                         Réglage par défaut conforme au droit commun en France métropolitaine :
                         <strong>2,5 jours ouvrables</strong> acquis par mois de travail effectif, sur une période de référence du
-                        <strong>1er juin au 31 mai</strong>. Les cas particuliers (convention collective, arrêt maladie, fractionnement, jours supplémentaires) restent ajustables dans le module CP.
+                        <strong>1er juin au 31 mai</strong>. Les cas particuliers (convention collective, arrêt maladie, jours supplémentaires) restent ajustables dans le module CP.
                     </div>
                 </div>
             </div>

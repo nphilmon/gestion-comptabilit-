@@ -13,6 +13,22 @@ final class CalculatePaieBulletinTotalsTest extends TestCase
         $this->assertSame(2000.0, $result['net_imposable']);
         $this->assertSame(2000.0, $result['net_a_payer']);
         $this->assertSame(2000.0, $result['cout_total_employeur']);
+        $this->assertSame(2000.0, $result['montant_net_social']);
+    }
+
+    public function testMontantNetSocialSuitLeNetImposable(): void
+    {
+        // Mention obligatoire depuis le 01/01/2024. Dans ce modèle simplifié
+        // (une seule ligne de cotisations salariales), l'approximation du
+        // montant net social coïncide avec le net imposable.
+        $result = calculatePaieBulletinTotals([
+            'salaire_base_brut' => 2500.0,
+            'prime' => 200.0,
+            'cotisations_salariales' => 550.0,
+        ]);
+
+        $this->assertSame($result['net_imposable'], $result['montant_net_social']);
+        $this->assertSame(2150.0, $result['montant_net_social']);
     }
 
     public function testCalculeAutomatiquementLeMontantDesHeuresSupplementaires(): void
