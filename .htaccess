@@ -5,9 +5,11 @@ DirectoryIndex index.php
     RewriteEngine On
     RewriteRule (^|/)\.(?!well-known/) - [F,L]
     RewriteRule ^database/ - [F,L,NC]
+    RewriteRule ^tests/ - [F,L,NC]
+    RewriteRule ^vendor/ - [F,L,NC]
 </IfModule>
 
-<FilesMatch "^(config\.php|install\.php|README\.md|\.gitignore|\.gitattributes)$">
+<FilesMatch "^(config\.php|config\.local\.php|install\.php|README\.md|composer\.json|composer\.lock|phpunit\.xml|\.gitignore|\.gitattributes)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
