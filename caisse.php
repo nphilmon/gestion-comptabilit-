@@ -138,11 +138,16 @@ include 'header.php';
     $notesEnCours = getNotesCaisse(['statut' => 'en_cours']);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-cart3"></i> Caisse</h2>
-        <div>
-            <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary"><i class="bi bi-lock"></i> Clôture</a>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNouvelleNote"><i class="bi bi-plus-lg"></i> Nouvelle note</button>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-cart3"></i> Caisse</h2>
+                <p class="text-muted mb-0">Point de vente et suivi des notes de caisse</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="<?= BASE_URL ?>cloture_caisse.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-lock"></i> Clôture</a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouvelleNote"><i class="bi bi-plus-lg"></i> Nouvelle note</button>
+            </div>
         </div>
     </div>
 
@@ -276,20 +281,22 @@ include 'header.php';
     $enCours = ($note['statut'] === 'en_cours');
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>
-            <i class="bi bi-receipt-cutoff"></i> Note <?= e($note['numero']) ?>
-            <?php
-            $statutBadge = ['en_cours' => 'warning', 'terminee' => 'success', 'annulee' => 'danger'];
-            $statutLabel = ['en_cours' => 'En cours', 'terminee' => 'Terminée', 'annulee' => 'Annulée'];
-            ?>
-            <span class="badge bg-<?= $statutBadge[$note['statut']] ?> fs-6"><?= $statutLabel[$note['statut']] ?></span>
-        </h2>
+    <?php
+    $statutBadge = ['en_cours' => 'warning', 'terminee' => 'success', 'annulee' => 'danger'];
+    $statutLabel = ['en_cours' => 'En cours', 'terminee' => 'Terminée', 'annulee' => 'Annulée'];
+    ?>
+    <div class="hero-banner mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-receipt-cutoff"></i> Note <?= e($note['numero']) ?></h2>
+                <p class="text-muted mb-0"><span class="badge bg-<?= $statutBadge[$note['statut']] ?>"><?= $statutLabel[$note['statut']] ?></span></p>
+            </div>
         <div>
             <?php if ($note['statut'] === 'terminee'): ?>
-                <a href="<?= BASE_URL ?>ticket_caisse.php?id=<?= $note['id'] ?>" class="btn btn-outline-info"><i class="bi bi-printer"></i> Ticket PDF</a>
+                <a href="<?= BASE_URL ?>ticket_caisse.php?id=<?= $note['id'] ?>" class="btn btn-outline-info document-action-btn"><i class="bi bi-printer"></i> Ticket PDF</a>
             <?php endif; ?>
-            <a href="<?= BASE_URL ?>caisse.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour caisse</a>
+            <a href="<?= BASE_URL ?>caisse.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour caisse</a>
+        </div>
         </div>
     </div>
 
@@ -505,11 +512,16 @@ include 'header.php';
     $stats = getStatsCaisse($annee);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-bar-chart"></i> Statistiques Caisse <?= $annee ?></h2>
-        <div>
-            <a href="?action=stats&annee=<?= $annee - 1 ?>" class="btn btn-sm btn-outline-secondary">&laquo; <?= $annee - 1 ?></a>
-            <a href="?action=stats&annee=<?= $annee + 1 ?>" class="btn btn-sm btn-outline-secondary"><?= $annee + 1 ?> &raquo;</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-bar-chart"></i> Statistiques Caisse <?= $annee ?></h2>
+                <p class="text-muted mb-0">Produits vendus et performance de la caisse</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="?action=stats&annee=<?= $annee - 1 ?>" class="btn btn-sm btn-outline-secondary">&laquo; <?= $annee - 1 ?></a>
+                <a href="?action=stats&annee=<?= $annee + 1 ?>" class="btn btn-sm btn-outline-secondary"><?= $annee + 1 ?> &raquo;</a>
+            </div>
         </div>
     </div>
 

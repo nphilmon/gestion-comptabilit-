@@ -96,11 +96,16 @@ include 'header.php';
     $categories = getCategoriesProduits();
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-box-seam"></i> Produits & Stock</h2>
-        <div>
-            <a href="?action=categories" class="btn btn-outline-secondary"><i class="bi bi-tags"></i> Catégories</a>
-            <a href="?action=ajouter" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nouveau produit</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-box-seam"></i> Produits & Stock</h2>
+                <p class="text-muted mb-0">Catalogue produits et suivi des niveaux de stock</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="?action=categories" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-tags"></i> Catégories</a>
+                <a href="?action=ajouter" class="btn btn-primary document-action-btn"><i class="bi bi-plus-lg"></i> Nouveau produit</a>
+            </div>
         </div>
     </div>
 
@@ -196,9 +201,14 @@ include 'header.php';
     $categories = getCategoriesProduits();
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-box-seam"></i> <?= $produit ? 'Modifier le produit' : 'Nouveau produit' ?></h2>
-        <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-box-seam"></i> <?= $produit ? 'Modifier le produit' : 'Nouveau produit' ?></h2>
+                <p class="text-muted mb-0">Renseignez les informations du produit</p>
+            </div>
+            <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
     </div>
 
     <div class="card">
@@ -287,11 +297,15 @@ include 'header.php';
     $mouvements = getMouvementsStock($produit['id']);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-box-seam"></i> <?= e($produit['nom']) ?></h2>
-        <div>
-            <a href="?action=modifier&id=<?= $produit['id'] ?>" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Modifier</a>
-            <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-box-seam"></i> <?= e($produit['nom']) ?></h2>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="?action=modifier&id=<?= $produit['id'] ?>" class="btn btn-outline-primary document-action-btn"><i class="bi bi-pencil"></i> Modifier</a>
+                <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+            </div>
         </div>
     </div>
 
@@ -394,9 +408,13 @@ include 'header.php';
 <?php elseif ($action === 'categories'): ?>
     <?php $categories = getCategoriesProduits(false); ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-tags"></i> Catégories de produits</h2>
-        <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour produits</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-tags"></i> Catégories de produits</h2>
+            </div>
+            <a href="<?= BASE_URL ?>produits.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour produits</a>
+        </div>
     </div>
 
     <div class="row g-4">

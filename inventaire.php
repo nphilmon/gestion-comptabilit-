@@ -55,9 +55,14 @@ include 'header.php';
 <?php if ($action === 'liste'): ?>
     <?php $inventaires = getInventaires(); ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-clipboard-check"></i> Inventaires</h2>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouvelInventaire"><i class="bi bi-plus-lg"></i> Nouvel inventaire</button>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-clipboard-check"></i> Inventaires</h2>
+                <p class="text-muted mb-0">Comptages physiques et écarts de stock</p>
+            </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouvelInventaire"><i class="bi bi-plus-lg"></i> Nouvel inventaire</button>
+        </div>
     </div>
 
     <div class="card">
@@ -144,9 +149,13 @@ include 'header.php';
     $produits = array_filter($produits, fn($p) => $p['gestion_stock']);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-clipboard-check"></i> Inventaire du <?= formatDate($inv['date_inventaire']) ?></h2>
-        <a href="<?= BASE_URL ?>inventaire.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-clipboard-check"></i> Inventaire du <?= formatDate($inv['date_inventaire']) ?></h2>
+            </div>
+            <a href="<?= BASE_URL ?>inventaire.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
     </div>
 
     <form method="post" action="?action=saisie&id=<?= $inv['id'] ?>">
@@ -220,9 +229,14 @@ include 'header.php';
     $lignes = getLignesInventaire($inv['id']);
     ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-clipboard-check"></i> Inventaire du <?= formatDate($inv['date_inventaire']) ?> <span class="badge bg-success">Validé</span></h2>
-        <a href="<?= BASE_URL ?>inventaire.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Retour</a>
+    <div class="hero-banner mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-clipboard-check"></i> Inventaire du <?= formatDate($inv['date_inventaire']) ?></h2>
+                <p class="text-muted mb-0"><span class="badge bg-success">Validé</span></p>
+            </div>
+            <a href="<?= BASE_URL ?>inventaire.php" class="btn btn-outline-secondary document-action-btn"><i class="bi bi-arrow-left"></i> Retour</a>
+        </div>
     </div>
 
     <div class="card">
