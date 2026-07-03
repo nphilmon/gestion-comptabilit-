@@ -68,20 +68,32 @@ $commercialTitles = [
         </div>
         <div class="commercial-overview__metrics">
             <div class="commercial-indicator">
-                <small>Clients actifs</small>
-                <strong><?= $commercialCounts['clients'] ?></strong>
+                <i class="bi bi-people-fill commercial-indicator__icon"></i>
+                <div>
+                    <small>Clients actifs</small>
+                    <strong><?= $commercialCounts['clients'] ?></strong>
+                </div>
             </div>
             <div class="commercial-indicator">
-                <small>À encaisser</small>
-                <strong><?= formatMontant($resteAEncaisser) ?></strong>
+                <i class="bi bi-cash-coin commercial-indicator__icon"></i>
+                <div>
+                    <small>À encaisser</small>
+                    <strong><?= formatMontant($resteAEncaisser) ?></strong>
+                </div>
             </div>
             <div class="commercial-indicator">
-                <small>Cmd ouvertes</small>
-                <strong><?= $commandesOuvertes ?></strong>
+                <i class="bi bi-cart-check-fill commercial-indicator__icon"></i>
+                <div>
+                    <small>Cmd ouvertes</small>
+                    <strong><?= $commandesOuvertes ?></strong>
+                </div>
             </div>
             <div class="commercial-indicator <?= $commercialStats['factures_en_retard'] > 0 ? 'commercial-indicator--alert' : '' ?>">
-                <small>Factures en retard</small>
-                <strong><?= $commercialStats['factures_en_retard'] ?></strong>
+                <i class="bi bi-exclamation-triangle-fill commercial-indicator__icon"></i>
+                <div>
+                    <small>Factures en retard</small>
+                    <strong><?= $commercialStats['factures_en_retard'] ?></strong>
+                </div>
             </div>
         </div>
     </div>
