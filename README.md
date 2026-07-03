@@ -1,4 +1,4 @@
-# Gestion Comptable Pro v2.1.0
+# Gestion Comptable Pro v3.0.1.1
 
 Application web de gestion comptable et commerciale pour auto-entrepreneurs, micro-entreprises et PME françaises. Fonctionne comme un **expert-comptable virtuel** avec gestion complète des documents commerciaux, caisse, comptabilité, ressources humaines et rapports.
 
@@ -174,7 +174,7 @@ vendor/bin/phpunit
    ```bash
    git init
    git add .
-   git commit -m "feat: release Gestion Comptable Pro v2.1.0"
+   git commit -m "feat: release Gestion Comptable Pro v3.0.1.1"
    ```
 2. Créer un dépôt vide sur GitHub
 3. Lier puis pousser :

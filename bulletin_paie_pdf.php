@@ -204,7 +204,7 @@ class BulletinMaquettePDF extends FPDF
         $this->labelValue(8, 75, 'Service', getParam('service_paie', ''));
         $this->labelValue(66, 64, 'Position', getParam('position_paie', ''), 19);
         $this->labelValue(66, 68, 'Niveau', getParam('niveau_paie', ''), 19);
-        $this->labelValue(66, 72, 'Echelon', getParam('echelon_paie', ''), 19);
+        $this->labelValue(66, 72, 'Échelon', getParam('echelon_paie', ''), 19);
         $this->labelValue(66, 76, 'Coefficient', getParam('coefficient_paie', ''), 19);
 
         $this->SetXY(5, 83);

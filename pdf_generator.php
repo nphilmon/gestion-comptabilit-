@@ -1,7 +1,7 @@
 <?php
 /**
- * Générateur de PDF professionnel style EBP / Ciel / SAP
- * Utilise FPDF v1.85
+ * Générateur de PDF professionnel — charte visuelle alignée sur le thème
+ * web (Material Design 3). Utilise FPDF v1.85
  */
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/functions_commercial.php';
@@ -18,7 +18,7 @@ if (!in_array($type, ['devis', 'facture', 'commande']) || !$id) {
 $conf = getRegimeConfig();
 
 // =====================================================================
-// Classe PDF — Style EBP / Ciel / SAP
+// Classe PDF — charte MD3 (mêmes tons que assets/style.css)
 // =====================================================================
 class DocumentPDF extends FPDF
 {
@@ -30,15 +30,20 @@ class DocumentPDF extends FPDF
     public $isCGVPage    = false;
     public $cgvDocRef    = '';
 
-    // Couleurs
-    private $colPrimary   = [0, 51, 102];
-    private $colDark      = [33, 33, 33];
-    private $colMuted     = [100, 100, 100];
-    private $colLight     = [128, 128, 128];
-    private $colBorder    = [180, 180, 180];
-    private $colBorderL   = [210, 210, 210];
-    private $colTableHead = [240, 240, 240];
-    private $colBg        = [250, 250, 250];
+    // Couleurs — alignées sur les jetons MD3 du thème web
+    private $colPrimary       = [37, 99, 235];    // --md-primary
+    private $colPrimaryDark   = [30, 58, 95];     // --md-on-primary-container
+    private $colPrimaryTint   = [219, 234, 254];  // --md-primary-container
+    private $colDark          = [15, 23, 42];     // --md-on-surface
+    private $colMuted         = [71, 85, 105];    // --md-on-surface-variant
+    private $colLight         = [100, 116, 139];  // slate-500
+    private $colBorder        = [203, 213, 225];  // --md-outline
+    private $colBorderL       = [226, 232, 240];  // --md-outline-variant
+    private $colTableHead     = [219, 234, 254];  // --md-primary-container
+    private $colBg            = [248, 250, 252];  // --md-surface
+    private $colZebra         = [241, 245, 249];  // subtle row tint
+    private $colSuccess       = [22, 163, 74];    // --md-success
+    private $colError         = [220, 38, 38];    // --md-error
 
     // --- Conversion UTF-8 ---
     function conv($str)
@@ -49,6 +54,41 @@ class DocumentPDF extends FPDF
     function eur(float $value): string
     {
         return number_format($value, 2, ',', ' ') . " \xE2\x82\xAC";
+    }
+
+    // --- Rectangle à coins arrondis (mêmes rayons que le web) ---
+    function roundedRect(float $x, float $y, float $w, float $h, float $r, string $style = ''): void
+    {
+        $k = $this->k;
+        $hp = $this->h;
+        $op = $style === 'F' ? 'f' : (($style === 'FD' || $style === 'DF') ? 'B' : 'S');
+        $myArc = 4 / 3 * (sqrt(2) - 1);
+
+        $this->_out(sprintf('%.2F %.2F m', ($x + $r) * $k, ($hp - $y) * $k));
+        $xc = $x + $w - $r; $yc = $y + $r;
+        $this->_out(sprintf('%.2F %.2F l', $xc * $k, ($hp - $y) * $k));
+        $this->_arc($xc + $r * $myArc, $yc - $r, $xc + $r, $yc - $r * $myArc, $xc + $r, $yc);
+        $xc = $x + $w - $r; $yc = $y + $h - $r;
+        $this->_out(sprintf('%.2F %.2F l', ($x + $w) * $k, ($hp - $yc) * $k));
+        $this->_arc($xc + $r, $yc + $r * $myArc, $xc + $r * $myArc, $yc + $r, $xc, $yc + $r);
+        $xc = $x + $r; $yc = $y + $h - $r;
+        $this->_out(sprintf('%.2F %.2F l', $xc * $k, ($hp - ($y + $h)) * $k));
+        $this->_arc($xc - $r * $myArc, $yc + $r, $xc - $r, $yc + $r * $myArc, $xc - $r, $yc);
+        $xc = $x + $r; $yc = $y + $r;
+        $this->_out(sprintf('%.2F %.2F l', $x * $k, ($hp - $yc) * $k));
+        $this->_arc($xc - $r, $yc - $r * $myArc, $xc - $r * $myArc, $yc - $r, $xc, $yc - $r);
+        $this->_out($op);
+    }
+
+    private function _arc(float $x1, float $y1, float $x2, float $y2, float $x3, float $y3): void
+    {
+        $h = $this->h;
+        $this->_out(sprintf(
+            '%.2F %.2F %.2F %.2F %.2F %.2F c',
+            $x1 * $this->k, ($h - $y1) * $this->k,
+            $x2 * $this->k, ($h - $y2) * $this->k,
+            $x3 * $this->k, ($h - $y3) * $this->k
+        ));
     }
 
     // =================================================================
@@ -76,7 +116,7 @@ class DocumentPDF extends FPDF
         }
 
         $this->SetFont('Helvetica', 'B', 14);
-        $this->SetTextColor(...$this->colPrimary);
+        $this->SetTextColor(...$this->colPrimaryDark);
         $this->SetXY($textX, $y);
         $this->Cell(80, 6, $this->conv($this->entreprise['nom'] ?? ''), 0, 1);
 
@@ -112,21 +152,23 @@ class DocumentPDF extends FPDF
             $this->Cell(80, 3.5, 'SIRET : ' . $this->entreprise['siret'], 0, 1);
         }
 
-        // Type de document (haut droit)
-        $this->SetFont('Helvetica', 'B', 24);
-        $this->SetTextColor(...$this->colPrimary);
-        $this->SetXY(120, $y);
-        $this->Cell(75, 10, $this->conv(mb_strtoupper($this->docType)), 0, 1, 'R');
+        // Type de document (haut droit) — pastille de couleur primaire
+        $this->SetFillColor(...$this->colPrimary);
+        $this->roundedRect(118, $y - 1, 77, 11, 2, 'F');
+        $this->SetFont('Helvetica', 'B', 15);
+        $this->SetTextColor(255, 255, 255);
+        $this->SetXY(118, $y + 0.7);
+        $this->Cell(73, 8, $this->conv(mb_strtoupper($this->docType)), 0, 1, 'C');
 
         $this->SetFont('Helvetica', '', 10);
         $this->SetTextColor(...$this->colDark);
-        $this->SetXY(120, $y + 11);
+        $this->SetXY(120, $y + 12.5);
         $this->Cell(75, 5, $this->conv("N\xC2\xB0 " . $this->docNumero), 0, 1, 'R');
 
-        // Trait de séparation
+        // Trait de séparation — fin, couleur primaire
         $sepY = max($infoY + 4, $y + 25);
         $this->SetDrawColor(...$this->colPrimary);
-        $this->SetLineWidth(0.6);
+        $this->SetLineWidth(0.5);
         $this->Line(15, $sepY, 195, $sepY);
         $this->SetLineWidth(0.2);
         $this->SetY($sepY + 4);
@@ -163,7 +205,7 @@ class DocumentPDF extends FPDF
         $lineCount = count($this->legalLines);
         $footerH = 12 + ($lineCount * 3);
         $this->SetY(-$footerH);
-        $this->SetDrawColor(...$this->colBorder);
+        $this->SetDrawColor(...$this->colBorderL);
         $this->SetLineWidth(0.2);
         $this->Line(15, $this->GetY(), 195, $this->GetY());
         $this->Ln(2);
@@ -215,16 +257,16 @@ class DocumentPDF extends FPDF
 
         $this->SetDrawColor(...$this->colBorder);
         $this->SetLineWidth(0.3);
-        $this->Rect($x, $y, $w, $contentH);
+        $this->roundedRect($x, $y, $w, $contentH, 2.5);
         $this->SetLineWidth(0.2);
 
-        $this->SetFillColor(...$this->colTableHead);
-        $this->Rect($x, $y, $w, $titleH + 2, 'F');
-        $this->SetDrawColor(...$this->colBorder);
-        $this->Line($x, $y + $titleH + 2, $x + $w, $y + $titleH + 2);
+        $this->SetFillColor(...$this->colPrimaryTint);
+        $this->roundedRect($x, $y, $w, $titleH + 2, 2.5, 'F');
+        $this->SetFillColor(...$this->colPrimaryTint);
+        $this->Rect($x, $y + 2.5, $w, $titleH - 0.5, 'F');
 
         $this->SetFont('Helvetica', 'B', 7);
-        $this->SetTextColor(...$this->colMuted);
+        $this->SetTextColor(...$this->colPrimaryDark);
         $this->SetXY($x + $padding, $y + 1.5);
         $this->Cell($w - $padding * 2, $titleH, $this->conv(mb_strtoupper($title)), 0, 1);
 
@@ -269,13 +311,13 @@ class DocumentPDF extends FPDF
     {
         $this->SetFillColor(...$this->colTableHead);
         $this->SetDrawColor(...$this->colBorder);
-        $this->SetTextColor(...$this->colDark);
+        $this->SetTextColor(...$this->colPrimaryDark);
         $this->SetFont('Helvetica', 'B', 7.5);
         $this->SetLineWidth(0.3);
 
         $x = 15;
         $y = $this->GetY();
-        $h = 7;
+        $h = 7.5;
         $totalW = array_sum(array_filter($widths));
 
         $this->Line($x, $y, $x + $totalW, $y);
@@ -283,10 +325,10 @@ class DocumentPDF extends FPDF
             if (($widths[$i] ?? 0) <= 0) continue;
             $this->SetXY($x, $y);
             $this->Cell($widths[$i], $h, $this->conv($header), 0, 0, $aligns[$i] ?? 'L', true);
-            $this->Line($x, $y, $x, $y + $h);
             $x += $widths[$i];
         }
-        $this->Line($x, $y, $x, $y + $h);
+        $this->SetDrawColor(...$this->colPrimary);
+        $this->SetLineWidth(0.4);
         $this->Line(15, $y + $h, 15 + $totalW, $y + $h);
         $this->SetLineWidth(0.2);
         $this->SetY($y + $h);
@@ -310,7 +352,7 @@ class DocumentPDF extends FPDF
         $y = $this->GetY();
 
         if ($fill) {
-            $this->SetFillColor(248, 248, 252);
+            $this->SetFillColor(...$this->colZebra);
             $this->Rect($x, $y, $totalW, $rowHeight, 'F');
         }
 
@@ -322,12 +364,10 @@ class DocumentPDF extends FPDF
             if (($widths[$i] ?? 0) <= 0) continue;
             $w = $widths[$i];
             $a = $aligns[$i] ?? 'L';
-            $this->Line($x, $y, $x, $y + $rowHeight);
             $this->SetXY($x + 1.5, $y + 1);
             $this->MultiCell($w - 3, 4.2, $this->conv($data[$i]), 0, $a);
             $x += $w;
         }
-        $this->Line($x, $y, $x, $y + $rowHeight);
         $this->Line(15, $y + $rowHeight, 15 + $totalW, $y + $rowHeight);
         $this->SetY($y + $rowHeight);
     }
@@ -339,7 +379,7 @@ class DocumentPDF extends FPDF
         $valW = 35;
         $h = $bold ? 7.5 : 6;
         $this->SetFont('Helvetica', $bold ? 'B' : '', $bold ? 10 : 8.5);
-        $this->SetTextColor(...($labelColor ?? $this->colDark));
+        $this->SetTextColor(...($labelColor ?? $this->colMuted));
         $this->SetX($x);
         $this->Cell($labelW, $h, $this->conv($label), 0, 0, 'R');
         $this->SetTextColor(...($valColor ?? $this->colDark));
@@ -350,15 +390,15 @@ class DocumentPDF extends FPDF
     {
         $x = 120;
         $totalW = 75;
-        $h = 9;
+        $h = 10;
         $y = $this->GetY();
         $this->SetFillColor(...$this->colPrimary);
-        $this->Rect($x, $y, $totalW, $h, 'F');
+        $this->roundedRect($x, $y, $totalW, $h, 2, 'F');
         $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 11);
-        $this->SetXY($x, $y);
-        $this->Cell(40, $h, $this->conv($label), 0, 0, 'R');
-        $this->Cell(35, $h, $this->conv($value), 0, 1, 'R');
+        $this->SetFont('Helvetica', 'B', 11.5);
+        $this->SetXY($x, $y + 0.6);
+        $this->Cell(40, $h - 1, $this->conv($label), 0, 0, 'R');
+        $this->Cell(35, $h - 1, $this->conv($value), 0, 1, 'R');
         $this->SetTextColor(...$this->colDark);
     }
 
@@ -367,14 +407,13 @@ class DocumentPDF extends FPDF
         if ($this->GetY() + 10 > $this->h - $this->bMargin) {
             $this->AddPage();
         }
-        $this->SetFillColor(...$this->colTableHead);
-        $this->SetDrawColor(...$this->colBorder);
-        $this->SetTextColor(...$this->colDark);
+        $this->SetFillColor(...$this->colPrimaryTint);
+        $this->SetTextColor(...$this->colPrimaryDark);
         $this->SetFont('Helvetica', 'B', 8);
         $y = $this->GetY();
-        $this->Rect(15, $y, 180, 6, 'DF');
+        $this->roundedRect(15, $y, 180, 6.5, 1.5, 'F');
         $this->SetXY(18, $y);
-        $this->Cell(174, 6, $this->conv(mb_strtoupper($label)), 0, 1, 'L');
+        $this->Cell(174, 6.5, $this->conv(mb_strtoupper($label)), 0, 1, 'L');
         $this->Ln(1);
     }
 }
@@ -412,15 +451,15 @@ function getLegalFooterLines(array $entreprise, array $conf, string $type, array
     if (!$conf['tva_applicable']) {
         $lines[] = 'TVA non applicable, art. 293 B du CGI';
     } elseif (!empty($doc['client_tva'])) {
-        $lines[] = "TVA applicable selon le regime en vigueur - N\xC2\xB0 TVA client : " . $doc['client_tva'];
+        $lines[] = "TVA applicable selon le régime en vigueur - N\xC2\xB0 TVA client : " . $doc['client_tva'];
     }
 
-    $conditionsPaiement = trim((string) getParam('conditions_paiement', "Paiement a reception"));
-    $lines[] = 'Conditions : ' . $conditionsPaiement . ' - Penalites de retard : taux BCE + 10 pts';
+    $conditionsPaiement = trim((string) getParam('conditions_paiement', "Paiement à réception"));
+    $lines[] = 'Conditions : ' . $conditionsPaiement . ' - Pénalités de retard : taux BCE + 10 pts';
 
     $clientPro = ($doc['client_type'] ?? null) === 'professionnel' || !empty($doc['client_entreprise']);
     if ($clientPro) {
-        $lines[] = "Indemnite forfaitaire de recouvrement (professionnels) : 40 \xE2\x82\xAC";
+        $lines[] = "Indemnité forfaitaire de recouvrement (professionnels) : 40 \xE2\x82\xAC";
     }
 
     return $lines;
@@ -489,15 +528,15 @@ $y = $pdf->infoLine(15, $y, 'Date :', formatDate($dateValue));
 $y = $pdf->infoLine(15, $y, 'Statut :', $statusLabel);
 
 if ($type === 'devis') {
-    $y = $pdf->infoLine(15, $y, 'Validite :', formatDate($doc['date_validite']));
+    $y = $pdf->infoLine(15, $y, 'Validité :', formatDate($doc['date_validite']));
 } elseif ($type === 'facture') {
-    $y = $pdf->infoLine(15, $y, 'Echeance :', formatDate($doc['date_echeance']));
+    $y = $pdf->infoLine(15, $y, 'Échéance :', formatDate($doc['date_echeance']));
 }
 
 if ($type === 'facture' && !empty($doc['devis_id'])) {
     $devisRef = getDevis((int)$doc['devis_id']);
     if ($devisRef) {
-        $y = $pdf->infoLine(15, $y, 'Ref. devis :', $devisRef['numero']);
+        $y = $pdf->infoLine(15, $y, 'Réf. devis :', $devisRef['numero']);
     }
 }
 
@@ -525,7 +564,7 @@ $clientLines = array_values(array_filter([
     !empty($doc['client_siret']) ? 'SIRET : ' . $doc['client_siret'] : '',
 ]));
 
-$bottomL = $pdf->addressBlock(15, $blockY, 85, 'Emetteur', $companyLines);
+$bottomL = $pdf->addressBlock(15, $blockY, 85, 'Émetteur', $companyLines);
 $bottomR = $pdf->addressBlock(110, $blockY, 85, 'Destinataire', $clientLines);
 $pdf->SetY(max($bottomL, $bottomR) + 5);
 
@@ -535,7 +574,7 @@ $pdf->SetY(max($bottomL, $bottomR) + 5);
 if (!empty($doc['objet'])) {
     $pdf->sectionLabel('Objet');
     $pdf->SetFont('Helvetica', '', 9);
-    $pdf->SetTextColor(33, 33, 33);
+    $pdf->SetTextColor(15, 23, 42);
     $pdf->SetX(15);
     $pdf->MultiCell(180, 4.5, $pdf->conv($doc['objet']));
     $pdf->Ln(3);
@@ -546,11 +585,11 @@ if (!empty($doc['objet'])) {
 // =============================================================
 if ($conf['tva_applicable']) {
     $colWidths    = [75, 14, 18, 24, 16, 33];
-    $headers      = ['Designation', 'Qte', 'Unite', 'P.U. HT', 'TVA %', 'Total HT'];
+    $headers      = ['Désignation', 'Qté', 'Unité', 'P.U. HT', 'TVA %', 'Total HT'];
     $headerAligns = ['L', 'C', 'C', 'R', 'R', 'R'];
 } else {
     $colWidths    = [90, 14, 18, 26, 0, 32];
-    $headers      = ['Designation', 'Qte', 'Unite', 'Prix unit.', '', 'Total'];
+    $headers      = ['Désignation', 'Qté', 'Unité', 'Prix unit.', '', 'Total'];
     $headerAligns = ['L', 'C', 'C', 'R', 'R', 'R'];
 }
 
@@ -585,9 +624,9 @@ $totalsY = $pdf->GetY();
 $boxW = 75;
 $boxX = 120;
 $boxH = $conf['tva_applicable'] ? 24 : 16;
-$pdf->SetFillColor(250, 250, 250);
-$pdf->SetDrawColor(180, 180, 180);
-$pdf->Rect($boxX, $totalsY, $boxW, $boxH, 'DF');
+$pdf->SetFillColor(248, 250, 252);
+$pdf->SetDrawColor(203, 213, 225);
+$pdf->roundedRect($boxX, $totalsY, $boxW, $boxH, 2, 'DF');
 
 $pdf->summaryLine('Total HT :', $pdf->eur((float)$doc['montant_ht']));
 
@@ -595,8 +634,8 @@ if ($conf['tva_applicable']) {
     $pdf->summaryLine('Total TVA :', $pdf->eur((float)$doc['montant_tva']));
 }
 
-$pdf->SetDrawColor(180, 180, 180);
-$pdf->Line($boxX + 2, $pdf->GetY(), $boxX + $boxW - 2, $pdf->GetY());
+$pdf->SetDrawColor(203, 213, 225);
+$pdf->Line($boxX + 3, $pdf->GetY(), $boxX + $boxW - 3, $pdf->GetY());
 $pdf->Ln(1);
 
 $pdf->summaryTotalTTC('TOTAL TTC :', $pdf->eur((float)$doc['montant_ttc']));
@@ -609,7 +648,7 @@ if (in_array($type, ['devis', 'commande'], true) && $acomptePct > 0) {
     $acompte = round((float)$doc['montant_ttc'] * ($acomptePct / 100), 2);
     $solde   = max(0, (float)$doc['montant_ttc'] - $acompte);
     $pdf->Ln(2);
-    $pdf->summaryLine('Acompte (' . number_format($acomptePct, 0) . '%) :', $pdf->eur($acompte), false, [0, 80, 170], [0, 80, 170]);
+    $pdf->summaryLine('Acompte (' . number_format($acomptePct, 0) . '%) :', $pdf->eur($acompte), false, [37, 99, 235], [37, 99, 235]);
     $pdf->summaryLine('Solde restant :', $pdf->eur($solde), true);
 }
 
@@ -618,10 +657,10 @@ if (in_array($type, ['devis', 'commande'], true) && $acomptePct > 0) {
 // =============================================================
 if ($type === 'facture' && (float)$doc['montant_paye'] > 0) {
     $pdf->Ln(2);
-    $pdf->summaryLine('Deja paye :', $pdf->eur((float)$doc['montant_paye']), false, [0, 120, 60], [0, 120, 60]);
+    $pdf->summaryLine('Déjà payé :', $pdf->eur((float)$doc['montant_paye']), false, [22, 163, 74], [22, 163, 74]);
     $reste = (float)$doc['montant_ttc'] - (float)$doc['montant_paye'];
     if ($reste > 0.01) {
-        $pdf->summaryLine('Reste a payer :', $pdf->eur($reste), true, [200, 30, 30], [200, 30, 30]);
+        $pdf->summaryLine('Reste à payer :', $pdf->eur($reste), true, [220, 38, 38], [220, 38, 38]);
     }
 }
 
@@ -633,10 +672,10 @@ $pdf->Ln(6);
 if (!empty($doc['notes'])) {
     $pdf->sectionLabel('Notes');
     $pdf->SetFont('Helvetica', '', 8.5);
-    $pdf->SetTextColor(80, 80, 80);
+    $pdf->SetTextColor(71, 85, 105);
     $pdf->SetX(15);
     $pdf->MultiCell(180, 4.5, $pdf->conv($doc['notes']));
-    $pdf->SetTextColor(33, 33, 33);
+    $pdf->SetTextColor(15, 23, 42);
     $pdf->Ln(3);
 }
 
@@ -650,29 +689,29 @@ if ($type === 'devis') {
     $pdf->Ln(3);
     $startY = $pdf->GetY();
 
-    $pdf->SetDrawColor(180, 180, 180);
-    $pdf->SetFillColor(250, 250, 252);
+    $pdf->SetDrawColor(203, 213, 225);
+    $pdf->SetFillColor(248, 250, 252);
     $pdf->SetLineWidth(0.3);
-    $pdf->Rect(15, $startY, 180, 34, 'DF');
+    $pdf->roundedRect(15, $startY, 180, 34, 3, 'DF');
     $pdf->SetLineWidth(0.2);
 
     $pdf->SetXY(20, $startY + 3);
     $pdf->SetFont('Helvetica', 'B', 9);
-    $pdf->SetTextColor(0, 51, 102);
+    $pdf->SetTextColor(30, 58, 95);
     $pdf->Cell(80, 5, $pdf->conv('BON POUR ACCORD'), 0, 1);
 
     $pdf->SetX(20);
     $pdf->SetFont('Helvetica', '', 7.5);
-    $pdf->SetTextColor(100, 100, 100);
-    $pdf->MultiCell(95, 3.5, $pdf->conv("Signature precedee de la mention \"Bon pour accord\",\ncachet eventuel, date et nom du signataire."));
+    $pdf->SetTextColor(71, 85, 105);
+    $pdf->MultiCell(95, 3.5, $pdf->conv("Signature précédée de la mention «\u00a0Bon pour accord\u00a0»,\ncachet éventuel, date et nom du signataire."));
 
     $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetTextColor(33, 33, 33);
+    $pdf->SetTextColor(15, 23, 42);
     $pdf->SetXY(130, $startY + 4);
     $pdf->Cell(55, 4, $pdf->conv('Date : ........ / ........ / ............'), 0, 1);
     $pdf->SetXY(130, $startY + 13);
     $pdf->Cell(55, 4, $pdf->conv('Signature :'), 0, 1);
-    $pdf->SetDrawColor(180, 180, 180);
+    $pdf->SetDrawColor(203, 213, 225);
     $pdf->Line(130, $startY + 29, 188, $startY + 29);
 
     $signaturePath = resolvePdfImagePath(getParam('signature_pdf_path', ''));
@@ -697,18 +736,18 @@ if ($hasCGV) {
 
     // Titre
     $pdf->SetFont('Helvetica', 'B', 14);
-    $pdf->SetTextColor(0, 51, 102);
-    $pdf->Cell(0, 8, $pdf->conv('CONDITIONS GENERALES DE VENTE'), 0, 1, 'C');
+    $pdf->SetTextColor(30, 58, 95);
+    $pdf->Cell(0, 8, $pdf->conv('CONDITIONS GÉNÉRALES DE VENTE'), 0, 1, 'C');
 
-    $pdf->SetDrawColor(0, 51, 102);
-    $pdf->SetLineWidth(0.4);
+    $pdf->SetDrawColor(37, 99, 235);
+    $pdf->SetLineWidth(0.5);
     $pdf->Line(60, $pdf->GetY(), 150, $pdf->GetY());
     $pdf->SetLineWidth(0.2);
     $pdf->Ln(5);
 
     // Référence du document
     $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetTextColor(128, 128, 128);
+    $pdf->SetTextColor(100, 116, 139);
     $pdf->Cell(0, 4, $pdf->conv("Applicables au " . $docLabel . " N\xC2\xB0 " . $doc['numero'] . ' du ' . formatDate($dateValue)), 0, 1, 'C');
     $pdf->Ln(4);
 
@@ -716,12 +755,12 @@ if ($hasCGV) {
     $conditionsText = getConditionsDocumentVente($type === 'facture' ? 'facture' : $type, $doc);
     if (!empty($conditionsText)) {
         $pdf->SetFont('Helvetica', 'B', 9);
-        $pdf->SetTextColor(0, 51, 102);
+        $pdf->SetTextColor(30, 58, 95);
         $pdf->SetX(15);
-        $pdf->Cell(180, 5, $pdf->conv('Resume'), 0, 1, 'L');
+        $pdf->Cell(180, 5, $pdf->conv('Résumé'), 0, 1, 'L');
         $pdf->Ln(1);
         $pdf->SetFont('Helvetica', '', 8);
-        $pdf->SetTextColor(60, 60, 60);
+        $pdf->SetTextColor(51, 65, 85);
         $pdf->SetX(15);
         $pdf->MultiCell(180, 4, $pdf->conv($conditionsText));
         $pdf->Ln(4);
@@ -731,29 +770,29 @@ if ($hasCGV) {
     $fullCGV = genererConditionsDocumentVenteCompletes($type === 'facture' ? 'facture' : $type, $doc);
     if (!empty($fullCGV)) {
         $pdf->SetFont('Helvetica', 'B', 9);
-        $pdf->SetTextColor(0, 51, 102);
+        $pdf->SetTextColor(30, 58, 95);
         $pdf->SetX(15);
-        $pdf->Cell(180, 5, $pdf->conv('Conditions detaillees'), 0, 1, 'L');
-        $pdf->SetDrawColor(210, 210, 210);
+        $pdf->Cell(180, 5, $pdf->conv('Conditions détaillées'), 0, 1, 'L');
+        $pdf->SetDrawColor(226, 232, 240);
         $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
         $pdf->Ln(2);
         $pdf->SetFont('Helvetica', '', 7.5);
-        $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetTextColor(71, 85, 105);
         $pdf->SetX(15);
         $pdf->MultiCell(180, 3.8, $pdf->conv($fullCGV));
     }
 
     // Mention d'acceptation
     $pdf->Ln(6);
-    $pdf->SetDrawColor(180, 180, 180);
+    $pdf->SetDrawColor(203, 213, 225);
     $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
     $pdf->Ln(3);
     $pdf->SetFont('Helvetica', 'I', 7);
-    $pdf->SetTextColor(128, 128, 128);
+    $pdf->SetTextColor(100, 116, 139);
     $pdf->SetX(15);
     $pdf->MultiCell(180, 3.5, $pdf->conv(
-        'Le client reconnait avoir pris connaissance des presentes conditions generales de vente et les accepte sans reserve. '
-        . 'Toute commande implique l\'adhesion pleine et entiere aux presentes conditions.'
+        'Le client reconnaît avoir pris connaissance des présentes conditions générales de vente et les accepte sans réserve. '
+        . 'Toute commande implique l\'adhésion pleine et entière aux présentes conditions.'
     ));
 }
 
