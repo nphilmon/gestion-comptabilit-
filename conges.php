@@ -215,34 +215,46 @@ include __DIR__ . '/header.php';
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Collaborateurs suivis</div>
-                <div class="display-6 fw-bold"><?= (int) $stats['employees'] ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+                    <small class="text-muted ms-2">Collaborateurs suivis</small>
+                </div>
+                <h3 class="mb-1"><?= (int) $stats['employees'] ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Demandes en attente</div>
-                <div class="display-6 fw-bold text-warning"><?= (int) $stats['pending'] ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-hourglass-split"></i></div>
+                    <small class="text-muted ms-2">Demandes en attente</small>
+                </div>
+                <h3 class="text-warning mb-1"><?= (int) $stats['pending'] ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">En congé aujourd'hui</div>
-                <div class="display-6 fw-bold text-info"><?= (int) $stats['on_leave_today'] ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-airplane-fill"></i></div>
+                    <small class="text-muted ms-2">En congé aujourd'hui</small>
+                </div>
+                <h3 class="text-info mb-1"><?= (int) $stats['on_leave_today'] ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Solde disponible total</div>
-                <div class="display-6 fw-bold text-success"><?= e(number_format((float) $stats['available_total'], 2, ',', ' ')) ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-calendar2-check-fill"></i></div>
+                    <small class="text-muted ms-2">Solde disponible total</small>
+                </div>
+                <h3 class="text-success mb-1"><?= e(number_format((float) $stats['available_total'], 2, ',', ' ')) ?></h3>
             </div>
         </div>
     </div>

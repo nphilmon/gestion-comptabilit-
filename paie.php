@@ -559,35 +559,47 @@ $entConv      = getParam('convention_collective', '');
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Collaborateurs suivis</div>
-                <div class="display-6 fw-bold"><?= (int) $stats['employees'] ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+                    <small class="text-muted ms-2">Collaborateurs suivis</small>
+                </div>
+                <h3 class="mb-1"><?= (int) $stats['employees'] ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Bulletins sur la période</div>
-                <div class="display-6 fw-bold text-primary"><?= (int) $stats['bulletins_count'] ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-file-earmark-text-fill"></i></div>
+                    <small class="text-muted ms-2">Bulletins sur la période</small>
+                </div>
+                <h3 class="text-primary mb-1"><?= (int) $stats['bulletins_count'] ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Net à payer total</div>
-                <div class="display-6 fw-bold text-success"><?= e(number_format((float) $stats['net_total'], 2, ',', ' ')) ?></div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-cash-stack"></i></div>
+                    <small class="text-muted ms-2">Net à payer total</small>
+                </div>
+                <h3 class="text-success mb-1"><?= e(number_format((float) $stats['net_total'], 2, ',', ' ')) ?></h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <div class="small text-muted text-uppercase">Coût employeur total</div>
-                <div class="display-6 fw-bold text-danger"><?= e(number_format((float) $stats['employer_total'], 2, ',', ' ')) ?></div>
-                <div class="small text-muted"><?= (int) $stats['drafts_count'] ?> brouillon(s)</div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-building"></i></div>
+                    <small class="text-muted ms-2">Coût employeur total</small>
+                </div>
+                <h3 class="text-danger mb-1"><?= e(number_format((float) $stats['employer_total'], 2, ',', ' ')) ?></h3>
+                <small class="text-muted"><?= (int) $stats['drafts_count'] ?> brouillon(s)</small>
             </div>
         </div>
     </div>
