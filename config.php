@@ -40,7 +40,7 @@ if (!defined('DB_CHARSET')) define('DB_CHARSET', envValue('GESTION_COMPTA_DB_CHA
 
 // --- Configuration application ---
 define('APP_NAME', 'Gestion Comptable Pro');
-define('APP_VERSION', '2.1.0');
+define('APP_VERSION', '3.0.1.1');
 
 if (!defined('BASE_URL')) {
     $baseUrl = trim(envValue('GESTION_COMPTA_BASE_URL', '/gestion%20comptabilit%C3%A9/'));
