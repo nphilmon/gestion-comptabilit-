@@ -304,6 +304,9 @@ include __DIR__ . '/header.php';
                     <div class="alert alert-light border-0 mt-3 mb-0">
                         <div class="fw-semibold">Votre solde actuel</div>
                         <div><?= e(number_format((float) $myBalance['available'], 2, ',', ' ')) ?> jour(s) disponibles</div>
+                        <?php if ($myBalance['fractionnement'] > 0): ?>
+                        <div class="small text-muted">dont <?= e(number_format((float) $myBalance['fractionnement'], 2, ',', ' ')) ?> jour(s) de fractionnement</div>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 
@@ -443,6 +446,7 @@ include __DIR__ . '/header.php';
                                 <th>Initial</th>
                                 <th>Acquis</th>
                                 <th>Ajustements</th>
+                                <th>Fractionnement</th>
                                 <th>Pris</th>
                                 <th>Disponible</th>
                                 <th>Dossier</th>
@@ -460,6 +464,7 @@ include __DIR__ . '/header.php';
                                 <td><?= e(number_format((float) $balance['initial'], 2, ',', ' ')) ?></td>
                                 <td><?= e(number_format((float) $balance['acquired'], 2, ',', ' ')) ?></td>
                                 <td><?= e(number_format((float) $balance['adjustments'], 2, ',', ' ')) ?></td>
+                                <td><?= $balance['fractionnement'] > 0 ? e(number_format((float) $balance['fractionnement'], 2, ',', ' ')) : '<span class="text-muted">-</span>' ?></td>
                                 <td><?= e(number_format((float) $balance['taken'], 2, ',', ' ')) ?></td>
                                 <td class="fw-bold <?= $balance['available'] < 5 ? 'text-warning' : 'text-success' ?>">
                                     <?= e(number_format((float) $balance['available'], 2, ',', ' ')) ?>

@@ -69,6 +69,7 @@ $b = [
     'net_imposable' => (float) $bulletin['net_imposable'],
     'net_a_payer' => (float) $bulletin['net_a_payer'],
     'cout_employeur' => (float) $bulletin['cout_total_employeur'],
+    'montant_net_social' => (float) ($bulletin['montant_net_social'] ?? 0),
     'notes' => (string) ($bulletin['notes'] ?? ''),
 ];
 
@@ -274,6 +275,10 @@ class BulletinMaquettePDF extends FPDF
 
         $this->SetFont('Helvetica', '', 6);
         $this->Cell(200, 4, $this->conv('Dont évolution de la rémunération liée à la suppression des cotisations salariales chômage et maladie'), 'LR', 1, 'L');
+
+        $this->SetFont('Helvetica', 'B', 6.5);
+        $this->Cell(186, 4.5, $this->conv('Montant net social'), 'LRB', 0, 'L');
+        $this->Cell(14, 4.5, $this->conv($this->money($b['montant_net_social'])), 'LRB', 1, 'R');
     }
 
     function drawIncomeTax(float $y, array $b): void {
@@ -422,7 +427,7 @@ $tableEnd = max($pdf->GetY(), 212);
 $pdf->closeTable($tableStart + 8, $tableEnd);
 
 $netY = max($tableEnd + 2, 214);
-$taxY = $netY + 11;
+$taxY = $netY + 16;
 $botY = $taxY + 22;
 
 $pdf->drawNetBeforeTax($netY, $b);

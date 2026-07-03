@@ -212,6 +212,7 @@ function initializeDatabaseSchema(PDO $pdo): void {
             `net_imposable` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             `net_a_payer` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             `cout_total_employeur` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+            `montant_net_social` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             `mode_paiement` ENUM('virement', 'cheque', 'especes', 'autre') NOT NULL DEFAULT 'virement',
             `reference_paiement` VARCHAR(120) DEFAULT NULL,
             `notes` TEXT DEFAULT NULL,
@@ -230,6 +231,9 @@ function initializeDatabaseSchema(PDO $pdo): void {
             }
             if (!columnExists($pdo, 'bulletins_paie', 'ancv_ce')) {
                 $pdo->exec("ALTER TABLE `bulletins_paie` ADD COLUMN `ancv_ce` DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER `indemnite_sante`");
+            }
+            if (!columnExists($pdo, 'bulletins_paie', 'montant_net_social')) {
+                $pdo->exec("ALTER TABLE `bulletins_paie` ADD COLUMN `montant_net_social` DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER `cout_total_employeur`");
             }
         }
 
@@ -326,6 +330,7 @@ function initializeDatabaseSchema(PDO $pdo): void {
             $stmt->execute(['cp_reference_start_day', '1', 'Jour de début de la période de référence CP']);
             $stmt->execute(['cp_acquisition_rate', '2.5', 'Jours acquis par mois de travail effectif']);
             $stmt->execute(['cp_annual_cap', '30', 'Plafond annuel de jours acquis']);
+            $stmt->execute(['cp_fractionnement_actif', '1', 'Appliquer les jours de fractionnement du congé principal (Code du travail L3141-23) (0/1)']);
             $stmt->execute(['module_paie_actif', '0', 'Activer le module de gestion des bulletins de paye (0/1)']);
             $stmt->execute(['paie_jours_travail_mensuel', '151.67', 'Base mensuelle d\'heures de travail pour la paie']);
             $stmt->execute(['paie_taux_charges_patronales', '42', 'Taux indicatif de charges patronales (%)']);

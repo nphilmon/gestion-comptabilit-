@@ -111,12 +111,22 @@ function calculatePaieBulletinTotals(array $data): array {
     $netAPayer = max(0.0, $netImposable - $retenues);
     $coutTotal = max(0.0, $salaireBrut + $cotisationsPatronales);
 
+    // Montant Net Social (mention obligatoire depuis le 01/01/2024, arrêté du
+    // 31/01/2023). Approximation : brut - cotisations salariales obligatoires.
+    // Le modèle de données de ce module regroupe les cotisations salariales en
+    // un seul montant (pas de détail par code URSSAF), donc cette valeur ne
+    // réintègre pas la CSG/CRDS non déductible ni n'exclut la participation/
+    // intéressement comme le ferait le calcul officiel complet. À faire
+    // valider par un expert-comptable avant usage en production.
+    $montantNetSocial = $netImposable;
+
     return [
         'montant_heures_supplementaires' => round($montantHeuresSupp, 2),
         'salaire_brut' => round($salaireBrut, 2),
         'net_imposable' => round($netImposable, 2),
         'net_a_payer' => round($netAPayer, 2),
         'cout_total_employeur' => round($coutTotal, 2),
+        'montant_net_social' => round($montantNetSocial, 2),
     ];
 }
 

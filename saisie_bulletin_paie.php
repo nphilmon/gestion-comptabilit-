@@ -79,9 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 user_id, periode, date_paiement, statut, salaire_base_brut, heures_travaillees,
                 heures_supplementaires, taux_horaire_majore, montant_heures_supplementaires,
                 prime, bonus, indemnites, indemnite_sante, ancv_ce, retenues, cotisations_salariales, cotisations_patronales,
-                salaire_brut, net_imposable, net_a_payer, cout_total_employeur,
+                salaire_brut, net_imposable, net_a_payer, cout_total_employeur, montant_net_social,
                 mode_paiement, reference_paiement, notes, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $userId, $periode, $datePaiement, $statut,
             round($payload['salaire_base_brut'], 2), round($payload['heures_travaillees'], 2),
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             round($payload['retenues'], 2),
             round($payload['cotisations_salariales'], 2), round($payload['cotisations_patronales'], 2),
             $payload['salaire_brut'], $payload['net_imposable'],
-            $payload['net_a_payer'], $payload['cout_total_employeur'],
+            $payload['net_a_payer'], $payload['cout_total_employeur'], $payload['montant_net_social'],
             $modePaiement,
             $referencePaiement !== '' ? $referencePaiement : null,
             $notes !== '' ? $notes : null,
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 heures_supplementaires=?, taux_horaire_majore=?, montant_heures_supplementaires=?,
                 prime=?, bonus=?, indemnites=?, indemnite_sante=?, ancv_ce=?, retenues=?,
                 cotisations_salariales=?, cotisations_patronales=?, salaire_brut=?, net_imposable=?,
-                net_a_payer=?, cout_total_employeur=?, mode_paiement=?, reference_paiement=?, notes=?
+                net_a_payer=?, cout_total_employeur=?, montant_net_social=?, mode_paiement=?, reference_paiement=?, notes=?
             WHERE id=?');
         $stmt->execute([
             $datePaiement, $statut,
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             round($payload['retenues'], 2),
             round($payload['cotisations_salariales'], 2), round($payload['cotisations_patronales'], 2),
             $payload['salaire_brut'], $payload['net_imposable'],
-            $payload['net_a_payer'], $payload['cout_total_employeur'],
+            $payload['net_a_payer'], $payload['cout_total_employeur'], $payload['montant_net_social'],
             $modePaiement,
             $referencePaiement !== '' ? $referencePaiement : null,
             $notes !== '' ? $notes : null,
@@ -838,7 +838,8 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                 <div class="paie-live-row divider"><span class="lbl">Net imposable</span><span class="val" id="ls_netimp">—</span></div>
                 <div class="paie-live-row"><span class="lbl">Retenues</span><span class="val" id="ls_ret" style="color:#ffa0a0">—</span></div>
                 <div class="paie-live-row divider net"><span class="lbl">Net à payer</span><span class="val" id="ls_netpay">—</span></div>
-                <div class="paie-live-row" style="margin-top:8px;font-size:0.74rem;opacity:.6"><span class="lbl">Coût employeur</span><span class="val" id="ls_cout">—</span></div>
+                <div class="paie-live-row" style="margin-top:8px;font-size:0.74rem;opacity:.6"><span class="lbl">Montant net social</span><span class="val" id="ls_netsoc">—</span></div>
+                <div class="paie-live-row" style="font-size:0.74rem;opacity:.6"><span class="lbl">Coût employeur</span><span class="val" id="ls_cout">—</span></div>
             </div>
 
             <!-- Boutons d'action -->
@@ -1022,11 +1023,12 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         var netimp  = Math.max(0, brut - cotsal);
         var netpay  = Math.max(0, netimp - ret);
         var cout    = Math.max(0, brut + cotpat);
+        var netsoc  = netimp; // Montant net social : approximation, voir calculatePaieBulletinTotals()
         var tauxH   = ht > 0 ? base / ht : 0;
         var tauxSal = brut > 0 ? (cotsal / brut * 100) : 0;
         var tauxPat = brut > 0 ? (cotpat / brut * 100) : 0;
 
-        return { base, ht, hs, tauxMaj, mhs, prime, bonus, indem, indemSante, ancvCe, cotsal, cotpat, ret, brut, netimp, netpay, cout, tauxH, tauxSal, tauxPat };
+        return { base, ht, hs, tauxMaj, mhs, prime, bonus, indem, indemSante, ancvCe, cotsal, cotpat, ret, brut, netimp, netpay, cout, netsoc, tauxH, tauxSal, tauxPat };
     }
 
     // ---- Mise à jour panneau résumé gauche ----
@@ -1036,6 +1038,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         setText('ls_netimp', fmt(t.netimp));
         setText('ls_ret',    t.ret > 0 ? '\u2212 ' + fmt(t.ret) : '—');
         setText('ls_netpay', fmt(t.netpay));
+        setText('ls_netsoc', fmt(t.netsoc));
         setText('ls_cout',   fmt(t.cout));
 
         // Champs calculés
@@ -1085,6 +1088,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         }
 
         rows += '<tr class="fp-net"><td colspan="3">\u2714\ufe0e Net \u00e0 payer en euros</td><td>' + fmt(t.netpay) + '</td></tr>';
+        rows += '<tr><td colspan="3" style="font-size:0.8em;opacity:.7">Montant net social</td><td style="font-size:0.8em;opacity:.7">' + fmt(t.netsoc) + '</td></tr>';
 
         rows += '<tr><td colspan="4" class="fp-section-lbl-light">Cotisations patronales (informatif)</td></tr>';
         rows += '<tr><td>Charges patronales</td><td>' + fmt(t.brut) + '</td><td>' +
@@ -1102,7 +1106,8 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                 '<div class="fp-recap-row"><span>Cotisations salariales</span><span style="color:#b91c1c">\u2212 ' + fmt(t.cotsal) + '</span></div>' +
                 '<div class="fp-recap-row"><span>Net imposable</span><span>' + fmt(t.netimp) + '</span></div>' +
                 (t.ret > 0 ? '<div class="fp-recap-row"><span>Retenues</span><span style="color:#b91c1c">\u2212 ' + fmt(t.ret) + '</span></div>' : '') +
-                '<div class="fp-recap-row total"><span>Net \u00e0 payer</span><span>' + fmt(t.netpay) + '</span></div>';
+                '<div class="fp-recap-row total"><span>Net \u00e0 payer</span><span>' + fmt(t.netpay) + '</span></div>' +
+                '<div class="fp-recap-row" style="font-size:0.8em;opacity:.7"><span>Montant net social</span><span>' + fmt(t.netsoc) + '</span></div>';
         }
 
         // Mode paiement

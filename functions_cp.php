@@ -279,6 +279,86 @@ function calculateCpAcquiredDays(array $profile, ?string $asOfDate = null): floa
     return round(min($cap + $bonus, $base), 2);
 }
 
+function isCpFractionnementEnabled(): bool {
+    return getParam('cp_fractionnement_actif', '1') === '1';
+}
+
+/**
+ * Jours de congés supplémentaires pour fractionnement du congé principal
+ * (Code du travail L3141-23) : si au moins 3 jours du congé principal sont
+ * pris hors de la période du 1er mai au 31 octobre, le salarié a droit à 2
+ * jours ouvrables supplémentaires ; s'il en prend 1 ou 2, à 1 jour.
+ *
+ * Approximation : cette fonction ne distingue pas le congé principal (24
+ * jours ouvrables maximum) de la 5e semaine — faute de ce marquage dans les
+ * demandes de congés, toutes les demandes validées de la période sont prises
+ * en compte, plafonnées à 24 jours ouvrables au total. Fonction pure, sans
+ * accès base de données, pour permettre des tests unitaires.
+ *
+ * @param array $demandesValidees Liste ordonnée chronologiquement de
+ *   ['date_debut' => 'Y-m-d', 'date_fin' => 'Y-m-d', 'jours_demandes' => float, 'mode_decompte' => 'ouvrables'|'ouvres']
+ */
+function calculerJoursFractionnement(array $demandesValidees): float {
+    $congePrincipalRestant = 24.0;
+    $joursHorsSaison = 0.0;
+
+    foreach ($demandesValidees as $demande) {
+        if ($congePrincipalRestant <= 0) {
+            break;
+        }
+
+        $mode = in_array($demande['mode_decompte'] ?? '', ['ouvrables', 'ouvres'], true)
+            ? $demande['mode_decompte']
+            : 'ouvrables';
+        $totalJoursDemande = (float) ($demande['jours_demandes'] ?? 0);
+        if ($totalJoursDemande <= 0) {
+            continue;
+        }
+
+        $joursImputes = min($totalJoursDemande, $congePrincipalRestant);
+        $congePrincipalRestant -= $joursImputes;
+
+        $joursDansSaison = 0.0;
+        foreach (array_unique([
+            (int) date('Y', strtotime($demande['date_debut'])),
+            (int) date('Y', strtotime($demande['date_fin'])),
+        ]) as $annee) {
+            $saisonDebut = max($demande['date_debut'], sprintf('%04d-05-01', $annee));
+            $saisonFin = min($demande['date_fin'], sprintf('%04d-10-31', $annee));
+            if ($saisonDebut <= $saisonFin) {
+                $joursDansSaison += calculateCpLeaveDays($saisonDebut, $saisonFin, $mode);
+            }
+        }
+
+        $joursHorsSaisonDemande = max(0.0, $totalJoursDemande - $joursDansSaison);
+        if ($joursImputes < $totalJoursDemande) {
+            // La demande dépasse le solde de congé principal restant : on ne
+            // compte que la part imputable au congé principal, au prorata.
+            $joursHorsSaisonDemande *= $joursImputes / $totalJoursDemande;
+        }
+
+        $joursHorsSaison += $joursHorsSaisonDemande;
+    }
+
+    if ($joursHorsSaison >= 3) {
+        return 2.0;
+    }
+    if ($joursHorsSaison >= 1) {
+        return 1.0;
+    }
+    return 0.0;
+}
+
+function getCpValidatedRequestsForPeriod(int $userId, array $period): array {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT date_debut, date_fin, jours_demandes, mode_decompte
+        FROM cp_demandes
+        WHERE user_id = ? AND statut = "valide" AND date_debut <= ? AND date_fin >= ?
+        ORDER BY date_debut ASC, id ASC');
+    $stmt->execute([$userId, $period['end'], $period['start']]);
+    return $stmt->fetchAll();
+}
+
 function getCpBalanceForUser(int $userId, ?string $asOfDate = null): ?array {
     $profile = getCpProfile($userId);
     if (!$profile) {
@@ -289,8 +369,11 @@ function getCpBalanceForUser(int $userId, ?string $asOfDate = null): ?array {
     $acquired = calculateCpAcquiredDays($profile, $asOfDate);
     $adjustments = getCpAdjustmentsTotal($userId, $period);
     $taken = getCpTakenDays($userId, $period);
+    $fractionnement = isCpFractionnementEnabled()
+        ? calculerJoursFractionnement(getCpValidatedRequestsForPeriod($userId, $period))
+        : 0.0;
     $initial = (float) ($profile['solde_initial'] ?? 0);
-    $available = round($initial + $acquired + $adjustments - $taken, 2);
+    $available = round($initial + $acquired + $adjustments + $fractionnement - $taken, 2);
 
     return [
         'profile' => $profile,
@@ -298,6 +381,7 @@ function getCpBalanceForUser(int $userId, ?string $asOfDate = null): ?array {
         'initial' => $initial,
         'acquired' => $acquired,
         'adjustments' => $adjustments,
+        'fractionnement' => $fractionnement,
         'taken' => $taken,
         'available' => $available,
     ];
