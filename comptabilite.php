@@ -191,28 +191,33 @@ foreach ($grandLivre as $catNom => $catData) {
 include 'header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-journal-bookmark-fill"></i> Comptabilité <?= $annee ?></h2>
-    <div class="d-flex gap-2">
-        <div class="btn-group">
-            <?php foreach ($annees as $a): ?>
-                <a href="?annee=<?= $a ?>&onglet=<?= e($onglet) ?>" 
-                   class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>">
-                    <?= $a ?>
-                </a>
-            <?php endforeach; ?>
+<div class="hero-banner mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-journal-bookmark-fill"></i> Comptabilité <?= $annee ?></h2>
+            <p class="text-muted mb-0">Livre des recettes, registre des achats et grand livre de l'exercice</p>
         </div>
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-download"></i> Exporter
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=recettes"><i class="bi bi-filetype-csv text-success"></i> Livre des recettes (CSV)</a></li>
-                <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=achats"><i class="bi bi-filetype-csv text-danger"></i> Registre des achats (CSV)</a></li>
-                <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=journal"><i class="bi bi-filetype-csv text-primary"></i> Journal général (CSV)</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=fec"><i class="bi bi-file-earmark-code text-dark"></i> Export FEC (contrôle fiscal)</a></li>
-            </ul>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <?php foreach ($annees as $a): ?>
+                    <a href="?annee=<?= $a ?>&onglet=<?= e($onglet) ?>"
+                       class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>">
+                        <?= $a ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download"></i> Exporter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=recettes"><i class="bi bi-filetype-csv text-success"></i> Livre des recettes (CSV)</a></li>
+                    <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=achats"><i class="bi bi-filetype-csv text-danger"></i> Registre des achats (CSV)</a></li>
+                    <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=journal"><i class="bi bi-filetype-csv text-primary"></i> Journal général (CSV)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?annee=<?= $annee ?>&export=fec"><i class="bi bi-file-earmark-code text-dark"></i> Export FEC (contrôle fiscal)</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -220,38 +225,50 @@ include 'header.php';
 <!-- Résumé comptable -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 h-100">
-            <div class="card-body text-center">
-                <small class="text-muted">Total recettes</small>
-                <h3 class="text-success"><?= formatMontant($totalRecettes) ?></h3>
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-arrow-up-circle-fill"></i></div>
+                    <small class="text-muted ms-2">Total recettes</small>
+                </div>
+                <h3 class="text-success mb-1"><?= formatMontant($totalRecettes) ?></h3>
                 <small class="text-muted"><?= count($recettes) ?> opérations</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 h-100">
-            <div class="card-body text-center">
-                <small class="text-muted">Total achats / dépenses</small>
-                <h3 class="text-danger"><?= formatMontant($totalAchats) ?></h3>
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-arrow-down-circle-fill"></i></div>
+                    <small class="text-muted ms-2">Total achats / dépenses</small>
+                </div>
+                <h3 class="text-danger mb-1"><?= formatMontant($totalAchats) ?></h3>
                 <small class="text-muted"><?= count($achats) ?> opérations</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 h-100">
-            <div class="card-body text-center">
-                <small class="text-muted">Résultat</small>
-                <h3 class="<?= ($totalRecettes - $totalAchats) >= 0 ? 'text-info' : 'text-danger' ?>"><?= formatMontant($totalRecettes - $totalAchats) ?></h3>
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-wallet2"></i></div>
+                    <small class="text-muted ms-2">Résultat</small>
+                </div>
+                <h3 class="<?= ($totalRecettes - $totalAchats) >= 0 ? 'text-info' : 'text-danger' ?> mb-1"><?= formatMontant($totalRecettes - $totalAchats) ?></h3>
                 <small class="text-muted"><?= count($toutesTransactions) ?> écritures totales</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 h-100">
+        <div class="card stat-card border-0 h-100">
             <div class="card-body">
-                <small class="text-muted d-block mb-2">
-                    CA trimestriel <?= $conf['is_micro'] ? '(URSSAF)' : '' ?>
-                </small>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-bank"></i></div>
+                    <small class="text-muted ms-2">
+                        CA trimestriel <?= $conf['is_micro'] ? '(URSSAF)' : '' ?>
+                    </small>
+                </div>
                 <div class="row text-center">
                     <?php foreach ($trimestres as $q => $montant): ?>
                         <div class="col-6 mb-1">
