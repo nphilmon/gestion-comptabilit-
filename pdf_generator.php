@@ -451,15 +451,15 @@ function getLegalFooterLines(array $entreprise, array $conf, string $type, array
     if (!$conf['tva_applicable']) {
         $lines[] = 'TVA non applicable, art. 293 B du CGI';
     } elseif (!empty($doc['client_tva'])) {
-        $lines[] = "TVA applicable selon le regime en vigueur - N\xC2\xB0 TVA client : " . $doc['client_tva'];
+        $lines[] = "TVA applicable selon le régime en vigueur - N\xC2\xB0 TVA client : " . $doc['client_tva'];
     }
 
-    $conditionsPaiement = trim((string) getParam('conditions_paiement', "Paiement a reception"));
-    $lines[] = 'Conditions : ' . $conditionsPaiement . ' - Penalites de retard : taux BCE + 10 pts';
+    $conditionsPaiement = trim((string) getParam('conditions_paiement', "Paiement à réception"));
+    $lines[] = 'Conditions : ' . $conditionsPaiement . ' - Pénalités de retard : taux BCE + 10 pts';
 
     $clientPro = ($doc['client_type'] ?? null) === 'professionnel' || !empty($doc['client_entreprise']);
     if ($clientPro) {
-        $lines[] = "Indemnite forfaitaire de recouvrement (professionnels) : 40 \xE2\x82\xAC";
+        $lines[] = "Indemnité forfaitaire de recouvrement (professionnels) : 40 \xE2\x82\xAC";
     }
 
     return $lines;
@@ -528,15 +528,15 @@ $y = $pdf->infoLine(15, $y, 'Date :', formatDate($dateValue));
 $y = $pdf->infoLine(15, $y, 'Statut :', $statusLabel);
 
 if ($type === 'devis') {
-    $y = $pdf->infoLine(15, $y, 'Validite :', formatDate($doc['date_validite']));
+    $y = $pdf->infoLine(15, $y, 'Validité :', formatDate($doc['date_validite']));
 } elseif ($type === 'facture') {
-    $y = $pdf->infoLine(15, $y, 'Echeance :', formatDate($doc['date_echeance']));
+    $y = $pdf->infoLine(15, $y, 'Échéance :', formatDate($doc['date_echeance']));
 }
 
 if ($type === 'facture' && !empty($doc['devis_id'])) {
     $devisRef = getDevis((int)$doc['devis_id']);
     if ($devisRef) {
-        $y = $pdf->infoLine(15, $y, 'Ref. devis :', $devisRef['numero']);
+        $y = $pdf->infoLine(15, $y, 'Réf. devis :', $devisRef['numero']);
     }
 }
 
@@ -564,7 +564,7 @@ $clientLines = array_values(array_filter([
     !empty($doc['client_siret']) ? 'SIRET : ' . $doc['client_siret'] : '',
 ]));
 
-$bottomL = $pdf->addressBlock(15, $blockY, 85, 'Emetteur', $companyLines);
+$bottomL = $pdf->addressBlock(15, $blockY, 85, 'Émetteur', $companyLines);
 $bottomR = $pdf->addressBlock(110, $blockY, 85, 'Destinataire', $clientLines);
 $pdf->SetY(max($bottomL, $bottomR) + 5);
 
@@ -585,11 +585,11 @@ if (!empty($doc['objet'])) {
 // =============================================================
 if ($conf['tva_applicable']) {
     $colWidths    = [75, 14, 18, 24, 16, 33];
-    $headers      = ['Designation', 'Qte', 'Unite', 'P.U. HT', 'TVA %', 'Total HT'];
+    $headers      = ['Désignation', 'Qté', 'Unité', 'P.U. HT', 'TVA %', 'Total HT'];
     $headerAligns = ['L', 'C', 'C', 'R', 'R', 'R'];
 } else {
     $colWidths    = [90, 14, 18, 26, 0, 32];
-    $headers      = ['Designation', 'Qte', 'Unite', 'Prix unit.', '', 'Total'];
+    $headers      = ['Désignation', 'Qté', 'Unité', 'Prix unit.', '', 'Total'];
     $headerAligns = ['L', 'C', 'C', 'R', 'R', 'R'];
 }
 
@@ -657,10 +657,10 @@ if (in_array($type, ['devis', 'commande'], true) && $acomptePct > 0) {
 // =============================================================
 if ($type === 'facture' && (float)$doc['montant_paye'] > 0) {
     $pdf->Ln(2);
-    $pdf->summaryLine('Deja paye :', $pdf->eur((float)$doc['montant_paye']), false, [22, 163, 74], [22, 163, 74]);
+    $pdf->summaryLine('Déjà payé :', $pdf->eur((float)$doc['montant_paye']), false, [22, 163, 74], [22, 163, 74]);
     $reste = (float)$doc['montant_ttc'] - (float)$doc['montant_paye'];
     if ($reste > 0.01) {
-        $pdf->summaryLine('Reste a payer :', $pdf->eur($reste), true, [220, 38, 38], [220, 38, 38]);
+        $pdf->summaryLine('Reste à payer :', $pdf->eur($reste), true, [220, 38, 38], [220, 38, 38]);
     }
 }
 
@@ -703,7 +703,7 @@ if ($type === 'devis') {
     $pdf->SetX(20);
     $pdf->SetFont('Helvetica', '', 7.5);
     $pdf->SetTextColor(71, 85, 105);
-    $pdf->MultiCell(95, 3.5, $pdf->conv("Signature precedee de la mention \"Bon pour accord\",\ncachet eventuel, date et nom du signataire."));
+    $pdf->MultiCell(95, 3.5, $pdf->conv("Signature précédée de la mention «\u00a0Bon pour accord\u00a0»,\ncachet éventuel, date et nom du signataire."));
 
     $pdf->SetFont('Helvetica', '', 8);
     $pdf->SetTextColor(15, 23, 42);
@@ -737,7 +737,7 @@ if ($hasCGV) {
     // Titre
     $pdf->SetFont('Helvetica', 'B', 14);
     $pdf->SetTextColor(30, 58, 95);
-    $pdf->Cell(0, 8, $pdf->conv('CONDITIONS GENERALES DE VENTE'), 0, 1, 'C');
+    $pdf->Cell(0, 8, $pdf->conv('CONDITIONS GÉNÉRALES DE VENTE'), 0, 1, 'C');
 
     $pdf->SetDrawColor(37, 99, 235);
     $pdf->SetLineWidth(0.5);
@@ -757,7 +757,7 @@ if ($hasCGV) {
         $pdf->SetFont('Helvetica', 'B', 9);
         $pdf->SetTextColor(30, 58, 95);
         $pdf->SetX(15);
-        $pdf->Cell(180, 5, $pdf->conv('Resume'), 0, 1, 'L');
+        $pdf->Cell(180, 5, $pdf->conv('Résumé'), 0, 1, 'L');
         $pdf->Ln(1);
         $pdf->SetFont('Helvetica', '', 8);
         $pdf->SetTextColor(51, 65, 85);
@@ -772,7 +772,7 @@ if ($hasCGV) {
         $pdf->SetFont('Helvetica', 'B', 9);
         $pdf->SetTextColor(30, 58, 95);
         $pdf->SetX(15);
-        $pdf->Cell(180, 5, $pdf->conv('Conditions detaillees'), 0, 1, 'L');
+        $pdf->Cell(180, 5, $pdf->conv('Conditions détaillées'), 0, 1, 'L');
         $pdf->SetDrawColor(226, 232, 240);
         $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
         $pdf->Ln(2);
@@ -791,8 +791,8 @@ if ($hasCGV) {
     $pdf->SetTextColor(100, 116, 139);
     $pdf->SetX(15);
     $pdf->MultiCell(180, 3.5, $pdf->conv(
-        'Le client reconnait avoir pris connaissance des presentes conditions generales de vente et les accepte sans reserve. '
-        . 'Toute commande implique l\'adhesion pleine et entiere aux presentes conditions.'
+        'Le client reconnaît avoir pris connaissance des présentes conditions générales de vente et les accepte sans réserve. '
+        . 'Toute commande implique l\'adhésion pleine et entière aux présentes conditions.'
     ));
 }
 
