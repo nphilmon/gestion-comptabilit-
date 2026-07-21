@@ -440,8 +440,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label" for="password">Mot de passe</label>
-                            <div class="md-input-group">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="form-label mb-0" for="password">Mot de passe</label>
+                                <a href="<?= BASE_URL ?>mot_de_passe_oublie.php" class="form-label mb-0" style="color:var(--md-primary);text-decoration:none;">Mot de passe oublié ?</a>
+                            </div>
+                            <div class="md-input-group mt-1">
                                 <span class="input-icon"><i class="bi bi-lock"></i></span>
                                 <input type="password" class="form-control" id="password" name="password"
                                        placeholder="••••••••" required>

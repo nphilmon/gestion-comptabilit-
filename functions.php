@@ -225,6 +225,112 @@ function logout(): void {
     session_destroy();
 }
 
+// --- Réinitialisation de mot de passe ---
+function checkPasswordResetRequests(?string $identifier = null): bool {
+    return checkRateLimit('password_reset_request', 3, 900, $identifier);
+}
+
+function recordPasswordResetRequest(?string $identifier = null): void {
+    recordRateLimitHit('password_reset_request', $identifier);
+}
+
+function getPasswordResetWaitTime(?string $identifier = null): int {
+    return getRateLimitWaitTime('password_reset_request', 900, $identifier);
+}
+
+function getAbsoluteBaseUrl(): string {
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    return ($isSecure ? 'https://' : 'http://') . $host . BASE_URL;
+}
+
+/**
+ * Crée un jeton de réinitialisation pour l'utilisateur correspondant à
+ * l'email donné. Retourne null si aucun compte actif ne correspond, sans
+ * jamais lever d'erreur, pour ne pas permettre l'énumération des comptes
+ * depuis l'appelant (mot_de_passe_oublie.php affiche le même message dans
+ * les deux cas).
+ */
+function createPasswordResetToken(string $email): ?string {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND actif = 1');
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        return null;
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $tokenHash = hash('sha256', $token);
+    $expiresAt = date('Y-m-d H:i:s', time() + 3600);
+
+    $db->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([$user['id']]);
+    $db->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)')
+        ->execute([$user['id'], $tokenHash, $expiresAt]);
+
+    logActivity((int) $user['id'], 'mot_de_passe_oublie', 'Demande de réinitialisation de mot de passe');
+
+    return $token;
+}
+
+function sendPasswordResetEmail(string $email, string $token): bool {
+    $link = getAbsoluteBaseUrl() . 'reinitialiser_mot_de_passe.php?token=' . urlencode($token);
+
+    $subject = '=?UTF-8?B?' . base64_encode('Réinitialisation de votre mot de passe - ' . APP_NAME) . '?=';
+    $body = "Bonjour,\r\n\r\n"
+        . "Une demande de réinitialisation de mot de passe a été effectuée pour votre compte " . APP_NAME . ".\r\n\r\n"
+        . "Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe (valable 1 heure) :\r\n"
+        . $link . "\r\n\r\n"
+        . "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.\r\n\r\n"
+        . "-- \r\n" . APP_NAME;
+
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $host = preg_replace('/[^a-zA-Z0-9.\-]/', '', explode(':', $host)[0]) ?: 'localhost';
+    $fromEmail = envValue('GESTION_COMPTA_MAIL_FROM', 'no-reply@' . $host);
+
+    $headers = "From: " . APP_NAME . " <" . $fromEmail . ">\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n";
+
+    try {
+        return @mail($email, $subject, $body, $headers);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function getUserByResetToken(string $token): ?array {
+    if ($token === '') {
+        return null;
+    }
+    $db = getDB();
+    $tokenHash = hash('sha256', $token);
+    $stmt = $db->prepare('SELECT u.id, u.nom, u.email FROM password_resets r
+        INNER JOIN users u ON u.id = r.user_id
+        WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at >= NOW() AND u.actif = 1');
+    $stmt->execute([$tokenHash]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+function resetPasswordWithToken(string $token, string $newPassword): bool {
+    $user = getUserByResetToken($token);
+    if (!$user) {
+        return false;
+    }
+
+    $db = getDB();
+    $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+
+    $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $user['id']]);
+    $db->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([$user['id']]);
+    clearLoginAttempts($user['email']);
+
+    logActivity((int) $user['id'], 'reinitialisation_mot_de_passe', 'Mot de passe réinitialisé via lien de récupération');
+
+    return true;
+}
+
 // --- Log d'activité ---
 function logActivity(int $userId, string $action, string $details = '', ?string $cible = null): void {
     try {
