@@ -107,19 +107,24 @@ include 'commercial_header.php';
 <?php
 $filtreStatut = $_GET['statut'] ?? '';
 $filtreRecherche = $_GET['recherche'] ?? '';
-$devisList = getDevisList(['statut' => $filtreStatut, 'recherche' => $filtreRecherche]);
-$totalTTC = array_sum(array_map(fn($d) => (float)$d['montant_ttc'], $devisList));
-$nbAccepte = count(array_filter($devisList, fn($d) => $d['statut'] === 'accepte'));
-$nbEnvoye = count(array_filter($devisList, fn($d) => $d['statut'] === 'envoye'));
-$nbBrouillon = count(array_filter($devisList, fn($d) => $d['statut'] === 'brouillon'));
-$tauxAcceptation = count($devisList) > 0 ? round(($nbAccepte / count($devisList)) * 100) : 0;
+$listFiltres = ['statut' => $filtreStatut, 'recherche' => $filtreRecherche];
+$perPage = 30;
+$devisStats = getDevisStats($listFiltres);
+$totalPages = max(1, (int) ceil($devisStats['nb'] / $perPage));
+$page = max(1, min((int) ($_GET['page'] ?? 1), $totalPages));
+$devisList = getDevisList($listFiltres + ['limit' => $perPage, 'offset' => ($page - 1) * $perPage]);
+$totalTTC = $devisStats['total_ttc'];
+$nbAccepte = $devisStats['nb_accepte'];
+$nbEnvoye = $devisStats['nb_envoye'];
+$nbBrouillon = $devisStats['nb_brouillon'];
+$tauxAcceptation = $devisStats['nb'] > 0 ? round(($nbAccepte / $devisStats['nb']) * 100) : 0;
 ?>
 
 <div class="hero-banner mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h2 class="mb-1"><i class="bi bi-file-earmark-text"></i> Devis</h2>
-            <p class="text-muted mb-0"><?= count($devisList) ?> devis</p>
+            <p class="text-muted mb-0"><?= $devisStats['nb'] ?> devis</p>
         </div>
         <a href="?action=nouveau" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nouveau devis</a>
     </div>
@@ -214,7 +219,7 @@ $tauxAcceptation = count($devisList) > 0 ? round(($nbAccepte / count($devisList)
     </div>
 </div>
 
-<?php if (empty($devisList)): ?>
+<?php if ($devisStats['nb'] === 0): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
             <div class="empty-state-icon">
@@ -241,7 +246,7 @@ $tauxAcceptation = count($devisList) > 0 ? round(($nbAccepte / count($devisList)
             <div class="commercial-table-card__stats">
                 <span class="commercial-table-pill"><i class="bi bi-check2-circle"></i> Taux d'acceptation : <strong><?= $tauxAcceptation ?>%</strong></span>
                 <span class="commercial-table-pill"><i class="bi bi-send"></i> Envoyés : <strong><?= $nbEnvoye ?></strong></span>
-                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($devisList) ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= $devisStats['nb'] ?></strong></span>
             </div>
         </div>
         <div class="table-responsive">
@@ -277,6 +282,11 @@ $tauxAcceptation = count($devisList) > 0 ? round(($nbAccepte / count($devisList)
                 </tbody>
             </table>
         </div>
+        <?php if ($totalPages > 1): ?>
+        <div class="card-footer bg-white py-3">
+            <?= renderPagination($page, $totalPages, $listFiltres) ?>
+        </div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 

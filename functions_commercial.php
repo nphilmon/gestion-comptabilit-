@@ -232,9 +232,58 @@ function getDevisList(array $filtres = []): array {
             JOIN clients c ON d.client_id = c.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY d.date_devis DESC, d.id DESC";
+    if (!empty($filtres['limit'])) {
+        $sql .= ' LIMIT ' . (int) $filtres['limit'] . ' OFFSET ' . (int) ($filtres['offset'] ?? 0);
+    }
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+// Agrégats (compteur + montants) pour la liste des devis, indépendants de
+// la pagination : évite de charger toutes les lignes juste pour les
+// cartes de statistiques et le nombre total de résultats.
+function getDevisStats(array $filtres = []): array {
+    $db = getDB();
+    $where = ['1=1'];
+    $params = [];
+
+    if (!empty($filtres['statut'])) {
+        $where[] = 'd.statut = ?';
+        $params[] = $filtres['statut'];
+    }
+    if (!empty($filtres['client_id'])) {
+        $where[] = 'd.client_id = ?';
+        $params[] = (int)$filtres['client_id'];
+    }
+    if (!empty($filtres['annee'])) {
+        $where[] = 'YEAR(d.date_devis) = ?';
+        $params[] = (int)$filtres['annee'];
+    }
+    if (!empty($filtres['recherche'])) {
+        $where[] = '(d.numero LIKE ? OR d.objet LIKE ? OR c.nom LIKE ? OR c.entreprise LIKE ?)';
+        $like = '%' . $filtres['recherche'] . '%';
+        $params = array_merge($params, [$like, $like, $like, $like]);
+    }
+
+    $sql = "SELECT COUNT(*) AS nb,
+                   COALESCE(SUM(d.montant_ttc), 0) AS total_ttc,
+                   COALESCE(SUM(CASE WHEN d.statut = 'accepte' THEN 1 ELSE 0 END), 0) AS nb_accepte,
+                   COALESCE(SUM(CASE WHEN d.statut = 'envoye' THEN 1 ELSE 0 END), 0) AS nb_envoye,
+                   COALESCE(SUM(CASE WHEN d.statut = 'brouillon' THEN 1 ELSE 0 END), 0) AS nb_brouillon
+            FROM devis d
+            JOIN clients c ON d.client_id = c.id
+            WHERE " . implode(' AND ', $where);
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return [
+        'nb' => (int) $row['nb'],
+        'total_ttc' => (float) $row['total_ttc'],
+        'nb_accepte' => (int) $row['nb_accepte'],
+        'nb_envoye' => (int) $row['nb_envoye'],
+        'nb_brouillon' => (int) $row['nb_brouillon'],
+    ];
 }
 
 function getDevis(int $id): ?array {
@@ -338,9 +387,57 @@ function getFacturesList(array $filtres = []): array {
             JOIN clients c ON f.client_id = c.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY f.date_facture DESC, f.id DESC";
+    if (!empty($filtres['limit'])) {
+        $sql .= ' LIMIT ' . (int) $filtres['limit'] . ' OFFSET ' . (int) ($filtres['offset'] ?? 0);
+    }
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+// Agrégats (compteur + montants) pour la liste des factures, indépendants
+// de la pagination — voir getDevisStats() pour la justification.
+function getFacturesStats(array $filtres = []): array {
+    $db = getDB();
+    $where = ['1=1'];
+    $params = [];
+
+    if (!empty($filtres['statut'])) {
+        $where[] = 'f.statut = ?';
+        $params[] = $filtres['statut'];
+    }
+    if (!empty($filtres['client_id'])) {
+        $where[] = 'f.client_id = ?';
+        $params[] = (int)$filtres['client_id'];
+    }
+    if (!empty($filtres['annee'])) {
+        $where[] = 'YEAR(f.date_facture) = ?';
+        $params[] = (int)$filtres['annee'];
+    }
+    if (!empty($filtres['recherche'])) {
+        $where[] = '(f.numero LIKE ? OR f.objet LIKE ? OR c.nom LIKE ? OR c.entreprise LIKE ?)';
+        $like = '%' . $filtres['recherche'] . '%';
+        $params = array_merge($params, [$like, $like, $like, $like]);
+    }
+
+    $sql = "SELECT COUNT(*) AS nb,
+                   COALESCE(SUM(f.montant_ttc), 0) AS total_ttc,
+                   COALESCE(SUM(f.montant_paye), 0) AS total_paye,
+                   COALESCE(SUM(CASE WHEN f.statut = 'en_retard' THEN 1 ELSE 0 END), 0) AS nb_en_retard,
+                   COALESCE(SUM(CASE WHEN f.statut = 'envoyee' THEN 1 ELSE 0 END), 0) AS nb_envoyee
+            FROM factures f
+            JOIN clients c ON f.client_id = c.id
+            WHERE " . implode(' AND ', $where);
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return [
+        'nb' => (int) $row['nb'],
+        'total_ttc' => (float) $row['total_ttc'],
+        'total_paye' => (float) $row['total_paye'],
+        'nb_en_retard' => (int) $row['nb_en_retard'],
+        'nb_envoyee' => (int) $row['nb_envoyee'],
+    ];
 }
 
 function getFacture(int $id): ?array {
@@ -955,9 +1052,53 @@ function getCommandesList(array $filtres = []): array {
             JOIN clients c ON co.client_id = c.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY co.date_commande DESC, co.id DESC";
+    if (!empty($filtres['limit'])) {
+        $sql .= ' LIMIT ' . (int) $filtres['limit'] . ' OFFSET ' . (int) ($filtres['offset'] ?? 0);
+    }
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+// Agrégats (compteur + montants) pour la liste des commandes, indépendants
+// de la pagination — voir getDevisStats() pour la justification.
+function getCommandesStats(array $filtres = []): array {
+    $db = getDB();
+    $where = ['1=1'];
+    $params = [];
+
+    if (!empty($filtres['statut'])) {
+        $where[] = 'co.statut = ?';
+        $params[] = $filtres['statut'];
+    }
+    if (!empty($filtres['client_id'])) {
+        $where[] = 'co.client_id = ?';
+        $params[] = (int)$filtres['client_id'];
+    }
+    if (!empty($filtres['recherche'])) {
+        $where[] = '(co.numero LIKE ? OR co.objet LIKE ? OR c.nom LIKE ? OR c.entreprise LIKE ?)';
+        $like = '%' . $filtres['recherche'] . '%';
+        $params = array_merge($params, [$like, $like, $like, $like]);
+    }
+
+    $sql = "SELECT COUNT(*) AS nb,
+                   COALESCE(SUM(co.montant_ttc), 0) AS total_ttc,
+                   COALESCE(SUM(CASE WHEN co.statut = 'en_attente' THEN 1 ELSE 0 END), 0) AS nb_en_attente,
+                   COALESCE(SUM(CASE WHEN co.statut = 'confirmee' THEN 1 ELSE 0 END), 0) AS nb_confirmee,
+                   COALESCE(SUM(CASE WHEN co.statut = 'livree' THEN 1 ELSE 0 END), 0) AS nb_livree
+            FROM commandes co
+            JOIN clients c ON co.client_id = c.id
+            WHERE " . implode(' AND ', $where);
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return [
+        'nb' => (int) $row['nb'],
+        'total_ttc' => (float) $row['total_ttc'],
+        'nb_en_attente' => (int) $row['nb_en_attente'],
+        'nb_confirmee' => (int) $row['nb_confirmee'],
+        'nb_livree' => (int) $row['nb_livree'],
+    ];
 }
 
 function getCommande(int $id): ?array {

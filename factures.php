@@ -158,19 +158,24 @@ include 'commercial_header.php';
 <?php
 $filtreStatut = $_GET['statut'] ?? '';
 $filtreRecherche = $_GET['recherche'] ?? '';
-$facturesList = getFacturesList(['statut' => $filtreStatut, 'recherche' => $filtreRecherche]);
-$totalTTC = array_sum(array_map(fn($f) => (float)$f['montant_ttc'], $facturesList));
-$totalPaye = array_sum(array_map(fn($f) => (float)$f['montant_paye'], $facturesList));
+$listFiltres = ['statut' => $filtreStatut, 'recherche' => $filtreRecherche];
+$perPage = 30;
+$facturesStats = getFacturesStats($listFiltres);
+$totalPages = max(1, (int) ceil($facturesStats['nb'] / $perPage));
+$page = max(1, min((int) ($_GET['page'] ?? 1), $totalPages));
+$facturesList = getFacturesList($listFiltres + ['limit' => $perPage, 'offset' => ($page - 1) * $perPage]);
+$totalTTC = $facturesStats['total_ttc'];
+$totalPaye = $facturesStats['total_paye'];
 $totalReste = max(0, $totalTTC - $totalPaye);
-$nbEnRetard = count(array_filter($facturesList, fn($f) => $f['statut'] === 'en_retard'));
-$nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoyee'));
+$nbEnRetard = $facturesStats['nb_en_retard'];
+$nbEnvoyee = $facturesStats['nb_envoyee'];
 ?>
 
 <div class="hero-banner mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h2 class="mb-1"><i class="bi bi-receipt"></i> Factures</h2>
-            <p class="text-muted mb-0"><?= count($facturesList) ?> facture<?= count($facturesList) > 1 ? 's' : '' ?></p>
+            <p class="text-muted mb-0"><?= $facturesStats['nb'] ?> facture<?= $facturesStats['nb'] > 1 ? 's' : '' ?></p>
         </div>
         <a href="?action=nouvelle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nouvelle facture</a>
     </div>
@@ -265,7 +270,7 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
     </div>
 </div>
 
-<?php if (empty($facturesList)): ?>
+<?php if ($facturesStats['nb'] === 0): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
             <div class="empty-state-icon">
@@ -290,7 +295,7 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
             <div class="commercial-table-card__stats">
                 <span class="commercial-table-pill"><i class="bi bi-wallet2"></i> À encaisser : <strong><?= formatMontant($totalReste) ?></strong></span>
                 <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> En retard : <strong><?= $nbEnRetard ?></strong></span>
-                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($facturesList) ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= $facturesStats['nb'] ?></strong></span>
             </div>
         </div>
         <div class="table-responsive">
@@ -330,6 +335,11 @@ $nbEnvoyee = count(array_filter($facturesList, fn($f) => $f['statut'] === 'envoy
                 </tbody>
             </table>
         </div>
+        <?php if ($totalPages > 1): ?>
+        <div class="card-footer bg-white py-3">
+            <?= renderPagination($page, $totalPages, $listFiltres) ?>
+        </div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 
