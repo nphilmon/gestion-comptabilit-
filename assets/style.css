@@ -1125,6 +1125,9 @@ body {
 /* Barres de progression fines (répartition par catégorie, tableau de bord). */
 .progress-thin { height: 8px; }
 .progress-h5 { height: 5px; }
+.progress-h12 { height: 12px; }
+.progress-h20 { height: 20px; }
+.col-w-200 { width: 200px; }
 
 /* Icône ronde de taille fixe (cartes de recommandations du tableau de bord). */
 .icon-circle-38 { width: 38px; height: 38px; }
