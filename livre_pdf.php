@@ -4,7 +4,7 @@
  * Remplace l'impression navigateur (window.print()), peu fiable selon les configurations.
  */
 require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/lib/fpdf.php';
+require_once __DIR__ . '/lib/LivrePdf.php';
 requireLogin();
 requireRole('admin', 'comptable');
 
@@ -63,123 +63,6 @@ $titres = [
 ];
 [$titrePrincipal, $sousTitre] = $titres[$onglet];
 
-// =====================================================================
-// Classe PDF — charte MD3 (mêmes tons que assets/style.css)
-// =====================================================================
-class LivrePDF extends FPDF
-{
-    public $titre = '';
-    public $sousTitre = '';
-    public $annee = 0;
-
-    private $colPrimary   = [37, 99, 235];
-    private $colPrimaryDk = [30, 58, 95];
-    private $colTint      = [219, 234, 254];
-    private $colDark      = [15, 23, 42];
-    private $colMuted     = [71, 85, 105];
-    private $colBorder    = [226, 232, 240];
-    private $colZebra     = [248, 250, 252];
-    private $colSuccess   = [22, 163, 74];
-    private $colError     = [220, 38, 38];
-
-    function conv($str)
-    {
-        return mb_convert_encoding((string) $str, 'Windows-1252', 'UTF-8');
-    }
-
-    function eur(float $value): string
-    {
-        return number_format($value, 2, ',', ' ') . " \xE2\x82\xAC";
-    }
-
-    function Header()
-    {
-        $this->SetFillColor(...$this->colPrimary);
-        $this->Rect(0, 0, $this->w, 22, 'F');
-        $this->SetTextColor(255, 255, 255);
-        $this->SetFont('Helvetica', 'B', 15);
-        $this->SetXY(10, 6);
-        $this->Cell(0, 8, $this->conv($this->titre . ' — ' . $this->annee), 0, 1);
-        if ($this->sousTitre !== '') {
-            $this->SetFont('Helvetica', '', 9);
-            $this->SetXY(10, 14);
-            $this->Cell(0, 5, $this->conv($this->sousTitre), 0, 1);
-        }
-        $this->SetY(28);
-        $this->SetTextColor(...$this->colDark);
-    }
-
-    function Footer()
-    {
-        $this->SetY(-15);
-        $this->SetFont('Helvetica', '', 8);
-        $this->SetTextColor(...$this->colMuted);
-        $this->Cell(0, 10, $this->conv(APP_NAME . ' — Généré le ' . date('d/m/Y à H:i')), 0, 0, 'L');
-        $this->Cell(0, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
-    }
-
-    function tableHeader(array $headers, array $widths, array $aligns): void
-    {
-        $this->SetFont('Helvetica', 'B', 8);
-        $this->SetFillColor(...$this->colTint);
-        $this->SetTextColor(...$this->colPrimaryDk);
-        $this->SetDrawColor(...$this->colBorder);
-        foreach ($headers as $i => $h) {
-            $this->Cell($widths[$i], 7, $this->conv($h), 0, 0, $aligns[$i], true);
-        }
-        $this->Ln();
-        $this->SetTextColor(...$this->colDark);
-    }
-
-    function tableRow(array $data, array $widths, array $aligns, bool $fill, array $colors = []): void
-    {
-        $this->SetFont('Helvetica', '', 8);
-        $this->SetFillColor(...$this->colZebra);
-        foreach ($data as $i => $val) {
-            if (isset($colors[$i])) {
-                $this->SetTextColor(...$colors[$i]);
-            } else {
-                $this->SetTextColor(...$this->colDark);
-            }
-            $this->Cell($widths[$i], 6, $this->conv($this->fitText((string) $val, $widths[$i])), 0, 0, $aligns[$i] ?? 'L', $fill);
-        }
-        $this->Ln();
-        $this->SetTextColor(...$this->colDark);
-    }
-
-    // Tronque le texte avec "..." s'il dépasse la largeur de la cellule (évite le chevauchement de colonnes)
-    function fitText(string $txt, float $width): string
-    {
-        $maxW = $width - 2;
-        if ($this->GetStringWidth($this->conv($txt)) <= $maxW) {
-            return $txt;
-        }
-        while ($txt !== '' && $this->GetStringWidth($this->conv($txt . '...')) > $maxW) {
-            $txt = mb_substr($txt, 0, -1);
-        }
-        return $txt . '...';
-    }
-
-    function totalRow(array $data, array $widths, array $aligns): void
-    {
-        $this->SetFont('Helvetica', 'B', 8.5);
-        $this->SetFillColor(...$this->colPrimaryDk);
-        $this->SetTextColor(255, 255, 255);
-        foreach ($data as $i => $val) {
-            $this->Cell($widths[$i], 7, $this->conv((string) $val), 0, 0, $aligns[$i] ?? 'L', true);
-        }
-        $this->Ln();
-        $this->SetTextColor(...$this->colDark);
-    }
-
-    function checkPageBreak(float $needed = 8): void
-    {
-        if ($this->GetY() + $needed > $this->h - 18) {
-            $this->AddPage();
-        }
-    }
-}
-
 $pdf = new LivrePDF('L', 'mm', 'A4');
 $pdf->titre = $titrePrincipal;
 $pdf->sousTitre = $sousTitre;
@@ -206,6 +89,7 @@ switch ($onglet) {
         }
         $pdf->checkPageBreak(9);
         $pdf->totalRow(['', '', '', '', 'TOTAL ' . $annee, $pdf->eur($totalRecettes), '', $pdf->eur($cumul)], $widths, $aligns);
+        $pdf->endTable();
         break;
 
     case 'achats':
@@ -225,6 +109,7 @@ switch ($onglet) {
         }
         $pdf->checkPageBreak(9);
         $pdf->totalRow(['', '', '', '', 'TOTAL ' . $annee, $pdf->eur($totalAchats), '', $pdf->eur($cumul)], $widths, $aligns);
+        $pdf->endTable();
         break;
 
     case 'journal':
@@ -247,6 +132,7 @@ switch ($onglet) {
         }
         $pdf->checkPageBreak(9);
         $pdf->totalRow(['', '', '', '', '', '', 'TOTAUX', $pdf->eur($cumulDebit), $pdf->eur($cumulCredit), $pdf->eur($cumulCredit - $cumulDebit)], $widths, $aligns);
+        $pdf->endTable();
         break;
 
     case 'grandlivre':
@@ -268,6 +154,7 @@ switch ($onglet) {
             }
             $pdf->Ln(3);
         }
+        $pdf->endTable();
         break;
 
     case 'balance':
@@ -291,6 +178,7 @@ switch ($onglet) {
         }
         $pdf->checkPageBreak(9);
         $pdf->totalRow(['TOTAUX', count($toutesTransactions), $pdf->eur($sD), $pdf->eur($sC), $pdf->eur($sSD), $pdf->eur($sSC)], $widths, $aligns);
+        $pdf->endTable();
         break;
 
     case 'tresorerie':
@@ -345,6 +233,7 @@ switch ($onglet) {
         $totalRow[] = $pdf->eur($cumulNet);
         $totalRow[] = $pdf->eur($cumulNet);
         $pdf->totalRow($totalRow, $widths, $aligns);
+        $pdf->endTable();
         break;
 }
 
