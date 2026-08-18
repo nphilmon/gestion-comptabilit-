@@ -272,10 +272,10 @@ include 'header.php';
                 <div class="row text-center">
                     <?php foreach ($trimestres as $q => $montant): ?>
                         <div class="col-6 mb-1">
-                            <div class="fw-bold <?= $montant > 0 ? 'text-primary' : 'text-muted' ?>" style="font-size: 0.85rem;">
+                            <div class="fw-bold fs-085 <?= $montant > 0 ? 'text-primary' : 'text-muted' ?>">
                                 <?= formatMontant($montant) ?>
                             </div>
-                            <small class="text-muted" style="font-size: 0.7rem;">T<?= $q ?></small>
+                            <small class="text-muted fs-07">T<?= $q ?></small>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -354,14 +354,14 @@ include 'header.php';
                 <table class="table table-sm table-hover table-striped mb-0">
                     <thead class="table-success">
                         <tr>
-                            <th class="text-center" style="width: 50px;">N°</th>
-                            <th style="width: 105px;">Date</th>
+                            <th class="text-center col-w-50">N°</th>
+                            <th class="col-w-105">Date</th>
                             <th>Réf.</th>
                             <th>Client</th>
                             <th>Nature de la prestation</th>
-                            <th class="text-end" style="width: 115px;">Montant</th>
-                            <th style="width: 100px;">Mode</th>
-                            <th class="text-end" style="width: 115px;">Cumul</th>
+                            <th class="text-end col-w-115">Montant</th>
+                            <th class="col-w-100">Mode</th>
+                            <th class="text-end col-w-115">Cumul</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -374,7 +374,7 @@ include 'header.php';
                                 <td>
                                     <?= e($t['description']) ?>
                                     <?php if ($t['categorie_nom']): ?>
-                                        <br><span class="badge" style="background-color: <?= e($t['categorie_couleur']) ?>; font-size: 0.65rem;"><?= e($t['categorie_nom']) ?></span>
+                                        <br><span class="badge fs-065" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end fw-bold text-success"><?= formatMontant($t['montant']) ?></td>
@@ -419,7 +419,7 @@ include 'header.php';
     <div class="card-body p-0">
         <?php if (empty($achatsChronologiques)): ?>
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                <i class="bi bi-cart-x fs-3rem"></i>
                 <p class="mt-2">Aucun achat pour <?= $annee ?>.</p>
             </div>
         <?php else: ?>
@@ -427,15 +427,15 @@ include 'header.php';
                 <table class="table table-sm table-hover table-striped mb-0">
                     <thead class="table-danger">
                         <tr>
-                            <th class="text-center" style="width: 50px;">N°</th>
-                            <th style="width: 105px;">Date</th>
+                            <th class="text-center col-w-50">N°</th>
+                            <th class="col-w-105">Date</th>
                             <th>Réf.</th>
                             <th>Fournisseur</th>
                             <th>Nature</th>
                             <th>Catégorie</th>
-                            <th class="text-end" style="width: 115px;">Montant</th>
-                            <th style="width: 100px;">Mode</th>
-                            <th class="text-end" style="width: 115px;">Cumul</th>
+                            <th class="text-end col-w-115">Montant</th>
+                            <th class="col-w-100">Mode</th>
+                            <th class="text-end col-w-115">Cumul</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -448,7 +448,7 @@ include 'header.php';
                                 <td><?= e($t['description']) ?></td>
                                 <td>
                                     <?php if ($t['categorie_nom']): ?>
-                                        <span class="badge" style="background-color: <?= e($t['categorie_couleur']) ?>; font-size: 0.65rem;"><?= e($t['categorie_nom']) ?></span>
+                                        <span class="badge fs-065" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
@@ -482,7 +482,7 @@ if (!empty($depensesParCat)):
     <div class="card-body p-0">
         <table class="table table-sm mb-0">
             <thead class="table-light">
-                <tr><th>Catégorie</th><th class="text-end">Montant</th><th style="width: 40%;">Part</th></tr>
+                <tr><th>Catégorie</th><th class="text-end">Montant</th><th class="col-w-40pct">Part</th></tr>
             </thead>
             <tbody>
                 <?php foreach ($depensesParCat as $cat):
@@ -493,10 +493,10 @@ if (!empty($depensesParCat)):
                         <td class="text-end fw-bold"><?= formatMontant((float)$cat['total']) ?></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress flex-grow-1 progress-thin">
                                     <div class="progress-bar" style="width: <?= $pct ?>%; background-color: <?= e($cat['couleur'] ?? '#6c757d') ?>"></div>
                                 </div>
-                                <small class="text-muted" style="width: 40px;"><?= $pct ?>%</small>
+                                <small class="text-muted col-w-40"><?= $pct ?>%</small>
                             </div>
                         </td>
                     </tr>
@@ -525,7 +525,7 @@ if (!empty($depensesParCat)):
     <div class="card-body p-0">
         <?php if (empty($journalChronologique)): ?>
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-journal" style="font-size: 3rem;"></i>
+                <i class="bi bi-journal fs-3rem"></i>
                 <p class="mt-2">Aucune écriture pour <?= $annee ?>.</p>
             </div>
         <?php else: ?>
@@ -533,16 +533,16 @@ if (!empty($depensesParCat)):
                 <table class="table table-sm table-hover table-striped mb-0">
                     <thead class="table-primary">
                         <tr>
-                            <th class="text-center" style="width: 50px;">N°</th>
-                            <th style="width: 105px;">Date</th>
-                            <th style="width: 80px;">Journal</th>
+                            <th class="text-center col-w-50">N°</th>
+                            <th class="col-w-105">Date</th>
+                            <th class="col-w-80">Journal</th>
                             <th>Libellé</th>
                             <th>Compte (Catégorie)</th>
                             <th>Tiers</th>
                             <th>Réf.</th>
-                            <th class="text-end" style="width: 115px;">Débit</th>
-                            <th class="text-end" style="width: 115px;">Crédit</th>
-                            <th class="text-end" style="width: 115px;">Solde cumulé</th>
+                            <th class="text-end col-w-115">Débit</th>
+                            <th class="text-end col-w-115">Crédit</th>
+                            <th class="text-end col-w-115">Solde cumulé</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -559,14 +559,14 @@ if (!empty($depensesParCat)):
                                 <td class="text-center text-muted"><?= $i + 1 ?></td>
                                 <td><?= formatDate($t['date_transaction']) ?></td>
                                 <td>
-                                    <span class="badge bg-<?= $isDebit ? 'danger' : 'success' ?>-subtle text-<?= $isDebit ? 'danger' : 'success' ?>" style="font-size: 0.7rem;">
+                                    <span class="badge bg-<?= $isDebit ? 'danger' : 'success' ?>-subtle text-<?= $isDebit ? 'danger' : 'success' ?> fs-07">
                                         <?= $isDebit ? 'ACH' : 'VTE' ?>
                                     </span>
                                 </td>
                                 <td><?= e($t['description']) ?></td>
                                 <td>
                                     <?php if ($t['categorie_nom']): ?>
-                                        <span class="badge" style="background-color: <?= e($t['categorie_couleur']) ?>; font-size: 0.65rem;"><?= e($t['categorie_nom']) ?></span>
+                                        <span class="badge fs-065" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
@@ -614,7 +614,7 @@ if (!empty($depensesParCat)):
     <div class="card-body p-0">
         <?php if (empty($grandLivre)): ?>
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-book" style="font-size: 3rem;"></i>
+                <i class="bi bi-book fs-3rem"></i>
                 <p class="mt-2">Aucune écriture pour <?= $annee ?>.</p>
             </div>
         <?php else: ?>
@@ -641,16 +641,16 @@ if (!empty($depensesParCat)):
                         <tbody>
                             <?php foreach ($catData['ecritures'] as $t): ?>
                                 <tr>
-                                    <td style="width: 105px;"><?= formatDate($t['date_transaction']) ?></td>
+                                    <td class="col-w-105"><?= formatDate($t['date_transaction']) ?></td>
                                     <td><?= e($t['description']) ?></td>
-                                    <td style="width: 150px;"><small><?= e($t['client_fournisseur'] ?? '') ?></small></td>
-                                    <td style="width: 80px;"><small><?= e($t['reference'] ?? '') ?></small></td>
-                                    <td class="text-end" style="width: 110px;">
+                                    <td class="col-w-150"><small><?= e($t['client_fournisseur'] ?? '') ?></small></td>
+                                    <td class="col-w-80"><small><?= e($t['reference'] ?? '') ?></small></td>
+                                    <td class="text-end col-w-110">
                                         <?php if ($t['type'] === 'depense'): ?>
                                             <span class="text-danger"><?= formatMontant($t['montant']) ?></span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-end" style="width: 110px;">
+                                    <td class="text-end col-w-110">
                                         <?php if ($t['type'] === 'recette'): ?>
                                             <span class="text-success"><?= formatMontant($t['montant']) ?></span>
                                         <?php endif; ?>
@@ -680,7 +680,7 @@ if (!empty($depensesParCat)):
     <div class="card-body p-0">
         <?php if (empty($balance)): ?>
             <div class="text-center py-5 text-muted">
-                <i class="bi bi-clipboard" style="font-size: 3rem;"></i>
+                <i class="bi bi-clipboard fs-3rem"></i>
                 <p class="mt-2">Aucune donnée pour <?= $annee ?>.</p>
             </div>
         <?php else: ?>
