@@ -10,7 +10,7 @@ function safeXmlValue(?string $value): string {
     $value = trim((string) $value);
     // Retire les caractères de contrôle interdits par XML 1.0 (hors tabulation,
     // saut de ligne, retour chariot) pour éviter une DOMException lors de la
-    // génération des exports e-facture (UBL, Factur-X, PDP).
+    // génération des exports e-facture (UBL, Factur-X, PA).
     return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
 }
 
@@ -702,15 +702,15 @@ function transmitFactureToPdp(int $factureId, bool $automatic = false): array {
     }
 
     if (!isFactureReadyForEInvoice($facture)) {
-        throw new RuntimeException('La facture n\'est pas prête pour une transmission PDP.');
+        throw new RuntimeException('La facture n\'est pas prête pour une transmission à la PA.');
     }
 
     $pdp = getPdpConfig();
     if (!$pdp['enabled']) {
-        throw new RuntimeException('Le module PDP n\'est pas activé dans les paramètres.');
+        throw new RuntimeException('Le module PA n\'est pas activé dans les paramètres.');
     }
     if ($pdp['endpoint_url'] === '') {
-        throw new RuntimeException('Aucune URL PDP configurée.');
+        throw new RuntimeException('Aucune URL de PA configurée.');
     }
 
     $export = getEinvoiceExportContent($factureId, $pdp['export_format']);
@@ -760,7 +760,7 @@ function transmitFactureToPdp(int $factureId, bool $automatic = false): array {
         $db->prepare('UPDATE factures SET einvoice_statut = ?, einvoice_reference = COALESCE(NULLIF(einvoice_reference, \'\'), ?) WHERE id = ?')
             ->execute(['transmise', 'TX-' . $transmissionId, $factureId]);
     } elseif (!$automatic) {
-        throw new RuntimeException('Transmission PDP échouée' . ($excerpt !== '' ? ' : ' . $excerpt : '.'));
+        throw new RuntimeException('Transmission PA échouée' . ($excerpt !== '' ? ' : ' . $excerpt : '.'));
     }
 
     return [
