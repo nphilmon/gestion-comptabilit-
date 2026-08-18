@@ -250,7 +250,7 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
                             <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle"></i> <?= e($currentUser['nom'] ?? '') ?>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="min-width: 210px;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0 min-w-210">
                                 <li class="user-info-block">
                                     <div class="fw-semibold"><?= e($currentUser['nom'] ?? '') ?></div>
                                     <small class="text-muted"><?= e($currentUser['email'] ?? '') ?></small>
@@ -314,7 +314,7 @@ $page_courante = basename($_SERVER['SCRIPT_NAME'], '.php');
             $bc = $breadcrumbMap[$page_courante];
         ?>
         <nav aria-label="breadcrumb" class="mb-2">
-            <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+            <ol class="breadcrumb mb-0 fs-085">
                 <li class="breadcrumb-item"><a href="<?= BASE_URL ?>"><i class="bi bi-house"></i></a></li>
                 <?php if (isset($bc['parent'], $parentMap[$bc['parent']])): ?>
                 <li class="breadcrumb-item text-muted"><?= $parentMap[$bc['parent']]['label'] ?></li>

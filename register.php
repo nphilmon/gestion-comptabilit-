@@ -170,13 +170,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="register-body">
             <?php if ($registrationClosed): ?>
-                <div class="alert py-2" style="background:var(--md-warning-container);color:#BF360C;border:none;border-radius:12px;">
+                <div class="alert py-2 alert-warning-soft">
                     <i class="bi bi-shield-lock"></i> Les inscriptions publiques sont désactivées. Contactez l'administrateur.
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($errors)): ?>
-                <div class="alert py-2" style="background:var(--md-error-container);color:var(--md-on-error-container);border:none;border-radius:12px;">
+                <div class="alert py-2 alert-error-soft">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <?php foreach ($errors as $err): ?>
                         <div><?= e($err) ?></div>

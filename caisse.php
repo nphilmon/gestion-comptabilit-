@@ -326,7 +326,7 @@ include 'header.php';
                         <div class="row g-2">
                             <div class="col-md-5">
                                 <input type="text" id="rechercheProduit" class="form-control form-control-sm" placeholder="Rechercher produit, scanner code-barres..." autocomplete="off">
-                                <div id="resultsProduit" class="list-group position-absolute" style="z-index:1050; display:none;"></div>
+                                <div id="resultsProduit" class="list-group position-absolute search-results-dropdown"></div>
                             </div>
                             <div class="col-md-3">
                                 <input type="text" name="designation" id="designationProduit" class="form-control form-control-sm" placeholder="Désignation" required>
@@ -358,7 +358,7 @@ include 'header.php';
                                 <th class="text-center">Qté</th>
                                 <th class="text-end">P.U.</th>
                                 <th class="text-end">Total TTC</th>
-                                <?php if ($enCours): ?><th class="text-center" style="width:100px">Actions</th><?php endif; ?>
+                                <?php if ($enCours): ?><th class="text-center col-w-100">Actions</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>

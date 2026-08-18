@@ -69,7 +69,7 @@ include 'header.php';
 
 <?php if ($q && empty($results)): ?>
     <div class="text-center py-5">
-        <i class="bi bi-search" style="font-size: 3rem; color: #cbd5e1;"></i>
+        <i class="bi bi-search fs-3rem text-icon-muted"></i>
         <p class="text-muted mt-3">Aucun résultat trouvé pour « <strong><?= e($q) ?></strong> »</p>
     </div>
 <?php endif; ?>
@@ -84,7 +84,7 @@ include 'header.php';
         <div class="list-group list-group-flush">
             <?php foreach ($items as $item): ?>
             <a href="<?= $item['link'] ?>" class="list-group-item list-group-item-action d-flex align-items-center py-2">
-                <div class="stat-icon bg-<?= $item['color'] ?>-subtle text-<?= $item['color'] ?> me-3" style="min-width:36px;">
+                <div class="stat-icon bg-<?= $item['color'] ?>-subtle text-<?= $item['color'] ?> me-3 min-w-36">
                     <i class="bi bi-<?= $item['icon'] ?>"></i>
                 </div>
                 <div>

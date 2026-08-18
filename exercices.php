@@ -157,7 +157,7 @@ include 'header.php';
                         $joursEcoules = $debut->diff($now)->days;
                         $pctAvancement = $totalJours > 0 ? min(round($joursEcoules / $totalJours * 100), 100) : 0;
                         ?>
-                        <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress mt-2 progress-h6">
                             <div class="progress-bar" style="width: <?= $pctAvancement ?>%"></div>
                         </div>
                         <small class="text-muted"><?= $pctAvancement ?>% écoulé — <?= max(0, $fin->diff($now)->days) ?> jours restants</small>
@@ -188,7 +188,7 @@ include 'header.php';
         <div class="card-body p-0">
             <?php if (empty($exercices)): ?>
                 <div class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                    <i class="bi bi-calendar-x fs-3rem"></i>
                     <p class="mt-2">Aucun exercice comptable défini.</p>
                     <a href="?action=nouveau" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Créer le premier exercice</a>
                 </div>
