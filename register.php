@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="register-card">
+    <main class="register-card">
         <div class="register-header">
             <span class="material-symbols-outlined">person_add</span>
             <h1>Créer un compte</h1>
@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="register-footer">
             Déjà un compte ? <a href="<?= BASE_URL ?>login.php">Se connecter</a>
         </div>
-    </div>
+    </main>
 
     <script>
     document.getElementById('password').addEventListener('input', function() {

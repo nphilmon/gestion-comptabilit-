@@ -129,7 +129,7 @@ if ($token === '' || !$user) {
     </style>
 </head>
 <body>
-    <div class="card-wrapper">
+    <main class="card-wrapper">
         <div class="card-header">
             <i class="bi bi-shield-lock"></i>
             <h1>Nouveau mot de passe</h1>
@@ -188,7 +188,7 @@ if ($token === '' || !$user) {
                 <a href="<?= BASE_URL ?>login.php"><i class="bi bi-arrow-left"></i> Retour à la connexion</a>
             <?php endif; ?>
         </div>
-    </div>
+    </main>
     <script>
     const pwInput = document.getElementById('password');
     if (pwInput) {
