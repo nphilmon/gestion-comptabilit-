@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $factureId = (int) ($_POST['id'] ?? 0);
         try {
             $result = transmitFactureToPdp($factureId, false);
-            $message = 'Transmission PDP réussie.';
+            $message = 'Transmission PA réussie.';
             if (!empty($result['note'])) {
                 $message .= ' ' . $result['note'];
             }
@@ -372,7 +372,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                 <input type="hidden" name="post_action" value="transmettre_pdp">
                 <input type="hidden" name="id" value="<?= $facture['id'] ?>">
                 <button type="submit" class="btn btn-outline-success document-action-btn" <?= empty($eMissing) ? '' : 'disabled' ?>>
-                    <i class="bi bi-send-check"></i> Transmettre PDP
+                    <i class="bi bi-send-check"></i> Transmettre à la PA
                 </button>
             </form>
             <?php endif; ?>
@@ -417,7 +417,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     <span class="fw-bold">E-facture :</span>
     <span class="badge bg-<?= $eStatus['class'] ?> badge-statut"><?= $eStatus['label'] ?></span>
     <?php if (empty($eMissing)): ?>
-    <span class="text-success small"><i class="bi bi-check-circle"></i> Dossier prêt pour export / PDP</span>
+    <span class="text-success small"><i class="bi bi-check-circle"></i> Dossier prêt pour export / PA</span>
     <?php else: ?>
     <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> Champs à compléter : <?= e(implode(', ', $eMissing)) ?></span>
     <?php endif; ?>
@@ -529,7 +529,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
 
 <?php if ($pdpConfig['enabled']): ?>
 <div class="card border-0 mt-4">
-    <div class="card-header"><i class="bi bi-hdd-network"></i> Journal PDP</div>
+    <div class="card-header"><i class="bi bi-hdd-network"></i> Journal PA</div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
@@ -545,7 +545,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
                 </thead>
                 <tbody>
                     <?php if (empty($transmissions)): ?>
-                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune transmission PDP enregistrée.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune transmission PA enregistrée.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($transmissions as $tx): ?>
                     <tr>
@@ -822,7 +822,7 @@ $defaultPaysLivraison = $facture['pays_livraison'] ?? ($selectedClient['pays'] ?
         <div class="card-header doc-form-section__header">
             <div>
                 <i class="bi bi-cpu"></i> Préparation facturation électronique
-                <small class="doc-form-section__subtitle">Champs utiles pour la réforme e-invoicing et l'intégration future PDP</small>
+                <small class="doc-form-section__subtitle">Champs utiles pour la réforme e-invoicing et l'intégration future avec une PA</small>
             </div>
         </div>
         <div class="card-body">
@@ -866,8 +866,8 @@ $defaultPaysLivraison = $facture['pays_livraison'] ?? ($selectedClient['pays'] ?
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label">Plateforme / PDP</label>
-                    <input type="text" name="einvoice_plateforme" class="form-control" value="<?= e($facture['einvoice_plateforme'] ?? '') ?>" placeholder="Nom de la PDP ou solution cible">
+                    <label class="form-label">Plateforme / PA</label>
+                    <input type="text" name="einvoice_plateforme" class="form-control" value="<?= e($facture['einvoice_plateforme'] ?? '') ?>" placeholder="Nom de la PA ou solution cible">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Référence électronique</label>

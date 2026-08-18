@@ -7,7 +7,16 @@
 require_once __DIR__ . '/config.php';
 
 function safeXmlValue(?string $value): string {
-    return trim((string) $value);
+    $value = trim((string) $value);
+    // Retire les caractères de contrôle interdits par XML 1.0 (hors tabulation,
+    // saut de ligne, retour chariot) pour éviter une DOMException lors de la
+    // génération des exports e-facture (UBL, Factur-X, PA).
+    $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
+    // DOMDocument::createElement($name, $value) traite $value comme du XML
+    // brut (pas comme du texte à échapper) : un "&" ou "<" non échappé y est
+    // interprété comme un début d'entité/balise invalide, et PHP produit un
+    // élément vide sans erreur visible, perdant silencieusement la donnée.
+    return htmlspecialchars($value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
 }
 
 /**
@@ -459,36 +468,36 @@ function buildFactureEInvoiceXml(int $factureId): string {
     $root->appendChild($meta);
 
     $seller = $xml->createElement('seller');
-    $seller->appendChild($xml->createElement('name', getParam('nom_entreprise', 'Mon Activité')));
-    $seller->appendChild($xml->createElement('siret', getParam('siret', '')));
-    $seller->appendChild($xml->createElement('address', getParam('adresse_entreprise', '')));
+    $seller->appendChild($xml->createElement('name', safeXmlValue(getParam('nom_entreprise', 'Mon Activité'))));
+    $seller->appendChild($xml->createElement('siret', safeXmlValue(getParam('siret', ''))));
+    $seller->appendChild($xml->createElement('address', safeXmlValue(getParam('adresse_entreprise', ''))));
     $root->appendChild($seller);
 
     $customer = $xml->createElement('customer');
-    $customer->appendChild($xml->createElement('name', (string) ($facture['client_entreprise'] ?: trim(($facture['client_prenom'] ?? '') . ' ' . ($facture['client_nom'] ?? '')))));
-    $customer->appendChild($xml->createElement('siren', (string) ($facture['client_siren'] ?: ($facture['client_siren_source'] ?? ''))));
-    $customer->appendChild($xml->createElement('siret', (string) ($facture['client_siret'] ?? '')));
-    $customer->appendChild($xml->createElement('vatNumber', (string) ($facture['client_tva'] ?? '')));
-    $customer->appendChild($xml->createElement('billingAddress', trim((string) (($facture['client_adresse'] ?? '') . ' ' . ($facture['client_cp'] ?? '') . ' ' . ($facture['client_ville'] ?? '')))));
+    $customer->appendChild($xml->createElement('name', safeXmlValue((string) ($facture['client_entreprise'] ?: trim(($facture['client_prenom'] ?? '') . ' ' . ($facture['client_nom'] ?? ''))))));
+    $customer->appendChild($xml->createElement('siren', safeXmlValue((string) ($facture['client_siren'] ?: ($facture['client_siren_source'] ?? '')))));
+    $customer->appendChild($xml->createElement('siret', safeXmlValue((string) ($facture['client_siret'] ?? ''))));
+    $customer->appendChild($xml->createElement('vatNumber', safeXmlValue((string) ($facture['client_tva'] ?? ''))));
+    $customer->appendChild($xml->createElement('billingAddress', safeXmlValue(trim((string) (($facture['client_adresse'] ?? '') . ' ' . ($facture['client_cp'] ?? '') . ' ' . ($facture['client_ville'] ?? ''))))));
     $root->appendChild($customer);
 
     $delivery = $xml->createElement('delivery');
-    $delivery->appendChild($xml->createElement('address', (string) ($facture['adresse_livraison'] ?? '')));
-    $delivery->appendChild($xml->createElement('postalCode', (string) ($facture['code_postal_livraison'] ?? '')));
-    $delivery->appendChild($xml->createElement('city', (string) ($facture['ville_livraison'] ?? '')));
-    $delivery->appendChild($xml->createElement('country', (string) ($facture['pays_livraison'] ?? '')));
+    $delivery->appendChild($xml->createElement('address', safeXmlValue((string) ($facture['adresse_livraison'] ?? ''))));
+    $delivery->appendChild($xml->createElement('postalCode', safeXmlValue((string) ($facture['code_postal_livraison'] ?? ''))));
+    $delivery->appendChild($xml->createElement('city', safeXmlValue((string) ($facture['ville_livraison'] ?? ''))));
+    $delivery->appendChild($xml->createElement('country', safeXmlValue((string) ($facture['pays_livraison'] ?? ''))));
     $root->appendChild($delivery);
 
     $invoice = $xml->createElement('invoice');
-    $invoice->appendChild($xml->createElement('number', (string) $facture['numero']));
-    $invoice->appendChild($xml->createElement('issueDate', (string) $facture['date_facture']));
-    $invoice->appendChild($xml->createElement('dueDate', (string) $facture['date_echeance']));
-    $invoice->appendChild($xml->createElement('businessStatus', (string) $facture['statut']));
-    $invoice->appendChild($xml->createElement('operationType', (string) ($facture['type_operation'] ?? 'services')));
-    $invoice->appendChild($xml->createElement('subject', (string) ($facture['objet'] ?? '')));
-    $invoice->appendChild($xml->createElement('notes', (string) ($facture['notes'] ?? '')));
-    $invoice->appendChild($xml->createElement('platform', (string) ($facture['einvoice_plateforme'] ?? '')));
-    $invoice->appendChild($xml->createElement('platformReference', (string) ($facture['einvoice_reference'] ?? '')));
+    $invoice->appendChild($xml->createElement('number', safeXmlValue((string) $facture['numero'])));
+    $invoice->appendChild($xml->createElement('issueDate', safeXmlValue((string) $facture['date_facture'])));
+    $invoice->appendChild($xml->createElement('dueDate', safeXmlValue((string) $facture['date_echeance'])));
+    $invoice->appendChild($xml->createElement('businessStatus', safeXmlValue((string) $facture['statut'])));
+    $invoice->appendChild($xml->createElement('operationType', safeXmlValue((string) ($facture['type_operation'] ?? 'services'))));
+    $invoice->appendChild($xml->createElement('subject', safeXmlValue((string) ($facture['objet'] ?? ''))));
+    $invoice->appendChild($xml->createElement('notes', safeXmlValue((string) ($facture['notes'] ?? ''))));
+    $invoice->appendChild($xml->createElement('platform', safeXmlValue((string) ($facture['einvoice_plateforme'] ?? ''))));
+    $invoice->appendChild($xml->createElement('platformReference', safeXmlValue((string) ($facture['einvoice_reference'] ?? ''))));
     $root->appendChild($invoice);
 
     $totals = $xml->createElement('totals');
@@ -502,9 +511,9 @@ function buildFactureEInvoiceXml(int $factureId): string {
     foreach ($lignes as $index => $ligne) {
         $lineNode = $xml->createElement('line');
         $lineNode->appendChild($xml->createElement('position', (string) ($index + 1)));
-        $lineNode->appendChild($xml->createElement('description', (string) ($ligne['description'] ?? '')));
+        $lineNode->appendChild($xml->createElement('description', safeXmlValue((string) ($ligne['description'] ?? ''))));
         $lineNode->appendChild($xml->createElement('quantity', number_format((float) ($ligne['quantite'] ?? 0), 3, '.', '')));
-        $lineNode->appendChild($xml->createElement('unit', (string) ($ligne['unite'] ?? 'unité')));
+        $lineNode->appendChild($xml->createElement('unit', safeXmlValue((string) ($ligne['unite'] ?? 'unité'))));
         $lineNode->appendChild($xml->createElement('unitPriceHT', number_format((float) ($ligne['prix_unitaire_ht'] ?? 0), 2, '.', '')));
         $lineNode->appendChild($xml->createElement('taxRate', number_format((float) ($ligne['taux_tva'] ?? 0), 2, '.', '')));
         $lineNode->appendChild($xml->createElement('lineAmountHT', number_format((float) ($ligne['montant_ht'] ?? 0), 2, '.', '')));
@@ -545,6 +554,13 @@ function ensureEinvoiceStorageBase(): void {
     $base = einvoiceStorageBasePath();
     if (!is_dir($base)) {
         mkdir($base, 0775, true);
+    }
+    // Défense en profondeur : ces fichiers contiennent des données client
+    // (SIREN, adresse, montants) et ne doivent jamais être servis directement,
+    // même si la règle du .htaccess racine n'est pas prise en compte.
+    $htaccess = $base . DIRECTORY_SEPARATOR . '.htaccess';
+    if (!is_file($htaccess)) {
+        file_put_contents($htaccess, "Require all denied\nDeny from all\n");
     }
 }
 
@@ -691,15 +707,15 @@ function transmitFactureToPdp(int $factureId, bool $automatic = false): array {
     }
 
     if (!isFactureReadyForEInvoice($facture)) {
-        throw new RuntimeException('La facture n\'est pas prête pour une transmission PDP.');
+        throw new RuntimeException('La facture n\'est pas prête pour une transmission à la PA.');
     }
 
     $pdp = getPdpConfig();
     if (!$pdp['enabled']) {
-        throw new RuntimeException('Le module PDP n\'est pas activé dans les paramètres.');
+        throw new RuntimeException('Le module PA n\'est pas activé dans les paramètres.');
     }
     if ($pdp['endpoint_url'] === '') {
-        throw new RuntimeException('Aucune URL PDP configurée.');
+        throw new RuntimeException('Aucune URL de PA configurée.');
     }
 
     $export = getEinvoiceExportContent($factureId, $pdp['export_format']);
@@ -749,7 +765,7 @@ function transmitFactureToPdp(int $factureId, bool $automatic = false): array {
         $db->prepare('UPDATE factures SET einvoice_statut = ?, einvoice_reference = COALESCE(NULLIF(einvoice_reference, \'\'), ?) WHERE id = ?')
             ->execute(['transmise', 'TX-' . $transmissionId, $factureId]);
     } elseif (!$automatic) {
-        throw new RuntimeException('Transmission PDP échouée' . ($excerpt !== '' ? ' : ' . $excerpt : '.'));
+        throw new RuntimeException('Transmission PA échouée' . ($excerpt !== '' ? ' : ' . $excerpt : '.'));
     }
 
     return [

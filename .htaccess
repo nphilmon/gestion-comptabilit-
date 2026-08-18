@@ -11,6 +11,7 @@ DirectoryIndex index.php
     RewriteRule ^database/ - [F,L,NC]
     RewriteRule ^tests/ - [F,L,NC]
     RewriteRule ^vendor/ - [F,L,NC]
+    RewriteRule ^uploads/einvoices/ - [F,L,NC]
 </IfModule>
 
 <FilesMatch "^(config\.php|config\.local\.php|install\.php|README\.md|composer\.json|composer\.lock|phpunit\.xml|\.gitignore|\.gitattributes)$">

@@ -240,7 +240,7 @@ include 'header.php';
     </div>
 
     <div class="card border-0 mb-4">
-        <div class="card-header"><i class="bi bi-diagram-3"></i> Facturation électronique - PDP</div>
+        <div class="card-header"><i class="bi bi-diagram-3"></i> Facturation électronique - PA</div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -249,10 +249,10 @@ include 'header.php';
                         <input class="form-check-input" type="checkbox" name="pdp_enabled" value="1"
                                id="pdpEnabledSwitch" <?= getParam('pdp_enabled', '0') === '1' ? 'checked' : '' ?>>
                         <label class="form-check-label" for="pdpEnabledSwitch">
-                            <strong>Activer le module PDP</strong>
+                            <strong>Activer le module PA (Plateforme Agréée)</strong>
                         </label>
                     </div>
-                    <small class="text-muted">Permet l'export UBL et la transmission automatique à une plateforme choisie.</small>
+                    <small class="text-muted">Permet l'export UBL et la transmission automatique à une plateforme agréée.</small>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Fournisseur</label>
@@ -279,9 +279,9 @@ include 'header.php';
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">URL endpoint PDP</label>
+                    <label class="form-label">URL endpoint PA</label>
                     <input type="url" name="pdp_endpoint_url" class="form-control"
-                           value="<?= e(getParam('pdp_endpoint_url')) ?>" placeholder="https://api.votre-pdp.fr/invoices">
+                           value="<?= e(getParam('pdp_endpoint_url')) ?>" placeholder="https://api.votre-pa.fr/invoices">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Authentification</label>
@@ -304,7 +304,7 @@ include 'header.php';
                 <div class="col-md-12">
                     <div class="alert alert-light border-0 mb-0">
                         <i class="bi bi-info-circle text-primary"></i>
-                        Cette configuration prépare une intégration générique de type solution compatible / PDP.
+                        Cette configuration prépare une intégration générique de type solution compatible / PA (Plateforme Agréée).
                         Le format <strong>UBL 2.1</strong> peut être généré directement. Le format <strong>Factur-X</strong> nécessite un PDF/A-3 embarquant un XML normé, ce qui demandera une couche supplémentaire spécifique.
                     </div>
                 </div>
