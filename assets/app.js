@@ -710,28 +710,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // =============================================================
-    // REFONTE PILOTE — Sidebar mobile (Tailwind)
+    // REFONTE PILOTE — Panneau de navigation mobile (Tailwind navbar)
     // =============================================================
-    const sidebar = document.querySelector('[data-sidebar]');
-    const backdrop = document.querySelector('[data-sidebar-backdrop]');
-    const openBtn = document.querySelector('[data-sidebar-open]');
-    const closeBtn = document.querySelector('[data-sidebar-close]');
+    const mobileNavToggle = document.querySelector('[data-mobile-nav-toggle]');
+    const mobileNavPanel = document.querySelector('[data-mobile-nav-panel]');
 
-    if (sidebar && backdrop && openBtn) {
-        const openSidebar = function() {
-            sidebar.classList.remove('-translate-x-full');
-            backdrop.classList.remove('hidden');
-        };
-        const closeSidebar = function() {
-            sidebar.classList.add('-translate-x-full');
-            backdrop.classList.add('hidden');
-        };
-
-        openBtn.addEventListener('click', openSidebar);
-        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-        backdrop.addEventListener('click', closeSidebar);
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeSidebar();
+    if (mobileNavToggle && mobileNavPanel) {
+        mobileNavToggle.addEventListener('click', function() {
+            const isOpen = !mobileNavPanel.classList.contains('hidden');
+            mobileNavPanel.classList.toggle('hidden');
+            mobileNavToggle.setAttribute('aria-expanded', String(!isOpen));
         });
     }
 });

@@ -7,7 +7,6 @@
                     <span><i class="bi bi-shield-check"></i> Connexion sécurisée · <?= date('Y') ?></span>
                 </div>
             </footer>
-        </div><!-- /zone principale -->
     </div><!-- /.tw-app -->
 
     <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true" data-version="<?= e(APP_VERSION) ?>">

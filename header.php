@@ -60,6 +60,14 @@ $navSections[] = ['label' => 'Paramètres', 'icon' => 'gear', 'href' => BASE_URL
 function navSectionIsActive(array $section, string $current): bool {
     return in_array($current, $section['match'], true);
 }
+
+// Classes Tailwind d'un bouton de nav horizontal (zone centrale de la navbar).
+function navBtnClasses(bool $active): string {
+    $base = 'relative inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition focus:outline-none focus:ring-2 focus:ring-white/40';
+    return $active
+        ? $base . ' bg-white/15 text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:rounded-full after:bg-white'
+        : $base . ' text-white/80 hover:bg-white/10 hover:text-white';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -103,93 +111,66 @@ function navSectionIsActive(array $section, string $current): bool {
     </script>
 </head>
 <body class="tw-shell bg-gray-50 text-gray-900 antialiased">
-    <div class="tw-app">
-        <!-- Backdrop mobile (sidebar) -->
-        <div id="sidebarBackdrop" class="fixed inset-0 z-30 bg-gray-900/40 lg:hidden hidden" data-sidebar-backdrop></div>
-
-        <!-- SIDEBAR -->
-        <aside id="appSidebar" class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out bg-white border-r border-gray-200 flex flex-col" data-sidebar>
-            <div class="h-16 flex items-center gap-2.5 px-5 border-b border-gray-100 shrink-0">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white shrink-0">
-                    <i class="bi bi-briefcase-fill"></i>
-                </span>
-                <div class="min-w-0">
-                    <div class="text-sm font-bold leading-tight text-gray-900 truncate"><?= e(APP_NAME) ?></div>
-                    <div class="text-xs text-gray-400 truncate"><?= e(getParam('nom_entreprise', 'Mon Activité')) ?></div>
-                </div>
-                <button type="button" class="ml-auto lg:hidden text-gray-400 hover:text-gray-600" data-sidebar-close aria-label="Fermer le menu">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-                <?php foreach ($navSections as $section):
-                    $active = navSectionIsActive($section, $page_courante);
-                    $hasItems = !empty($section['items']);
-                ?>
-                <?php if (!$hasItems): ?>
-                    <a href="<?= $section['href'] ?>"
-                       class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors <?= $active ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?>">
-                        <i class="bi bi-<?= $section['icon'] ?> text-base <?= $active ? 'text-brand-600' : 'text-gray-400' ?>"></i>
-                        <?= e($section['label']) ?>
-                    </a>
-                <?php else: ?>
-                    <details class="group" <?= $active ? 'open' : '' ?>>
-                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors <?= $active ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?>">
-                            <i class="bi bi-<?= $section['icon'] ?> text-base <?= $active ? 'text-brand-600' : 'text-gray-400' ?>"></i>
-                            <span class="flex-1"><?= e($section['label']) ?></span>
-                            <i class="bi bi-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-1 ml-4 space-y-0.5 border-l border-gray-100 pl-4">
-                            <?php foreach ($section['items'] as $item): $itemActive = $page_courante === $item['match']; ?>
-                            <a href="<?= $item['href'] ?>"
-                               class="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors <?= $itemActive ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' ?>">
-                                <i class="bi bi-<?= $item['icon'] ?> text-sm <?= $itemActive ? 'text-brand-600' : 'text-gray-400' ?>"></i>
-                                <?= e($item['label']) ?>
-                            </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </details>
-                <?php endif; ?>
-                <?php endforeach; ?>
-            </nav>
-
-            <div class="border-t border-gray-100 p-3">
-                <a href="<?= BASE_URL ?>profil.php" class="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 shrink-0">
-                        <i class="bi bi-person-fill"></i>
+    <div class="tw-app min-h-screen flex flex-col">
+        <!-- ═══════════ NAVBAR PRINCIPALE ═══════════ -->
+        <header class="navbar sticky top-0 z-30 h-16 bg-gradient-to-r from-brand-700 to-brand-800 shadow-md">
+            <div class="h-16 flex items-center gap-3 px-4 sm:px-6">
+                <!-- Zone gauche : logo -->
+                <a href="<?= BASE_URL ?>" class="flex items-center gap-3 shrink-0">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-white text-lg">
+                        <i class="bi bi-briefcase-fill"></i>
                     </span>
-                    <span class="min-w-0">
-                        <span class="block truncate font-medium text-gray-800"><?= e($currentUser['nom'] ?? '') ?></span>
-                        <span class="block truncate text-xs text-gray-400"><?= e(ucfirst($currentUser['role'] ?? '')) ?></span>
-                    </span>
+                    <span class="hidden md:block text-white font-bold text-[15px] leading-tight whitespace-nowrap"><?= e(APP_NAME) ?></span>
                 </a>
-            </div>
-        </aside>
 
-        <!-- ZONE PRINCIPALE -->
-        <div class="lg:pl-64 min-h-screen flex flex-col">
-            <!-- TOPBAR -->
-            <header class="navbar sticky top-0 z-20 h-16 bg-white border-b border-gray-200 flex items-center gap-3 px-4 sm:px-6">
-                <button type="button" class="lg:hidden text-gray-500 hover:text-gray-700" data-sidebar-open aria-label="Ouvrir le menu">
-                    <i class="bi bi-list text-2xl"></i>
-                </button>
+                <!-- Zone centrale : navigation -->
+                <nav class="hidden lg:flex items-center gap-1 mx-auto">
+                    <?php foreach ($navSections as $section):
+                        $active = navSectionIsActive($section, $page_courante);
+                        $hasItems = !empty($section['items']);
+                    ?>
+                        <?php if (!$hasItems): ?>
+                            <a href="<?= $section['href'] ?>" class="<?= navBtnClasses($active) ?>">
+                                <i class="bi bi-<?= $section['icon'] ?>"></i>
+                                <span><?= e($section['label']) ?></span>
+                            </a>
+                        <?php else: ?>
+                            <div class="dropdown relative">
+                                <a href="#" role="button" data-bs-toggle="dropdown" class="<?= navBtnClasses($active) ?> cursor-pointer">
+                                    <i class="bi bi-<?= $section['icon'] ?>"></i>
+                                    <span><?= e($section['label']) ?></span>
+                                    <i class="bi bi-chevron-down text-[10px] opacity-70"></i>
+                                </a>
+                                <ul class="dropdown-menu shadow-lg border border-gray-100 rounded-xl p-1.5 mt-2">
+                                    <?php foreach ($section['items'] as $item): $itemActive = $page_courante === $item['match']; ?>
+                                    <li>
+                                        <a class="dropdown-item rounded-lg <?= $itemActive ? 'active' : '' ?>" href="<?= $item['href'] ?>">
+                                            <i class="bi bi-<?= $item['icon'] ?>"></i> <?= e($item['label']) ?>
+                                        </a>
+                                    </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </nav>
 
-                <form class="relative flex-1 max-w-md js-smart-search" action="<?= BASE_URL ?>recherche.php" method="GET" autocomplete="off">
-                    <div class="relative">
-                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text"
-                               class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:bg-white focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100 transition"
-                               name="q" placeholder="Rechercher..." id="searchGlobal"
-                               data-search-input="desktop"
-                               value="<?= e($_GET['q'] ?? '') ?>">
-                    </div>
-                    <div class="smart-search-panel absolute left-0 right-0 top-full mt-1 z-30" data-search-panel="desktop" hidden></div>
-                </form>
+                <!-- Zone droite : actions -->
+                <div class="flex items-center gap-2 ml-auto lg:ml-0">
+                    <form class="relative hidden md:block js-smart-search" action="<?= BASE_URL ?>recherche.php" method="GET" autocomplete="off">
+                        <div class="relative">
+                            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-sm"></i>
+                            <input type="text"
+                                   class="h-10 w-40 lg:w-56 rounded-lg border border-white/20 bg-white/10 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/60 focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 transition"
+                                   name="q" placeholder="Rechercher..." id="searchGlobal"
+                                   data-search-input="desktop"
+                                   value="<?= e($_GET['q'] ?? '') ?>">
+                        </div>
+                        <div class="smart-search-panel absolute right-0 top-full mt-2 w-80 z-30" data-search-panel="desktop" hidden></div>
+                    </form>
 
-                <div class="ml-auto flex items-center gap-2">
                     <div class="dropdown">
-                        <button class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200 transition"
+                        <button class="inline-flex h-10 items-center gap-2 rounded-lg bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
                                 type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-plus-circle-fill"></i>
                             <span class="hidden sm:inline">Créer</span>
@@ -212,14 +193,14 @@ function navSectionIsActive(array $section, string $current): bool {
                         </ul>
                     </div>
 
-                    <div class="dropdown">
-                        <button class="flex items-center gap-2 rounded-lg border border-gray-200 pl-1.5 pr-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-100 transition"
+                    <div class="dropdown hidden sm:block">
+                        <button class="flex h-10 items-center gap-2 rounded-lg border border-white/20 bg-white/10 pl-2 pr-3 text-sm text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
                                 type="button" data-bs-toggle="dropdown">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
                                 <i class="bi bi-person-fill"></i>
                             </span>
-                            <span class="hidden sm:inline font-medium max-w-[9rem] truncate"><?= e($currentUser['nom'] ?? '') ?></span>
-                            <i class="bi bi-chevron-down text-xs text-gray-400"></i>
+                            <span class="font-medium max-w-[9rem] truncate"><?= e($currentUser['nom'] ?? '') ?></span>
+                            <i class="bi bi-chevron-down text-xs opacity-70"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-gray-100 rounded-xl p-0 mt-2 min-w-210 overflow-hidden">
                             <li class="user-info-block">
@@ -242,21 +223,60 @@ function navSectionIsActive(array $section, string $current): bool {
                             </li>
                         </ul>
                     </div>
-                </div>
-            </header>
 
-            <!-- Recherche mobile (repliée sous la topbar) -->
-            <form class="d-xxl-none position-relative app-navbar-search--mobile js-smart-search px-4 sm:px-6 pt-3 lg:hidden" action="<?= BASE_URL ?>recherche.php" method="GET" autocomplete="off">
-                <div class="relative">
-                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text"
-                           class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:bg-white focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100 transition"
-                           name="q" placeholder="Rechercher..." id="searchGlobalMobile"
-                           data-search-input="mobile"
-                           value="<?= e($_GET['q'] ?? '') ?>">
+                    <!-- Hamburger (mobile / tablette < lg) -->
+                    <button type="button" class="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition" data-mobile-nav-toggle aria-label="Ouvrir le menu" aria-expanded="false">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
                 </div>
-                <div class="smart-search-panel" data-search-panel="mobile" hidden></div>
-            </form>
+            </div>
+
+            <!-- Panneau mobile (nav + recherche + profil), < lg -->
+            <div class="hidden lg:hidden bg-brand-800 border-t border-white/10 px-4 py-3 space-y-1" data-mobile-nav-panel>
+                <?php foreach ($navSections as $section):
+                    $active = navSectionIsActive($section, $page_courante);
+                    $hasItems = !empty($section['items']);
+                ?>
+                    <?php if (!$hasItems): ?>
+                        <a href="<?= $section['href'] ?>" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium <?= $active ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10' ?>">
+                            <i class="bi bi-<?= $section['icon'] ?>"></i> <?= e($section['label']) ?>
+                        </a>
+                    <?php else: ?>
+                        <details <?= $active ? 'open' : '' ?>>
+                            <summary class="flex cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium <?= $active ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10' ?>">
+                                <i class="bi bi-<?= $section['icon'] ?>"></i>
+                                <span class="flex-1"><?= e($section['label']) ?></span>
+                                <i class="bi bi-chevron-down text-xs"></i>
+                            </summary>
+                            <div class="mt-1 ml-4 space-y-0.5 border-l border-white/15 pl-4">
+                                <?php foreach ($section['items'] as $item): $itemActive = $page_courante === $item['match']; ?>
+                                <a href="<?= $item['href'] ?>" class="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm <?= $itemActive ? 'text-white font-semibold' : 'text-white/70 hover:text-white' ?>">
+                                    <i class="bi bi-<?= $item['icon'] ?>"></i> <?= e($item['label']) ?>
+                                </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+                <form class="relative pt-2 js-smart-search" action="<?= BASE_URL ?>recherche.php" method="GET" autocomplete="off">
+                    <div class="relative">
+                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-sm"></i>
+                        <input type="text"
+                               class="w-full h-10 rounded-lg border border-white/20 bg-white/10 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/60 focus:bg-white/20 focus:outline-none"
+                               name="q" placeholder="Rechercher..." id="searchGlobalMobile"
+                               data-search-input="mobile"
+                               value="<?= e($_GET['q'] ?? '') ?>">
+                    </div>
+                    <div class="smart-search-panel" data-search-panel="mobile" hidden></div>
+                </form>
+
+                <a href="<?= BASE_URL ?>profil.php" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 mt-1 text-sm text-white/90 hover:bg-white/10">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20"><i class="bi bi-person-fill"></i></span>
+                    <span class="truncate"><?= e($currentUser['nom'] ?? '') ?></span>
+                </a>
+            </div>
+        </header>
 
             <main class="flex-1 px-4 sm:px-6 py-6 app-content">
                 <?php
