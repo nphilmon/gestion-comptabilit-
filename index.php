@@ -404,7 +404,7 @@ include 'header.php';
                 </div>
                 <h3 class="text-success mb-1"><?= formatMontant($stats['total_recettes']) ?></h3>
                 <?php if ($stats['plafond_ca'] > 0): ?>
-                <div class="progress mt-2" style="height: 5px;">
+                <div class="progress mt-2 progress-h5">
                     <div class="progress-bar bg-success" style="width: <?= min($stats['pct_plafond'], 100) ?>%"></div>
                 </div>
                 <small class="text-muted"><?= $stats['pct_plafond'] ?>% du plafond</small>
@@ -562,7 +562,7 @@ include 'header.php';
             <div class="card-body p-0">
                 <?php if (empty($dernieres)): ?>
                     <div class="text-center py-4 text-muted">
-                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <i class="bi bi-inbox fs-2rem"></i>
                         <p class="mt-2 mb-0">Aucune écriture pour <?= $annee ?>.</p>
                     </div>
                 <?php else: ?>
@@ -570,11 +570,11 @@ include 'header.php';
                         <?php foreach ($dernieres as $t): ?>
                             <div class="list-group-item d-flex justify-content-between align-items-center py-2">
                                 <div>
-                                    <div class="fw-semibold" style="font-size: 0.9rem;"><?= e($t['description']) ?></div>
+                                    <div class="fw-semibold fs-09"><?= e($t['description']) ?></div>
                                     <small class="text-muted">
                                         <?= formatDate($t['date_transaction']) ?>
                                         <?php if ($t['categorie_nom']): ?>
-                                            · <span class="badge" style="background-color: <?= e($t['categorie_couleur']) ?>; font-size: 0.65rem;"><?= e($t['categorie_nom']) ?></span>
+                                            · <span class="badge fs-065" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
                                         <?php endif; ?>
                                     </small>
                                 </div>
@@ -603,7 +603,7 @@ include 'header.php';
                     <a href="devis.php?action=voir&id=<?= $d['id'] ?>" class="list-group-item list-group-item-action py-2">
                         <div class="d-flex justify-content-between">
                             <small class="fw-semibold"><?= e($d['numero']) ?></small>
-                            <span class="badge bg-<?= $sd['class'] ?>" style="font-size: 0.65rem;"><?= $sd['label'] ?></span>
+                            <span class="badge bg-<?= $sd['class'] ?> fs-065"><?= $sd['label'] ?></span>
                         </div>
                         <small class="text-muted"><?= e($d['client_entreprise'] ?: trim(($d['client_prenom'] ?? '') . ' ' . ($d['client_nom'] ?? ''))) ?></small>
                         <div class="text-end"><small class="fw-bold"><?= formatMontant($d['montant_ttc']) ?></small></div>
@@ -626,7 +626,7 @@ include 'header.php';
                     <a href="factures.php?action=voir&id=<?= $f['id'] ?>" class="list-group-item list-group-item-action py-2">
                         <div class="d-flex justify-content-between">
                             <small class="fw-semibold"><?= e($f['numero']) ?></small>
-                            <span class="badge bg-<?= $sf['class'] ?>" style="font-size: 0.65rem;"><?= $sf['label'] ?></span>
+                            <span class="badge bg-<?= $sf['class'] ?> fs-065"><?= $sf['label'] ?></span>
                         </div>
                         <small class="text-muted"><?= e($f['client_entreprise'] ?: trim(($f['client_prenom'] ?? '') . ' ' . ($f['client_nom'] ?? ''))) ?></small>
                         <div class="text-end"><small class="fw-bold"><?= formatMontant($f['montant_ttc']) ?></small></div>
@@ -959,7 +959,7 @@ include 'header.php';
                 </div>
                 <?php else: ?>
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-people" style="font-size: 2rem;"></i>
+                    <i class="bi bi-people fs-2rem"></i>
                     <p class="mt-2 mb-0">Pas encore assez de données clients.</p>
                 </div>
                 <?php endif; ?>
@@ -1031,7 +1031,7 @@ include 'header.php';
                 </div>
                 <?php else: ?>
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                    <i class="bi bi-box-seam fs-2rem"></i>
                     <p class="mt-2 mb-0">Pas encore de données de vente produits.</p>
                 </div>
                 <?php endif; ?>
@@ -1131,18 +1131,18 @@ include 'header.php';
             <div class="col-md-6 col-xl-4 ia-card" data-ia-cat="<?= $cat ?>" <?= $i >= 6 ? 'style="display:none"' : '' ?>>
                 <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background:<?= $tc['bg'] ?>;border-left:3px solid <?= $tc['border'] ?>">
                     <div class="flex-shrink-0">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle text-white" style="width:38px;height:38px;background:<?= $tc['icon_bg'] ?>">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle text-white icon-circle-38" style="background:<?= $tc['icon_bg'] ?>">
                             <i class="bi bi-<?= e($reco['icon']) ?>"></i>
                         </div>
                     </div>
                     <div class="flex-grow-1 min-w-0">
                         <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="fw-semibold lh-sm" style="font-size:.88rem"><?= e($reco['titre']) ?></div>
-                            <span class="badge bg-<?= $catMeta['color'] ?>-subtle text-<?= $catMeta['color'] ?> ms-2 flex-shrink-0" style="font-size:.65rem"><?= $catMeta['label'] ?></span>
+                            <div class="fw-semibold lh-sm fs-088"><?= e($reco['titre']) ?></div>
+                            <span class="badge bg-<?= $catMeta['color'] ?>-subtle text-<?= $catMeta['color'] ?> ms-2 flex-shrink-0 fs-065"><?= $catMeta['label'] ?></span>
                         </div>
-                        <div class="text-muted mb-2" style="font-size:.8rem;line-height:1.35"><?= e($reco['texte']) ?></div>
+                        <div class="text-muted mb-2 fs-08-lh135"><?= e($reco['texte']) ?></div>
                         <?php if (!empty($reco['lien'])): ?>
-                        <a href="<?= e($reco['lien']) ?>" class="btn btn-sm btn-outline-<?= e($reco['type']) ?> py-0 px-2" style="font-size:.75rem">
+                        <a href="<?= e($reco['lien']) ?>" class="btn btn-sm btn-outline-<?= e($reco['type']) ?> py-0 px-2 fs-075">
                             <i class="bi bi-arrow-right"></i> Agir
                         </a>
                         <?php endif; ?>
