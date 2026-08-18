@@ -11,7 +11,12 @@ function safeXmlValue(?string $value): string {
     // Retire les caractères de contrôle interdits par XML 1.0 (hors tabulation,
     // saut de ligne, retour chariot) pour éviter une DOMException lors de la
     // génération des exports e-facture (UBL, Factur-X, PA).
-    return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
+    $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value);
+    // DOMDocument::createElement($name, $value) traite $value comme du XML
+    // brut (pas comme du texte à échapper) : un "&" ou "<" non échappé y est
+    // interprété comme un début d'entité/balise invalide, et PHP produit un
+    // élément vide sans erreur visible, perdant silencieusement la donnée.
+    return htmlspecialchars($value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
 }
 
 /**
