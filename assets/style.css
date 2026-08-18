@@ -535,6 +535,18 @@ body {
     border-radius: 6px;
 }
 
+/* Le bouton "Créer" est un vrai bouton d'action (fond plein), pas un lien de
+   navigation : on l'aligne sur la taille compacte des autres contrôles du
+   bandeau (recherche, profil) au lieu de la hauteur pleine des liens de menu.
+   Sélecteur à 3 classes pour primer sur .navbar .nav-link à tous les
+   breakpoints, quel que soit l'ordre des règles dans la feuille de style. */
+.navbar .app-navbar-quick .nav-link {
+    font-size: 0.82rem !important;
+    padding: 0.38rem 0.8rem !important;
+    min-height: 34px !important;
+    align-self: center;
+}
+
 .app-navbar-quick .nav-link .bi {
     background: none;
     opacity: 0.9;
