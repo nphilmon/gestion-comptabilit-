@@ -192,7 +192,7 @@ include 'header.php';
                     <?php foreach ($categoriesRecette as $cat): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="rounded-circle d-inline-block" style="width: 12px; height: 12px; background-color: <?= e($cat['couleur']) ?>"></span>
+                                <span class="rounded-circle d-inline-block color-dot" style="background-color: <?= e($cat['couleur']) ?>"></span>
                                 <div>
                                     <strong><?= e($cat['nom']) ?></strong>
                                     <?php if ($cat['description']): ?>
@@ -233,7 +233,7 @@ include 'header.php';
                     <?php foreach ($categoriesDepense as $cat): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="rounded-circle d-inline-block" style="width: 12px; height: 12px; background-color: <?= e($cat['couleur']) ?>"></span>
+                                <span class="rounded-circle d-inline-block color-dot" style="background-color: <?= e($cat['couleur']) ?>"></span>
                                 <div>
                                     <strong><?= e($cat['nom']) ?></strong>
                                     <?php if ($cat['description']): ?>

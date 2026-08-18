@@ -457,7 +457,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span class="success-icon" aria-hidden="true"><i class="bi bi-check2-circle"></i></span>
                     <h2 class="mt-3 mb-2">Tout est prêt !</h2>
                     <p class="text-muted mb-4">La configuration de <?= e(APP_NAME) ?> est terminée.</p>
-                    <div class="d-flex flex-column gap-2 mx-auto" style="max-width: 300px;">
+                    <div class="d-flex flex-column gap-2 mx-auto max-w-300">
                         <a href="<?= BASE_URL ?>" class="btn btn-primary btn-setup btn-lg">
                             <i class="bi bi-speedometer2"></i> Accéder au tableau de bord
                         </a>

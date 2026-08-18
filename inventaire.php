@@ -167,7 +167,7 @@ include 'header.php';
                         <tr>
                             <th>Produit</th>
                             <th class="text-end">Stock théorique</th>
-                            <th class="text-end" style="width:150px">Stock réel</th>
+                            <th class="text-end col-w-150">Stock réel</th>
                             <th class="text-end">Écart</th>
                         </tr>
                     </thead>

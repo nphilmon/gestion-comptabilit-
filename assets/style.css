@@ -1125,12 +1125,36 @@ body {
 /* Barres de progression fines (répartition par catégorie, tableau de bord). */
 .progress-thin { height: 8px; }
 .progress-h5 { height: 5px; }
+.progress-h6 { height: 6px; }
 .progress-h12 { height: 12px; }
 .progress-h20 { height: 20px; }
 .col-w-200 { width: 200px; }
+.max-w-300 { max-width: 300px; }
+.min-w-36 { min-width: 36px; }
+.min-w-210 { min-width: 210px; }
+.color-dot { width: 12px; height: 12px; }
+.text-icon-muted { color: #cbd5e1; }
+.link-plain-primary { color: var(--md-primary); text-decoration: none; }
+.alert-warning-soft { background: var(--md-warning-container); color: #BF360C; border: none; border-radius: 12px; }
+.alert-error-soft { background: var(--md-error-container); color: var(--md-on-error-container); border: none; border-radius: 12px; }
 
 /* Icône ronde de taille fixe (cartes de recommandations du tableau de bord). */
 .icon-circle-38 { width: 38px; height: 38px; }
+
+/* Panneaux de résultats de recherche en direct (produits, SIRET...).
+   Pas de !important : le JS bascule display via element.style.display,
+   qui doit continuer à primer sur cette classe pour afficher/masquer. */
+.search-results-dropdown { z-index: 1050; display: none; }
+.search-results-dropdown-full {
+    z-index: 1050;
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+}
 .btn-outline-success {
     color: var(--md-success) !important;
     border-color: var(--md-outline) !important;

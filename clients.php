@@ -568,7 +568,7 @@ if ($action === 'modifier') {
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
-                    <div id="resultsSiret" class="list-group position-absolute shadow-lg w-100" style="z-index:1050; display:none; max-height:300px; overflow-y:auto; left:0; right:0; top:100%; margin-top:4px;"></div>
+                    <div id="resultsSiret" class="list-group position-absolute shadow-lg w-100 search-results-dropdown-full"></div>
                     <div class="form-text"><i class="bi bi-info-circle"></i> Recherche sécurisée via le serveur local et les données publiques de l'État.</div>
                 </div>
                 <div class="col-md-6 d-flex align-items-end">
