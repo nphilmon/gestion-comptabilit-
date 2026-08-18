@@ -1081,6 +1081,26 @@ body {
     min-width: 122px;
     font-weight: 600;
 }
+
+/* Contrôles de statut compacts (facture, e-facture...) — remplace les
+   style="width: auto; border-radius: 0.5rem;" répétés en inline. */
+.document-status-control {
+    width: auto;
+    border-radius: 0.5rem;
+}
+
+.document-status-radius {
+    border-radius: 0.5rem;
+}
+
+/* Largeurs de colonnes fixes des tableaux de lignes de documents
+   (devis/factures/commandes) — remplace les style="width: Npx" répétés
+   en inline sur les <th>. */
+.col-w-40 { width: 40px; }
+.col-w-60 { width: 60px; }
+.col-w-80 { width: 80px; }
+.col-w-120 { width: 120px; }
+.max-w-200 { max-width: 200px; }
 .btn-outline-success {
     color: var(--md-success) !important;
     border-color: var(--md-outline) !important;
@@ -2081,6 +2101,14 @@ body {
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--md-success);
+}
+
+.payment-summary .amount--primary {
+    color: var(--md-primary);
+}
+
+.payment-summary .amount--danger {
+    color: #ef4444;
 }
 
 .payment-summary .label {
