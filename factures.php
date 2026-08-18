@@ -395,7 +395,7 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
     <span class="fw-bold">Statut :</span>
     <span class="badge bg-<?= $s['class'] ?> badge-statut"><?= $s['label'] ?></span>
     <?php if ($resteAPayer > 0.01 && $facture['statut'] !== 'annulee'): ?>
-    <div class="payment-progress flex-grow-1" style="max-width: 200px;">
+    <div class="payment-progress flex-grow-1 max-w-200">
         <div class="bar <?= $facture['statut'] === 'en_retard' ? 'overdue' : ($facture['montant_paye'] > 0 ? 'partial' : '') ?>" style="width: <?= min(100, round(($facture['montant_paye'] / max(1, $facture['montant_ttc'])) * 100)) ?>%"></div>
     </div>
     <small class="text-muted"><?= round(($facture['montant_paye'] / max(1, $facture['montant_ttc'])) * 100) ?>% payé</small>
@@ -404,12 +404,12 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
         <?= csrfField() ?>
         <input type="hidden" name="post_action" value="changer_statut">
         <input type="hidden" name="id" value="<?= $facture['id'] ?>">
-        <select name="statut" class="form-select form-select-sm" style="width: auto; border-radius: 0.5rem;">
+        <select name="statut" class="form-select form-select-sm document-status-control">
             <?php foreach (['brouillon', 'envoyee', 'payee', 'partielle', 'en_retard', 'annulee'] as $st): $stl = getStatutFactureLabel($st); ?>
                 <option value="<?= $st ?>" <?= $facture['statut'] === $st ? 'selected' : '' ?>><?= $stl['label'] ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn document-status-radius">Mettre à jour</button>
     </form>
 </div>
 
@@ -425,12 +425,12 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
         <?= csrfField() ?>
         <input type="hidden" name="post_action" value="changer_statut_einvoice">
         <input type="hidden" name="id" value="<?= $facture['id'] ?>">
-        <select name="einvoice_statut" class="form-select form-select-sm" style="width: auto; border-radius: 0.5rem;">
+        <select name="einvoice_statut" class="form-select form-select-sm document-status-control">
             <?php foreach (['non_preparee', 'prete', 'a_transmettre', 'transmise', 'rejetee'] as $estatus): $elabel = getEInvoiceStatusLabel($estatus); ?>
                 <option value="<?= $estatus ?>" <?= ($facture['einvoice_statut'] ?? 'non_preparee') === $estatus ? 'selected' : '' ?>><?= e($elabel['label']) ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn document-status-radius">Mettre à jour</button>
     </form>
 </div>
 
@@ -574,13 +574,13 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
         <table class="table table-detail mb-0">
             <thead>
                 <tr>
-                    <th style="width: 40px;">#</th>
+                    <th class="col-w-40">#</th>
                     <th>Description</th>
-                    <th class="text-end" style="width: 80px;">Qté</th>
-                    <th style="width: 60px;">Unité</th>
-                    <th class="text-end" style="width: 120px;">P.U. HT</th>
-                    <?php if ($conf['tva_applicable']): ?><th class="text-end" style="width: 80px;">TVA %</th><?php endif; ?>
-                    <th class="text-end" style="width: 120px;">Total HT</th>
+                    <th class="text-end col-w-80">Qté</th>
+                    <th class="col-w-60">Unité</th>
+                    <th class="text-end col-w-120">P.U. HT</th>
+                    <?php if ($conf['tva_applicable']): ?><th class="text-end col-w-80">TVA %</th><?php endif; ?>
+                    <th class="text-end col-w-120">Total HT</th>
                 </tr>
             </thead>
             <tbody>
@@ -638,12 +638,12 @@ $resteAPayer = (float)$facture['montant_ttc'] - (float)$facture['montant_paye'];
             <div class="text-muted">/</div>
             <div>
                 <div class="label">Total TTC</div>
-                <div class="amount" style="color: var(--bleu-primary);"><?= formatMontant($facture['montant_ttc']) ?></div>
+                <div class="amount amount--primary"><?= formatMontant($facture['montant_ttc']) ?></div>
             </div>
             <?php if ($resteAPayer > 0.01): ?>
             <div class="ms-auto">
                 <div class="label">Reste à payer</div>
-                <div class="amount" style="color: #ef4444;"><?= formatMontant($resteAPayer) ?></div>
+                <div class="amount amount--danger"><?= formatMontant($resteAPayer) ?></div>
             </div>
             <?php endif; ?>
         </div>
@@ -919,12 +919,12 @@ $defaultPaysLivraison = $facture['pays_livraison'] ?? ($selectedClient['pays'] ?
                 <thead class="table-light">
                     <tr>
                         <th>Description</th>
-                        <th style="width: 80px;">Qté</th>
-                        <th style="width: 80px;">Unité</th>
-                        <th style="width: 120px;">P.U. HT</th>
-                        <?php if ($conf['tva_applicable']): ?><th style="width: 80px;">TVA %</th><?php endif; ?>
-                        <th style="width: 120px;">Total HT</th>
-                        <th style="width: 40px;"></th>
+                        <th class="col-w-80">Qté</th>
+                        <th class="col-w-80">Unité</th>
+                        <th class="col-w-120">P.U. HT</th>
+                        <?php if ($conf['tva_applicable']): ?><th class="col-w-80">TVA %</th><?php endif; ?>
+                        <th class="col-w-120">Total HT</th>
+                        <th class="col-w-40"></th>
                     </tr>
                 </thead>
                 <tbody id="lignesBody">
