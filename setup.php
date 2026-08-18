@@ -436,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="setup-container">
+    <main class="setup-container">
         <div class="setup-header">
             <div class="setup-brand">
                 <div class="setup-brand-icon" aria-hidden="true">
@@ -707,7 +707,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="text-center mt-3 setup-version">
             <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?>
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

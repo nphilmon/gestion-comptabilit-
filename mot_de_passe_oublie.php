@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <div class="card-wrapper">
+    <main class="card-wrapper">
         <div class="card-header">
             <i class="bi bi-key"></i>
             <h1>Mot de passe oublié</h1>
@@ -173,6 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="card-footer-links">
             <a href="<?= BASE_URL ?>login.php"><i class="bi bi-arrow-left"></i> Retour à la connexion</a>
         </div>
-    </div>
+    </main>
 </body>
 </html>
