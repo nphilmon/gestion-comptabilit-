@@ -1114,11 +1114,20 @@ body {
    remplace les style="font-size: ..." répétés en inline. */
 .fs-065 { font-size: 0.65rem; }
 .fs-07 { font-size: 0.7rem; }
+.fs-075 { font-size: 0.75rem; }
+.fs-08-lh135 { font-size: 0.8rem; line-height: 1.35; }
 .fs-085 { font-size: 0.85rem; }
+.fs-088 { font-size: 0.88rem; }
+.fs-09 { font-size: 0.9rem; }
+.fs-2rem { font-size: 2rem; }
 .fs-3rem { font-size: 3rem; }
 
-/* Barre de progression fine (répartition par catégorie). */
+/* Barres de progression fines (répartition par catégorie, tableau de bord). */
 .progress-thin { height: 8px; }
+.progress-h5 { height: 5px; }
+
+/* Icône ronde de taille fixe (cartes de recommandations du tableau de bord). */
+.icon-circle-38 { width: 38px; height: 38px; }
 .btn-outline-success {
     color: var(--md-success) !important;
     border-color: var(--md-outline) !important;
