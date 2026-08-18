@@ -376,6 +376,17 @@ $entConv      = getParam('convention_collective', '');
     color: #888;
     font-size: 0.72rem;
 }
+.fiche-paie .fp-header .fp-muted.fst-italic {
+    font-style: italic;
+}
+.fiche-paie .fp-titre-wrap {
+    text-align: right;
+    min-width: 220px;
+}
+.fiche-paie .fp-ss-number {
+    color: #aaa;
+    font-size: 0.7rem;
+}
 .fiche-paie .fp-titre-doc {
     text-align: right;
 }
@@ -425,6 +436,18 @@ $entConv      = getParam('convention_collective', '');
     padding: 4px 12px;
     border-top: 1px solid #b5c8e2;
 }
+.fiche-paie .fp-section-title.light {
+    background: #e8eef7;
+    color: #555;
+}
+.fiche-paie .fp-notice {
+    padding: 8px 14px;
+    background: #fffbea;
+    font-size: 0.75rem;
+    color: #666;
+    border-top: 1px solid #e0d89a;
+    font-style: italic;
+}
 .fiche-paie .fp-table {
     width: 100%;
     border-collapse: collapse;
@@ -443,6 +466,11 @@ $entConv      = getParam('convention_collective', '');
 .fiche-paie .fp-table thead th:first-child {
     text-align: left;
 }
+.fiche-paie .fp-table .col-w-50pct { width: 50%; }
+.fiche-paie .fp-table .col-w-17pct { width: 17%; }
+.fiche-paie .fp-table .col-w-13pct { width: 13%; }
+.fiche-paie .fp-table .col-w-20pct { width: 20%; }
+.fiche-paie .fp-neg { color: #c0392b; }
 .fiche-paie .fp-table tbody tr td {
     padding: 4px 10px;
     border-bottom: 1px solid #e8ecf2;
@@ -504,6 +532,24 @@ $entConv      = getParam('convention_collective', '');
 }
 .fiche-paie .fp-footer-bloc .fp-footer-value.big {
     font-size: 1.1rem;
+    color: #2563EB;
+}
+.fiche-paie .fp-footer-bloc .fp-footer-value.iban {
+    font-size: 0.72rem;
+    word-break: break-all;
+}
+.fiche-paie .fp-footer-col-center {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.fiche-paie .fp-recap-total-row {
+    border-top: 1px solid #ccc;
+    font-size: 0.8rem;
+}
+.fiche-paie .text-paie-bleu {
     color: #2563EB;
 }
 .fiche-paie .fp-footer-bloc .fp-recap-table {
@@ -674,9 +720,9 @@ if ($existingBulletin):
                 <?php if ($entSiret !== ''): ?><div class="fp-muted">SIRET : <?= e($entSiret) ?></div><?php endif; ?>
                 <?php if ($entNaf !== ''): ?><div class="fp-muted">Code APE/NAF : <?= e($entNaf) ?></div><?php endif; ?>
                 <?php if ($entUrssaf !== ''): ?><div class="fp-muted">N° URSSAF : <?= e($entUrssaf) ?></div><?php endif; ?>
-                <?php if ($entConv !== ''): ?><div class="fp-muted" style="font-style:italic">Conv. coll. : <?= e($entConv) ?></div><?php endif; ?>
+                <?php if ($entConv !== ''): ?><div class="fp-muted fst-italic">Conv. coll. : <?= e($entConv) ?></div><?php endif; ?>
             </div>
-            <div style="text-align:right; min-width:220px;">
+            <div class="fp-titre-wrap">
                 <div class="fp-titre-doc">
                     <div class="fp-doc-title">Bulletin de Paie</div>
                     <div class="fp-periode-label">Période : <?= e($periodeLabel) ?></div>
@@ -688,7 +734,7 @@ if ($existingBulletin):
                     <div class="fp-emp-info">
                         <?php if (!empty($bp['poste'])): ?>Poste : <?= e((string) $bp['poste']) ?><br><?php endif; ?>
                         <?php if (!empty($bp['matricule'])): ?>Matricule : <?= e((string) $bp['matricule']) ?><br><?php endif; ?>
-                        <?php if ($secuEmp !== ''): ?><span style="color:#aaa;font-size:0.7rem">N° SS : <?= e($secuEmp) ?></span><?php endif; ?>
+                        <?php if ($secuEmp !== ''): ?><span class="fp-ss-number">N° SS : <?= e($secuEmp) ?></span><?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -698,10 +744,10 @@ if ($existingBulletin):
         <table class="fp-table">
             <thead>
                 <tr>
-                    <th style="width:50%;text-align:left">Désignation</th>
-                    <th style="width:17%">Base</th>
-                    <th style="width:13%">Taux</th>
-                    <th style="width:20%">Montant</th>
+                    <th class="col-w-50pct">Désignation</th>
+                    <th class="col-w-17pct">Base</th>
+                    <th class="col-w-13pct">Taux</th>
+                    <th class="col-w-20pct">Montant</th>
                 </tr>
             </thead>
             <tbody>
@@ -754,7 +800,7 @@ if ($existingBulletin):
                     <td>Cotisations sociales salariales</td>
                     <td><?= e(number_format($bpBrut, 2, ',', ' ')) ?> €</td>
                     <td><?= $bpTauxSal > 0 ? e(number_format($bpTauxSal, 2, ',', ' ')) . ' %' : '—' ?></td>
-                    <td style="color:#c0392b">- <?= e(number_format($bpCotSal, 2, ',', ' ')) ?> €</td>
+                    <td class="fp-neg">- <?= e(number_format($bpCotSal, 2, ',', ' ')) ?> €</td>
                 </tr>
                 <!-- NET IMPOSABLE -->
                 <tr class="fp-total-row">
@@ -768,7 +814,7 @@ if ($existingBulletin):
                 <tr>
                     <td>Retenues diverses</td>
                     <td></td><td></td>
-                    <td style="color:#c0392b">- <?= e(number_format($bpRetenues, 2, ',', ' ')) ?> €</td>
+                    <td class="fp-neg">- <?= e(number_format($bpRetenues, 2, ',', ' ')) ?> €</td>
                 </tr>
                 <?php endif; ?>
 
@@ -779,7 +825,7 @@ if ($existingBulletin):
                 </tr>
 
                 <!-- Section cotisations patronales -->
-                <tr><td colspan="4" class="fp-section-title" style="background:#e8eef7;color:#555">Cotisations patronales (part employeur — informatif)</td></tr>
+                <tr><td colspan="4" class="fp-section-title light">Cotisations patronales (part employeur — informatif)</td></tr>
                 <tr>
                     <td>Charges patronales</td>
                     <td><?= e(number_format($bpBrut, 2, ',', ' ')) ?> €</td>
@@ -794,7 +840,7 @@ if ($existingBulletin):
         </table>
 
         <?php if (!empty($bp['notes'])): ?>
-        <div style="padding:8px 14px;background:#fffbea;font-size:0.75rem;color:#666;border-top:1px solid #e0d89a;font-style:italic">
+        <div class="fp-notice">
             <i class="bi bi-info-circle"></i> Note : <?= e((string) $bp['notes']) ?>
         </div>
         <?php endif; ?>
@@ -806,7 +852,7 @@ if ($existingBulletin):
                 <div class="fp-footer-value"><?= e($bpModeLbl) ?></div>
                 <?php if ($ibanFormate !== ''): ?>
                 <div class="fp-footer-label mt-2">IBAN</div>
-                <div class="fp-footer-value" style="font-size:0.72rem;word-break:break-all"><?= e($ibanFormate) ?></div>
+                <div class="fp-footer-value iban"><?= e($ibanFormate) ?></div>
                 <?php endif; ?>
                 <?php if (!empty($bp['reference_paiement'])): ?>
                 <div class="fp-footer-label mt-2">Référence</div>
@@ -817,15 +863,15 @@ if ($existingBulletin):
                 <div class="fp-footer-label">Récapitulatif</div>
                 <table class="fp-recap-table">
                     <tr><td class="text-muted">Salaire brut</td><td><?= e(number_format($bpBrut, 2, ',', ' ')) ?> €</td></tr>
-                    <tr><td class="text-muted">Cotisations salariales</td><td style="color:#c0392b">- <?= e(number_format($bpCotSal, 2, ',', ' ')) ?> €</td></tr>
+                    <tr><td class="text-muted">Cotisations salariales</td><td class="fp-neg">- <?= e(number_format($bpCotSal, 2, ',', ' ')) ?> €</td></tr>
                     <tr><td class="text-muted">Net imposable</td><td><?= e(number_format($bpNetImp, 2, ',', ' ')) ?> €</td></tr>
                     <?php if ($bpRetenues > 0): ?>
-                    <tr><td class="text-muted">Retenues</td><td style="color:#c0392b">- <?= e(number_format($bpRetenues, 2, ',', ' ')) ?> €</td></tr>
+                    <tr><td class="text-muted">Retenues</td><td class="fp-neg">- <?= e(number_format($bpRetenues, 2, ',', ' ')) ?> €</td></tr>
                     <?php endif; ?>
-                    <tr style="border-top:1px solid #ccc;font-size:0.8rem"><td class="fw-bold" style="color:#2563EB">Net à payer</td><td class="fw-bold" style="color:#2563EB"><?= e(number_format($bpNetPay, 2, ',', ' ')) ?> €</td></tr>
+                    <tr class="fp-recap-total-row"><td class="fw-bold text-paie-bleu">Net à payer</td><td class="fw-bold text-paie-bleu"><?= e(number_format($bpNetPay, 2, ',', ' ')) ?> €</td></tr>
                 </table>
             </div>
-            <div class="fp-footer-col" style="text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center">
+            <div class="fp-footer-col fp-footer-col-center">
                 <div class="fp-footer-label">Net à payer</div>
                 <div class="fp-footer-value big"><?= e(number_format($bpNetPay, 2, ',', ' ')) ?> €</div>
                 <div class="mt-2">
