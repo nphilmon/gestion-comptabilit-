@@ -370,6 +370,13 @@ include __DIR__ . '/header.php';
 .paie-live-row.divider { border-top: 1px solid rgba(255,255,255,.2); margin-top: 4px; padding-top: 6px; }
 .paie-live-row.net { font-size: 1rem; font-weight: 800; }
 .paie-live-row.net .val { font-size: 1.1rem; }
+.paie-live-row .val.warn { color: #ffa0a0; }
+.paie-live-row.sub { font-size: 0.74rem; opacity: .6; }
+.paie-periode-input {
+    width: 100%; padding: 6px 10px;
+    border: 1px solid #ccd3e0; border-radius: 6px;
+    font-size: .85rem;
+}
 
 /* Bouton d'action */
 .paie-actions {
@@ -444,6 +451,16 @@ include __DIR__ . '/header.php';
 .fiche-paie .fp-ent-nom { font-size: 1rem; font-weight: 800; color: var(--paie-bleu); margin-bottom: 3px; }
 .fiche-paie .fp-info    { color: #444; font-size: 0.75rem; line-height: 1.65; }
 .fiche-paie .fp-muted   { color: #999; font-size: 0.7rem; }
+.fiche-paie .fp-muted.fst-italic { font-style: italic; }
+.fiche-paie .fp-ss-number { color: #bbb; font-size: .68rem; }
+.fiche-paie .fp-iban-value { font-size: 0.72rem; word-break: break-all; }
+.fiche-paie .fp-footer-col-center { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.fiche-paie .fp-table .col-w-48pct { width: 48%; }
+.fiche-paie .fp-table .col-w-18pct { width: 18%; }
+.fiche-paie .fp-table .col-w-14pct { width: 14%; }
+.fiche-paie .fp-table .col-w-20pct { width: 20%; }
+.fp-neg { color: #b91c1c; }
+.fp-muted-08 { font-size: 0.8em; opacity: .7; }
 .fiche-paie .fp-right   { text-align: right; min-width: 200px; }
 .fiche-paie .fp-doc-title {
     font-size: 1.2rem; font-weight: 900;
@@ -614,7 +631,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
             </div>
             <div id="custom_periode_wrap" style="<?= !in_array($selectedPeriod, $latestPeriods, true) ? '' : 'display:none' ?>">
                 <label>Période personnalisée</label>
-                <input type="month" id="custom_periode" value="<?= e($selectedPeriod) ?>" onchange="navigateTo()" style="width:100%;padding:6px 10px;border:1px solid #ccd3e0;border-radius:6px;font-size:.85rem">
+                <input type="month" id="custom_periode" value="<?= e($selectedPeriod) ?>" onchange="navigateTo()" class="paie-periode-input">
             </div>
         </div>
 
@@ -834,12 +851,12 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
             <div class="paie-live-summary">
                 <div class="ls-title"><i class="bi bi-calculator me-1"></i>Résumé en temps réel</div>
                 <div class="paie-live-row"><span class="lbl">Salaire brut</span><span class="val" id="ls_brut">—</span></div>
-                <div class="paie-live-row"><span class="lbl">Cotisations salariales</span><span class="val" id="ls_cotsal" style="color:#ffa0a0">—</span></div>
+                <div class="paie-live-row"><span class="lbl">Cotisations salariales</span><span class="val warn" id="ls_cotsal">—</span></div>
                 <div class="paie-live-row divider"><span class="lbl">Net imposable</span><span class="val" id="ls_netimp">—</span></div>
-                <div class="paie-live-row"><span class="lbl">Retenues</span><span class="val" id="ls_ret" style="color:#ffa0a0">—</span></div>
+                <div class="paie-live-row"><span class="lbl">Retenues</span><span class="val warn" id="ls_ret">—</span></div>
                 <div class="paie-live-row divider net"><span class="lbl">Net à payer</span><span class="val" id="ls_netpay">—</span></div>
-                <div class="paie-live-row" style="margin-top:8px;font-size:0.74rem;opacity:.6"><span class="lbl">Montant net social</span><span class="val" id="ls_netsoc">—</span></div>
-                <div class="paie-live-row" style="font-size:0.74rem;opacity:.6"><span class="lbl">Coût employeur</span><span class="val" id="ls_cout">—</span></div>
+                <div class="paie-live-row sub mt-2"><span class="lbl">Montant net social</span><span class="val" id="ls_netsoc">—</span></div>
+                <div class="paie-live-row sub"><span class="lbl">Coût employeur</span><span class="val" id="ls_cout">—</span></div>
             </div>
 
             <!-- Boutons d'action -->
@@ -885,7 +902,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                     <?php if ($ent['siret']): ?><div class="fp-muted">SIRET : <?= e($ent['siret']) ?></div><?php endif; ?>
                     <?php if ($ent['naf']): ?><div class="fp-muted">Code APE/NAF : <?= e($ent['naf']) ?></div><?php endif; ?>
                     <?php if ($ent['urssaf']): ?><div class="fp-muted">N° URSSAF : <?= e($ent['urssaf']) ?></div><?php endif; ?>
-                    <?php if ($ent['conv']): ?><div class="fp-muted" style="font-style:italic">Conv. coll. : <?= e($ent['conv']) ?></div><?php endif; ?>
+                    <?php if ($ent['conv']): ?><div class="fp-muted fst-italic">Conv. coll. : <?= e($ent['conv']) ?></div><?php endif; ?>
                 </div>
                 <div class="fp-right">
                     <div class="fp-doc-title">Bulletin de Paie</div>
@@ -897,7 +914,7 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                     <div class="fp-emp-meta">
                         <?php if (!empty($selectedProfile['poste'])): ?>Poste : <?= e((string) $selectedProfile['poste']) ?><br><?php endif; ?>
                         <?php if (!empty($selectedProfile['matricule'])): ?>Matricule : <?= e((string) $selectedProfile['matricule']) ?><br><?php endif; ?>
-                        <?php if (!empty($selectedProfile['numero_securite_sociale'])): ?><span style="color:#bbb;font-size:.68rem">N° SS : <?= e((string) $selectedProfile['numero_securite_sociale']) ?></span><?php endif; ?>
+                        <?php if (!empty($selectedProfile['numero_securite_sociale'])): ?><span class="fp-ss-number">N° SS : <?= e((string) $selectedProfile['numero_securite_sociale']) ?></span><?php endif; ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -907,10 +924,10 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
             <table class="fp-table">
                 <thead>
                     <tr>
-                        <th style="width:48%;text-align:left">Désignation</th>
-                        <th style="width:18%">Base</th>
-                        <th style="width:14%">Taux</th>
-                        <th style="width:20%">Montant</th>
+                        <th class="col-w-48pct">Désignation</th>
+                        <th class="col-w-18pct">Base</th>
+                        <th class="col-w-14pct">Taux</th>
+                        <th class="col-w-20pct">Montant</th>
                     </tr>
                 </thead>
                 <tbody id="pv_tbody">
@@ -924,11 +941,11 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                     <div class="fp-footer-lbl">Mode de paiement</div>
                     <div class="fp-footer-val" id="pv_mode">—</div>
                     <?php if ($ibanFmt): ?>
-                    <div class="fp-footer-lbl" style="margin-top:8px">IBAN</div>
-                    <div class="fp-footer-val" style="font-size:0.72rem;word-break:break-all"><?= e($ibanFmt) ?></div>
+                    <div class="fp-footer-lbl mt-2">IBAN</div>
+                    <div class="fp-footer-val fp-iban-value"><?= e($ibanFmt) ?></div>
                     <?php endif; ?>
                     <?php if ($fv('reference_paiement')): ?>
-                    <div class="fp-footer-lbl" style="margin-top:8px">Référence</div>
+                    <div class="fp-footer-lbl mt-2">Référence</div>
                     <div class="fp-footer-val" id="pv_ref"><?= e($fv('reference_paiement')) ?></div>
                     <?php endif; ?>
                 </div>
@@ -936,11 +953,11 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
                     <div class="fp-footer-lbl">Récapitulatif</div>
                     <div id="pv_recap"></div>
                 </div>
-                <div class="fp-footer-col" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div class="fp-footer-col fp-footer-col-center">
                     <div class="fp-footer-lbl">Net à payer</div>
                     <div class="fp-footer-val big" id="pv_net_big">—</div>
                     <?php if ($isEdit): ?>
-                    <div style="margin-top:8px">
+                    <div class="mt-2">
                         <a href="<?= BASE_URL ?>bulletin_paie_pdf.php?id=<?= $bulletinId ?>" target="_blank" class="btn btn-danger btn-sm">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
@@ -1079,16 +1096,16 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         rows += '<tr><td colspan="4" class="fp-section-lbl">Cotisations salariales (part employ\u00e9)</td></tr>';
         rows += '<tr><td>Cotisations sociales salariales</td><td>' + fmt(t.brut) + '</td><td>' +
                 (t.brut > 0 ? fmtPct(t.tauxSal) : '—') +
-                '</td><td style="color:#b91c1c">\u2212\u00a0' + fmt(t.cotsal) + '</td></tr>';
+                '</td><td class="fp-neg">\u2212\u00a0' + fmt(t.cotsal) + '</td></tr>';
         rows += '<tr class="fp-subtotal"><td colspan="3">Net imposable</td><td>' + fmt(t.netimp) + '</td></tr>';
 
         if (t.ret > 0) {
             rows += '<tr><td colspan="4" class="fp-section-lbl">Retenues</td></tr>';
-            rows += '<tr><td>Retenues diverses</td><td></td><td></td><td style="color:#b91c1c">\u2212\u00a0' + fmt(t.ret) + '</td></tr>';
+            rows += '<tr><td>Retenues diverses</td><td></td><td></td><td class="fp-neg">\u2212\u00a0' + fmt(t.ret) + '</td></tr>';
         }
 
         rows += '<tr class="fp-net"><td colspan="3">\u2714\ufe0e Net \u00e0 payer en euros</td><td>' + fmt(t.netpay) + '</td></tr>';
-        rows += '<tr><td colspan="3" style="font-size:0.8em;opacity:.7">Montant net social</td><td style="font-size:0.8em;opacity:.7">' + fmt(t.netsoc) + '</td></tr>';
+        rows += '<tr><td colspan="3" class="fp-muted-08">Montant net social</td><td class="fp-muted-08">' + fmt(t.netsoc) + '</td></tr>';
 
         rows += '<tr><td colspan="4" class="fp-section-lbl-light">Cotisations patronales (informatif)</td></tr>';
         rows += '<tr><td>Charges patronales</td><td>' + fmt(t.brut) + '</td><td>' +
@@ -1103,11 +1120,11 @@ $ibanFmt = wordwrap((string) ($selectedProfile['iban'] ?? ''), 4, ' ', true);
         if (recap) {
             recap.innerHTML =
                 '<div class="fp-recap-row"><span>Salaire brut</span><span>' + fmt(t.brut) + '</span></div>' +
-                '<div class="fp-recap-row"><span>Cotisations salariales</span><span style="color:#b91c1c">\u2212 ' + fmt(t.cotsal) + '</span></div>' +
+                '<div class="fp-recap-row"><span>Cotisations salariales</span><span class="fp-neg">\u2212 ' + fmt(t.cotsal) + '</span></div>' +
                 '<div class="fp-recap-row"><span>Net imposable</span><span>' + fmt(t.netimp) + '</span></div>' +
-                (t.ret > 0 ? '<div class="fp-recap-row"><span>Retenues</span><span style="color:#b91c1c">\u2212 ' + fmt(t.ret) + '</span></div>' : '') +
+                (t.ret > 0 ? '<div class="fp-recap-row"><span>Retenues</span><span class="fp-neg">\u2212 ' + fmt(t.ret) + '</span></div>' : '') +
                 '<div class="fp-recap-row total"><span>Net \u00e0 payer</span><span>' + fmt(t.netpay) + '</span></div>' +
-                '<div class="fp-recap-row" style="font-size:0.8em;opacity:.7"><span>Montant net social</span><span>' + fmt(t.netsoc) + '</span></div>';
+                '<div class="fp-recap-row fp-muted-08"><span>Montant net social</span><span>' + fmt(t.netsoc) + '</span></div>';
         }
 
         // Mode paiement
