@@ -536,15 +536,22 @@ body {
 }
 
 /* Le bouton "Créer" est un vrai bouton d'action (fond plein), pas un lien de
-   navigation : on l'aligne sur la taille compacte des autres contrôles du
-   bandeau (recherche, profil) au lieu de la hauteur pleine des liens de menu.
-   Sélecteur à 3 classes pour primer sur .navbar .nav-link à tous les
-   breakpoints, quel que soit l'ordre des règles dans la feuille de style. */
+   navigation : on l'aligne EXACTEMENT sur la taille du bouton "Administrateur"
+   (mêmes valeurs que .navbar .dropdown .btn-outline-light) au lieu de la
+   hauteur pleine des liens de menu. Sélecteur à 3 classes pour primer sur
+   .navbar .nav-link à tous les breakpoints, quel que soit l'ordre des règles
+   dans la feuille de style. */
 .navbar .app-navbar-quick .nav-link {
-    font-size: 0.82rem !important;
-    padding: 0.38rem 0.8rem !important;
-    min-height: 34px !important;
+    font-size: 0.78rem !important;
+    padding: 0.3rem 0.7rem !important;
+    min-height: 32px !important;
     align-self: center;
+}
+
+.app-navbar-quick,
+.app-navbar-search,
+.app-navbar-user {
+    align-items: center;
 }
 
 .app-navbar-quick .nav-link .bi {
@@ -675,6 +682,17 @@ body {
         font-size: 0.76rem;
         padding: 0.25rem 0.6rem;
         min-height: 30px;
+    }
+
+    .navbar .app-navbar-quick .nav-link {
+        font-size: 0.76rem !important;
+        padding: 0.25rem 0.6rem !important;
+        min-height: 30px !important;
+    }
+
+    .app-navbar-search .input-group {
+        min-height: 30px;
+        height: 30px;
     }
 
     .navbar .nav-link .bi {
