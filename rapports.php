@@ -325,7 +325,7 @@ include 'header.php';
                 <tr>
                     <td>Utilisation du plafond CA</td>
                     <td class="text-end">
-                        <div class="progress" style="height: 20px;">
+                        <div class="progress progress-h20">
                             <div class="progress-bar <?= $stats['pct_plafond'] > 90 ? 'bg-danger' : ($stats['pct_plafond'] > 70 ? 'bg-warning' : 'bg-success') ?>"
                                  style="width: <?= min($stats['pct_plafond'], 100) ?>%"><?= $stats['pct_plafond'] ?>%</div>
                         </div>
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <th class="text-end">Dépenses</th>
                     <th class="text-end">Solde</th>
                     <th class="text-end">Cumul</th>
-                    <th class="text-center" style="width: 200px;">Progression</th>
+                    <th class="text-center col-w-200">Progression</th>
                 </tr>
             </thead>
             <tbody>
@@ -585,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="text-end fw-bold <?= $d['solde'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($d['solde']) ?></td>
                         <td class="text-end <?= $cumulData[$mois] >= 0 ? 'text-info' : 'text-danger' ?>"><?= formatMontant($cumulData[$mois]) ?></td>
                         <td>
-                            <div class="progress" style="height: 12px;">
+                            <div class="progress progress-h12">
                                 <div class="progress-bar bg-success" style="width: <?= $pctBar ?>%"></div>
                             </div>
                         </td>
