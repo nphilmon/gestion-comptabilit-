@@ -349,12 +349,12 @@ $s = getStatutCommandeLabel($commande['statut']);
         <?= csrfField() ?>
         <input type="hidden" name="post_action" value="changer_statut">
         <input type="hidden" name="id" value="<?= $commande['id'] ?>">
-        <select name="statut" class="form-select form-select-sm" style="width: auto; border-radius: 0.5rem;">
+        <select name="statut" class="form-select form-select-sm document-status-control">
             <?php foreach (['en_attente', 'confirmee', 'en_cours', 'livree', 'annulee'] as $st): $stl = getStatutCommandeLabel($st); ?>
                 <option value="<?= $st ?>" <?= $commande['statut'] === $st ? 'selected' : '' ?>><?= $stl['label'] ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn btn-sm btn-outline-primary document-status-btn" style="border-radius: 0.5rem;">Mettre à jour</button>
+        <button class="btn btn-sm btn-outline-primary document-status-btn document-status-radius">Mettre à jour</button>
     </form>
 </div>
 
@@ -396,13 +396,13 @@ $s = getStatutCommandeLabel($commande['statut']);
         <table class="table table-detail mb-0">
             <thead>
                 <tr>
-                    <th style="width: 40px;">#</th>
+                    <th class="col-w-40">#</th>
                     <th>Description</th>
-                    <th class="text-end" style="width: 80px;">Qté</th>
-                    <th style="width: 60px;">Unité</th>
-                    <th class="text-end" style="width: 120px;">P.U. HT</th>
-                    <?php if ($conf['tva_applicable']): ?><th class="text-end" style="width: 80px;">TVA %</th><?php endif; ?>
-                    <th class="text-end" style="width: 120px;">Total HT</th>
+                    <th class="text-end col-w-80">Qté</th>
+                    <th class="col-w-60">Unité</th>
+                    <th class="text-end col-w-120">P.U. HT</th>
+                    <?php if ($conf['tva_applicable']): ?><th class="text-end col-w-80">TVA %</th><?php endif; ?>
+                    <th class="text-end col-w-120">Total HT</th>
                 </tr>
             </thead>
             <tbody>
@@ -525,12 +525,12 @@ $generatedConditions = genererConditionsDocumentVente('commande', $commande ?? [
                 <thead class="table-light">
                     <tr>
                         <th>Description</th>
-                        <th style="width: 80px;">Qté</th>
-                        <th style="width: 80px;">Unité</th>
-                        <th style="width: 120px;">P.U. HT</th>
-                        <?php if ($conf['tva_applicable']): ?><th style="width: 80px;">TVA %</th><?php endif; ?>
-                        <th style="width: 120px;">Total HT</th>
-                        <th style="width: 40px;"></th>
+                        <th class="col-w-80">Qté</th>
+                        <th class="col-w-80">Unité</th>
+                        <th class="col-w-120">P.U. HT</th>
+                        <?php if ($conf['tva_applicable']): ?><th class="col-w-80">TVA %</th><?php endif; ?>
+                        <th class="col-w-120">Total HT</th>
+                        <th class="col-w-40"></th>
                     </tr>
                 </thead>
                 <tbody id="lignesBody">
