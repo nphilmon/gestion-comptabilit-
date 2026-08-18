@@ -708,4 +708,30 @@ document.addEventListener('DOMContentLoaded', function() {
         syncNavbarScrollState();
         window.addEventListener('scroll', syncNavbarScrollState, { passive: true });
     }
+
+    // =============================================================
+    // REFONTE PILOTE — Sidebar mobile (Tailwind)
+    // =============================================================
+    const sidebar = document.querySelector('[data-sidebar]');
+    const backdrop = document.querySelector('[data-sidebar-backdrop]');
+    const openBtn = document.querySelector('[data-sidebar-open]');
+    const closeBtn = document.querySelector('[data-sidebar-close]');
+
+    if (sidebar && backdrop && openBtn) {
+        const openSidebar = function() {
+            sidebar.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+        };
+        const closeSidebar = function() {
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
+        };
+
+        openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        backdrop.addEventListener('click', closeSidebar);
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+    }
 });
