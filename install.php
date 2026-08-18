@@ -20,7 +20,7 @@ $charset = DB_CHARSET;
 
 echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Installation</title>";
 echo "<link href='https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap' rel='stylesheet'>";
-echo "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet'>";
+echo "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' rel='stylesheet' integrity='sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH' crossorigin='anonymous'>";
 echo "<style>body{font-family:'Roboto',system-ui,sans-serif;background:#FAFAFA;color:#191C20} .card{border:none;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.3),0 2px 6px 2px rgba(0,0,0,0.15)} .alert{border:none;border-radius:12px}</style></head>";
 echo "<body class='p-5'><div class='container'>";
 echo "<h1>🔧 Installation - Gestion Comptable Pro</h1><hr>";
