@@ -414,8 +414,8 @@ include 'header.php';
             <tfoot>
                 <?php $resultatExploitation = $totalProduits - $totalCharges; ?>
                 <tr class="table-primary">
-                    <td><strong class="fs-5"><i class="bi bi-trophy"></i> RÉSULTAT D'EXPLOITATION</strong></td>
-                    <td class="text-end fs-5"><strong class="<?= $resultatExploitation >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($resultatExploitation) ?></strong></td>
+                    <td><strong class="fs-6"><i class="bi bi-trophy"></i> RÉSULTAT D'EXPLOITATION</strong></td>
+                    <td class="text-end fs-6"><strong class="<?= $resultatExploitation >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($resultatExploitation) ?></strong></td>
                 </tr>
                 <?php if (!$conf['is_micro'] && $conf['tva_applicable']): ?>
                 <tr>
@@ -430,8 +430,8 @@ include 'header.php';
                 </tr>
                 <?php endif; ?>
                 <tr class="table-info">
-                    <td><strong class="fs-5"><i class="bi bi-wallet2"></i> RÉSULTAT NET</strong></td>
-                    <td class="text-end fs-5"><strong class="<?= $stats['benefice_net'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($stats['benefice_net']) ?></strong></td>
+                    <td><strong class="fs-6"><i class="bi bi-wallet2"></i> RÉSULTAT NET</strong></td>
+                    <td class="text-end fs-6"><strong class="<?= $stats['benefice_net'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($stats['benefice_net']) ?></strong></td>
                 </tr>
             </tfoot>
         </table>
