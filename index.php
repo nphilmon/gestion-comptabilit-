@@ -3,6 +3,15 @@
  * Tableau de bord principal - Vue d'ensemble
  */
 require_once __DIR__ . '/functions.php';
+
+// Visiteur non connecté : page de présentation publique plutôt que le
+// tableau de bord (qui redirigerait de toute façon vers la connexion,
+// après avoir inutilement interrogé la base).
+if (!isLoggedIn()) {
+    require __DIR__ . '/presentation.php';
+    exit;
+}
+
 require_once __DIR__ . '/functions_commercial.php';
 require_once __DIR__ . '/functions_intelligence.php';
 require_once __DIR__ . '/functions_cp.php';
