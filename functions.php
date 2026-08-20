@@ -299,6 +299,40 @@ function sendPasswordResetEmail(string $email, string $token): bool {
     }
 }
 
+/**
+ * Envoie un message du formulaire de contact public (presentation.php) à
+ * l'adresse de contact configurée dans Paramètres. $email doit avoir été
+ * validé (FILTER_VALIDATE_EMAIL) par l'appelant avant l'appel : une
+ * adresse valide ne peut pas contenir de retour à la ligne, ce qui
+ * protège l'en-tête Reply-To contre une injection d'en-têtes.
+ */
+function sendContactMessage(string $nom, string $email, string $message): bool {
+    try {
+        $to = getParam('email_entreprise', '');
+        if ($to === '') {
+            return false;
+        }
+
+        $subject = '=?UTF-8?B?' . base64_encode('Nouveau message de contact - ' . APP_NAME) . '?=';
+        $body = "Nouveau message reçu depuis la page de présentation de " . APP_NAME . " :\r\n\r\n"
+            . "Nom : " . $nom . "\r\n"
+            . "Email : " . $email . "\r\n\r\n"
+            . "Message :\r\n" . $message . "\r\n";
+
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $host = preg_replace('/[^a-zA-Z0-9.\-]/', '', explode(':', $host)[0]) ?: 'localhost';
+        $fromEmail = envValue('GESTION_COMPTA_MAIL_FROM', 'no-reply@' . $host);
+
+        $headers = "From: " . APP_NAME . " <" . $fromEmail . ">\r\n"
+            . "Reply-To: " . $email . "\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n";
+
+        return @mail($to, $subject, $body, $headers);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function getUserByResetToken(string $token): ?array {
     if ($token === '') {
         return null;
