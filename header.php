@@ -159,9 +159,9 @@ function navBtnClasses(bool $active): string {
                 <div class="flex items-center gap-2 ml-auto lg:ml-0">
                     <form class="relative hidden md:block js-smart-search" action="<?= BASE_URL ?>recherche.php" method="GET" autocomplete="off">
                         <div class="relative">
-                            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-sm"></i>
+                            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm"></i>
                             <input type="text"
-                                   class="h-10 w-40 lg:w-56 rounded-lg border border-white/20 bg-white/10 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/60 focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 transition"
+                                   class="h-10 w-40 lg:w-56 rounded-lg border border-white/25 bg-white/15 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/70 focus:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
                                    name="q" placeholder="Rechercher..." id="searchGlobal"
                                    data-search-input="desktop"
                                    value="<?= e($_GET['q'] ?? '') ?>">
@@ -170,7 +170,7 @@ function navBtnClasses(bool $active): string {
                     </form>
 
                     <div class="dropdown">
-                        <button class="inline-flex h-10 items-center gap-2 rounded-lg bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
+                        <button class="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-brand-700 shadow-sm hover:bg-blue-50 hover:shadow transition focus:outline-none focus:ring-2 focus:ring-white/60"
                                 type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-plus-circle-fill"></i>
                             <span class="hidden sm:inline">Créer</span>
@@ -194,9 +194,9 @@ function navBtnClasses(bool $active): string {
                     </div>
 
                     <div class="dropdown hidden sm:block">
-                        <button class="flex h-10 items-center gap-2 rounded-lg border border-white/20 bg-white/10 pl-2 pr-3 text-sm text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
+                        <button class="flex h-10 items-center gap-2 rounded-lg border border-white/25 bg-white/15 pl-2 pr-3 text-sm text-white hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
                                 type="button" data-bs-toggle="dropdown">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/25">
                                 <i class="bi bi-person-fill"></i>
                             </span>
                             <span class="font-medium max-w-[9rem] truncate"><?= e($currentUser['nom'] ?? '') ?></span>
