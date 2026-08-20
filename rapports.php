@@ -441,7 +441,11 @@ include 'header.php';
 <!-- Graphique résultat -->
 <div class="card border-0 mb-4">
     <div class="card-body">
-        <canvas id="chartResultat" height="250"></canvas>
+        <?php if ($totalProduits > 0 || $totalCharges > 0): ?>
+            <canvas id="chartResultat" height="250"></canvas>
+        <?php else: ?>
+            <p class="text-muted text-center py-4 mb-0">Pas encore de produits ni de charges enregistrés en <?= $annee ?> — le graphique s'affichera dès votre première écriture.</p>
+        <?php endif; ?>
     </div>
 </div>
 <script>
@@ -527,10 +531,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Graphique comparaison mensuelle -->
+<?php $aDesDonneesComparaison = array_sum(array_column($statsMensuelles, 'recettes')) > 0 || array_sum(array_column($statsMensuellesN1, 'recettes')) > 0; ?>
 <div class="card border-0 mb-4">
     <div class="card-header"><i class="bi bi-graph-up"></i> Évolution mensuelle comparée</div>
     <div class="card-body">
-        <canvas id="chartComparaison" height="280"></canvas>
+        <?php if ($aDesDonneesComparaison): ?>
+            <canvas id="chartComparaison" height="280"></canvas>
+        <?php else: ?>
+            <p class="text-muted text-center py-4 mb-0">Pas encore de recettes enregistrées sur <?= $annee ?> ou <?= $annee - 1 ?> — le graphique s'affichera dès vos premières recettes.</p>
+        <?php endif; ?>
     </div>
 </div>
 <script>
