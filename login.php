@@ -461,7 +461,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php if ($inscriptionOuverte): ?>
                         <a href="<?= BASE_URL ?>register.php"><i class="bi bi-person-plus"></i> Créer un compte</a>
                     <?php endif; ?>
-                    <div class="login-version"><?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></div>
+                    <div class="login-version">
+                        <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?>
+                        · <a href="<?= BASE_URL ?>mentions-legales.php" class="link-plain-primary">Mentions légales</a>
+                    </div>
                 </div>
             </div>
         </div>

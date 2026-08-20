@@ -4,7 +4,10 @@
                 <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-400">
                     <span><i class="bi bi-briefcase-fill"></i> <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></span>
                     <span><?= e(getParam('nom_entreprise', 'Mon Activité')) ?></span>
-                    <span><i class="bi bi-shield-check"></i> Connexion sécurisée · <?= date('Y') ?></span>
+                    <span>
+                        <i class="bi bi-shield-check"></i> Connexion sécurisée · <?= date('Y') ?>
+                        · <a href="<?= BASE_URL ?>mentions-legales.php" class="text-gray-400" target="_blank">Mentions légales</a>
+                    </span>
                 </div>
             </footer>
     </div><!-- /.tw-app -->
