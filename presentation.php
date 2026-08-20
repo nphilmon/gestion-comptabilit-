@@ -13,6 +13,40 @@ if (isLoggedIn()) {
     exit;
 }
 
+// Formulaire de contact — validation, honeypot et limitation de débit,
+// puis retour à la page (PRG) avec un message flash pour éviter toute
+// resoumission au rechargement.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
+    if (!verifyCsrf()) {
+        setFlash('contact_error', 'Jeton de sécurité invalide. Veuillez réessayer.');
+    } elseif (!empty($_POST['website'])) {
+        // Piège à robots rempli : on ignore silencieusement sans le signaler.
+        setFlash('contact_success', '1');
+    } elseif (!checkRateLimit('contact', 3, 3600)) {
+        setFlash('contact_error', 'Trop de messages envoyés récemment. Merci de réessayer plus tard.');
+    } else {
+        $contactNom = trim($_POST['nom'] ?? '');
+        $contactEmail = trim($_POST['email'] ?? '');
+        $contactMessage = trim($_POST['message'] ?? '');
+        if ($contactNom === '' || $contactMessage === '' || !filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
+            setFlash('contact_error', 'Merci de renseigner un nom, un email valide et un message.');
+        } else {
+            recordRateLimitHit('contact');
+            if (sendContactMessage($contactNom, $contactEmail, $contactMessage)) {
+                setFlash('contact_success', '1');
+            } else {
+                setFlash('contact_error', "Impossible d'envoyer le message pour le moment. Réessayez plus tard.");
+            }
+        }
+    }
+    header('Location: ' . BASE_URL . 'presentation.php#contact');
+    exit;
+}
+
+$contactFlash = getFlash();
+$contactSuccess = $contactFlash && $contactFlash['type'] === 'contact_success';
+$contactError = ($contactFlash && $contactFlash['type'] === 'contact_error') ? $contactFlash['message'] : '';
+
 $inscriptionOuverte = isRegistrationOpen();
 
 $fonctionnalites = [
@@ -99,6 +133,14 @@ $fonctionnalites = [
             text-decoration: none;
         }
         .pres-nav .brand i { color: var(--md-primary); font-size: 1.3rem; }
+        .pres-nav-actions { display: flex; align-items: center; gap: 1.25rem; }
+        .pres-nav-link {
+            color: var(--md-on-surface-variant);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .pres-nav-link:hover { color: var(--md-primary); }
         .btn-nav-login {
             background: var(--md-primary);
             color: #fff;
@@ -291,13 +333,74 @@ $fonctionnalites = [
         }
         .pres-footer a { color: var(--md-primary); text-decoration: none; font-weight: 500; }
         .pres-footer a:hover { text-decoration: underline; }
+
+        /* ── Contact ── */
+        .pres-contact {
+            padding: 4rem 1.5rem;
+            border-top: 1px solid var(--md-outline-variant);
+        }
+        .pres-contact-inner {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .contact-honeypot {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+        .contact-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+        }
+        .contact-alert-success { background: #DCFCE7; color: #166534; }
+        .contact-alert-error { background: #FEE2E2; color: #991B1B; }
+        .contact-form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .contact-field { margin-bottom: 1rem; }
+        .contact-field label {
+            display: block;
+            font-size: 0.83rem;
+            font-weight: 500;
+            color: var(--md-on-surface-variant);
+            margin-bottom: 0.35rem;
+        }
+        .contact-field input,
+        .contact-field textarea {
+            width: 100%;
+            border: 1.5px solid var(--md-outline-variant);
+            border-radius: 10px;
+            padding: 0.65rem 0.8rem;
+            font-size: 0.92rem;
+            font-family: inherit;
+            color: var(--md-on-surface);
+        }
+        .contact-field input:focus,
+        .contact-field textarea:focus {
+            outline: none;
+            border-color: var(--md-primary);
+            box-shadow: 0 0 0 1px var(--md-primary);
+        }
+        .contact-form button { border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <nav class="pres-nav">
         <a href="<?= BASE_URL ?>presentation.php" class="brand"><i class="bi bi-bar-chart-line-fill"></i> <?= e(APP_NAME) ?></a>
-        <a href="<?= BASE_URL ?>login.php" class="btn-nav-login">Se connecter</a>
+        <div class="pres-nav-actions">
+            <a href="#contact" class="pres-nav-link">Contact</a>
+            <a href="<?= BASE_URL ?>login.php" class="btn-nav-login">Se connecter</a>
+        </div>
     </nav>
 
     <header class="pres-hero">
@@ -337,6 +440,48 @@ $fonctionnalites = [
         <h2>Prêt à simplifier votre gestion ?</h2>
         <p>Connectez-vous pour accéder à votre espace.</p>
         <a href="<?= BASE_URL ?>login.php" class="btn-cta-primary"><i class="bi bi-box-arrow-in-right"></i> Se connecter</a>
+    </section>
+
+    <section class="pres-contact" id="contact">
+        <div class="pres-contact-inner">
+            <div class="pres-section-title">
+                <h2>Une question ?</h2>
+                <p>Écrivez-nous et nous vous répondrons directement par email.</p>
+            </div>
+
+            <?php if ($contactSuccess): ?>
+                <div class="contact-alert contact-alert-success">
+                    <i class="bi bi-check-circle"></i> Message envoyé, merci ! Nous vous répondrons rapidement.
+                </div>
+            <?php endif; ?>
+            <?php if ($contactError !== ''): ?>
+                <div class="contact-alert contact-alert-error">
+                    <i class="bi bi-exclamation-triangle"></i> <?= e($contactError) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="<?= BASE_URL ?>presentation.php#contact" class="contact-form">
+                <?= csrfField() ?>
+                <input type="text" name="website" class="contact-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <div class="contact-form-row">
+                    <div class="contact-field">
+                        <label for="contact-nom">Nom</label>
+                        <input type="text" id="contact-nom" name="nom" required>
+                    </div>
+                    <div class="contact-field">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" name="email" required>
+                    </div>
+                </div>
+                <div class="contact-field">
+                    <label for="contact-message">Message</label>
+                    <textarea id="contact-message" name="message" rows="4" required></textarea>
+                </div>
+                <button type="submit" name="contact_submit" value="1" class="btn-cta-primary">
+                    <i class="bi bi-send"></i> Envoyer le message
+                </button>
+            </form>
+        </div>
     </section>
 
     <footer class="pres-footer">
