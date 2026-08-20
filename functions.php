@@ -382,6 +382,49 @@ function e(string $str): string {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
 
+// --- Pagination (listes de documents commerciaux, etc.) ---
+function renderPagination(int $page, int $totalPages, array $queryParams = []): string {
+    if ($totalPages <= 1) {
+        return '';
+    }
+    $page = max(1, min($page, $totalPages));
+    $buildUrl = function (int $p) use ($queryParams): string {
+        $params = $queryParams;
+        $params['page'] = $p;
+        return '?' . http_build_query($params);
+    };
+
+    $html = '<nav aria-label="Pagination"><ul class="pagination pagination-sm justify-content-center mb-0">';
+
+    $html .= '<li class="page-item' . ($page <= 1 ? ' disabled' : '') . '">'
+        . '<a class="page-link" href="' . e($buildUrl(max(1, $page - 1))) . '">&laquo; Précédent</a></li>';
+
+    $start = max(1, $page - 2);
+    $end = min($totalPages, $page + 2);
+    if ($start > 1) {
+        $html .= '<li class="page-item"><a class="page-link" href="' . e($buildUrl(1)) . '">1</a></li>';
+        if ($start > 2) {
+            $html .= '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+        }
+    }
+    for ($i = $start; $i <= $end; $i++) {
+        $html .= '<li class="page-item' . ($i === $page ? ' active' : '') . '">'
+            . '<a class="page-link" href="' . e($buildUrl($i)) . '">' . $i . '</a></li>';
+    }
+    if ($end < $totalPages) {
+        if ($end < $totalPages - 1) {
+            $html .= '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+        }
+        $html .= '<li class="page-item"><a class="page-link" href="' . e($buildUrl($totalPages)) . '">' . $totalPages . '</a></li>';
+    }
+
+    $html .= '<li class="page-item' . ($page >= $totalPages ? ' disabled' : '') . '">'
+        . '<a class="page-link" href="' . e($buildUrl(min($totalPages, $page + 1))) . '">Suivant &raquo;</a></li>';
+
+    $html .= '</ul></nav>';
+    return $html;
+}
+
 function csrfToken(): string {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

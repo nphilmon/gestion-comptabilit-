@@ -248,474 +248,404 @@ if (empty($assistantRecommendations)) {
     ];
 }
 
+// Palette Tailwind par "tone" métier (success/warning/danger/info/primary/secondary)
+$toneClasses = [
+    'success'   => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'ring' => 'ring-emerald-100', 'dot' => 'bg-emerald-500', 'solid' => 'bg-emerald-600'],
+    'warning'   => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'ring' => 'ring-amber-100', 'dot' => 'bg-amber-500', 'solid' => 'bg-amber-500'],
+    'danger'    => ['bg' => 'bg-rose-50', 'text' => 'text-rose-700', 'ring' => 'ring-rose-100', 'dot' => 'bg-rose-500', 'solid' => 'bg-rose-600'],
+    'info'      => ['bg' => 'bg-sky-50', 'text' => 'text-sky-700', 'ring' => 'ring-sky-100', 'dot' => 'bg-sky-500', 'solid' => 'bg-sky-600'],
+    'primary'   => ['bg' => 'bg-brand-50', 'text' => 'text-brand-700', 'ring' => 'ring-brand-100', 'dot' => 'bg-brand-600', 'solid' => 'bg-brand-600'],
+    'secondary' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-600', 'ring' => 'ring-gray-200', 'dot' => 'bg-gray-400', 'solid' => 'bg-gray-500'],
+];
+function tw_tone(array $map, ?string $tone, string $key): string {
+    return $map[$tone ?? 'secondary'][$key] ?? $map['secondary'][$key];
+}
+
 include 'header.php';
 ?>
 
-<!-- Hero / Welcome -->
-<div class="hero-banner mb-4">
-    <div class="row align-items-center">
-        <div class="col-lg-7">
-            <h2 class="mb-1"><i class="bi bi-speedometer2"></i> Tableau de bord <?= $annee ?></h2>
-            <p class="text-muted mb-0">
-                <?= e(getParam('nom_entreprise', 'Mon Activité')) ?> — <?= e(getRegimeLabel()) ?>
-            </p>
+<!-- ═══════════ En-tête de page ═══════════ -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <i class="bi bi-speedometer2 text-brand-600"></i> Tableau de bord <?= $annee ?>
+        </h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+            <?= e(getParam('nom_entreprise', 'Mon Activité')) ?> — <?= e(getRegimeLabel()) ?>
+        </p>
+    </div>
+    <div class="flex items-center gap-2">
+        <div class="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+            <?php foreach ($annees as $a): ?>
+                <a href="?annee=<?= $a ?>"
+                   class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors <?= $a === $annee ? 'bg-brand-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800' ?>">
+                    <?= $a ?>
+                </a>
+            <?php endforeach; ?>
         </div>
-        <div class="col-md-4 text-end">
-            <div class="d-flex justify-content-end gap-2 mb-2">
-                <div class="btn-group">
-                    <?php foreach ($annees as $a): ?>
-                        <a href="?annee=<?= $a ?>" class="btn btn-sm <?= $a === $annee ? 'btn-primary' : 'btn-outline-primary' ?>">
-                            <?= $a ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Export
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=transactions&annee=<?= $annee ?>"><i class="bi bi-table"></i> Transactions <?= $annee ?></a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=factures"><i class="bi bi-receipt"></i> Factures</a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=clients"><i class="bi bi-people"></i> Clients</a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>export_csv.php?type=produits"><i class="bi bi-box-seam"></i> Produits</a></li>
-                    </ul>
-                </div>
-            </div>
+        <div class="dropdown">
+            <button class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> <span class="hidden sm:inline">Export</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-gray-100 rounded-xl p-1.5 mt-2">
+                <li><a class="dropdown-item rounded-lg" href="<?= BASE_URL ?>export_csv.php?type=transactions&annee=<?= $annee ?>"><i class="bi bi-table"></i> Transactions <?= $annee ?></a></li>
+                <li><a class="dropdown-item rounded-lg" href="<?= BASE_URL ?>export_csv.php?type=factures"><i class="bi bi-receipt"></i> Factures</a></li>
+                <li><a class="dropdown-item rounded-lg" href="<?= BASE_URL ?>export_csv.php?type=clients"><i class="bi bi-people"></i> Clients</a></li>
+                <li><a class="dropdown-item rounded-lg" href="<?= BASE_URL ?>export_csv.php?type=produits"><i class="bi bi-box-seam"></i> Produits</a></li>
+            </ul>
         </div>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-lg-8">
-        <div class="card border-0 h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-stars"></i> Priorités du moment</span>
-                <small class="text-muted">Ce qui mérite ton attention en premier</small>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <?php foreach (array_slice($actionsPrioritaires, 0, 3) as $action): ?>
-                    <div class="col-md-6 col-xl-4">
-                        <a href="<?= $action['link'] ?>" class="priority-card priority-<?= $action['tone'] ?>">
-                            <span class="priority-icon"><i class="bi bi-<?= $action['icon'] ?>"></i></span>
-                            <strong><?= e($action['title']) ?></strong>
-                            <span><?= e($action['text']) ?></span>
-                            <span class="priority-link"><?= e($action['button']) ?> <i class="bi bi-arrow-right-short"></i></span>
-                        </a>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card border-0 h-100">
-            <div class="card-header">
-                <i class="bi bi-activity"></i> Vue rapide
-            </div>
-            <div class="card-body">
-                <div class="insight-stack">
-                    <?php foreach ($insights as $insight): ?>
-                    <div class="insight-item insight-<?= $insight['tone'] ?>">
-                        <div class="insight-icon"><i class="bi bi-<?= $insight['icon'] ?>"></i></div>
-                        <div>
-                            <small><?= e($insight['label']) ?></small>
-                            <div class="fw-semibold"><?= e($insight['value']) ?></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- ═══════════ Notifications ═══════════ -->
 <?php if (!empty($notifications)): ?>
-<div class="mb-4">
-    <?php foreach ($notifications as $n): ?>
-    <a href="<?= $n['link'] ?>" class="alert alert-<?= $n['type'] ?> d-flex align-items-center py-2 mb-2 text-decoration-none">
-        <i class="bi bi-<?= $n['icon'] ?> me-2"></i>
-        <span><?= e($n['text']) ?></span>
-        <i class="bi bi-chevron-right ms-auto"></i>
+<div class="mb-6 space-y-2">
+    <?php foreach ($notifications as $n): $nt = $toneClasses[$n['type']] ?? $toneClasses['info']; ?>
+    <a href="<?= $n['link'] ?>" class="flex items-center gap-3 rounded-xl border border-gray-100 <?= $nt['bg'] ?> px-4 py-3 text-sm <?= $nt['text'] ?> hover:brightness-95 transition">
+        <i class="bi bi-<?= $n['icon'] ?>"></i>
+        <span class="font-medium flex-1"><?= e($n['text']) ?></span>
+        <i class="bi bi-chevron-right"></i>
     </a>
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
 
-<div class="card border-0 mb-4 intelligent-card intelligent-<?= $assistantTone ?>">
-    <div class="card-body">
-        <div class="row g-4 align-items-start">
-            <div class="col-xl-4">
-                <div class="intelligent-score">
-                    <div class="intelligent-score__ring">
-                        <strong><?= $assistantScore ?></strong>
-                        <small>/100</small>
-                    </div>
-                    <div class="intelligent-score__content">
-                        <span class="intelligent-eyebrow"><i class="bi bi-stars"></i> Copilote de gestion</span>
-                        <h3><?= e($assistantHeadline) ?></h3>
-                        <p><?= e($assistantSummary) ?></p>
-                        <div class="intelligent-trend trend-<?= $assistantTrendTone ?>">
-                            <i class="bi bi-activity"></i>
-                            <span><?= e($assistantTrendLabel) ?></span>
-                            <strong><?= e($assistantTrendValue) ?></strong>
-                        </div>
-                    </div>
+<!-- ═══════════ Priorités + Vue rapide ═══════════ -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+            <span class="text-sm font-semibold text-gray-800"><i class="bi bi-stars text-brand-600"></i> Priorités du moment</span>
+            <span class="text-xs text-gray-400 hidden sm:inline">Ce qui mérite votre attention en premier</span>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <?php foreach (array_slice($actionsPrioritaires, 0, 3) as $action): $pt = $toneClasses[$action['tone']] ?? $toneClasses['info']; ?>
+            <a href="<?= $action['link'] ?>" class="group flex flex-col gap-2 rounded-xl border border-gray-100 <?= $pt['bg'] ?> p-4 hover:shadow-card-hover transition">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg <?= $pt['solid'] ?> text-white">
+                    <i class="bi bi-<?= $action['icon'] ?>"></i>
+                </span>
+                <strong class="text-sm text-gray-800"><?= e($action['title']) ?></strong>
+                <span class="text-xs text-gray-500"><?= e($action['text']) ?></span>
+                <span class="mt-auto inline-flex items-center gap-1 text-xs font-semibold <?= $pt['text'] ?>">
+                    <?= e($action['button']) ?> <i class="bi bi-arrow-right-short group-hover:translate-x-0.5 transition-transform"></i>
+                </span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800">
+            <i class="bi bi-activity text-brand-600"></i> Vue rapide
+        </div>
+        <div class="p-5 space-y-3">
+            <?php foreach ($insights as $insight): $it = $toneClasses[$insight['tone']] ?? $toneClasses['info']; ?>
+            <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg <?= $it['bg'] ?> <?= $it['text'] ?> shrink-0">
+                    <i class="bi bi-<?= $insight['icon'] ?>"></i>
+                </span>
+                <div class="min-w-0">
+                    <div class="text-xs text-gray-400"><?= e($insight['label']) ?></div>
+                    <div class="text-sm font-semibold text-gray-800 truncate"><?= e($insight['value']) ?></div>
                 </div>
             </div>
-            <div class="col-xl-4">
-                <div class="intelligent-panel">
-                    <div class="intelligent-panel__title">Diagnostic automatique</div>
-                    <div class="intelligent-factor-list">
-                        <?php foreach (array_slice($assistantFactors, 0, 4) as $factor): ?>
-                        <div class="intelligent-factor factor-<?= e($factor['tone']) ?>">
-                            <span><?= e($factor['label']) ?></span>
-                            <strong><?= e($factor['value']) ?></strong>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ Copilote de gestion ═══════════ -->
+<?php $at = $toneClasses[$assistantTone]; ?>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card mb-6">
+    <div class="p-5 sm:p-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="flex items-center gap-4">
+            <div class="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full <?= $at['bg'] ?> ring-8 <?= $at['ring'] ?>">
+                <strong class="text-2xl <?= $at['text'] ?>"><?= $assistantScore ?></strong>
+                <small class="absolute bottom-2 text-[10px] text-gray-400">/100</small>
+            </div>
+            <div class="min-w-0">
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-brand-600"><i class="bi bi-stars"></i> Copilote de gestion</span>
+                <h3 class="text-base font-bold text-gray-900 mt-0.5"><?= e($assistantHeadline) ?></h3>
+                <p class="text-sm text-gray-500 mt-0.5"><?= e($assistantSummary) ?></p>
+                <div class="inline-flex items-center gap-1.5 mt-2 rounded-full <?= tw_tone($toneClasses, $assistantTrendTone, 'bg') ?> <?= tw_tone($toneClasses, $assistantTrendTone, 'text') ?> px-2.5 py-1 text-xs font-medium">
+                    <i class="bi bi-activity"></i> <?= e($assistantTrendLabel) ?> : <strong><?= e($assistantTrendValue) ?></strong>
                 </div>
             </div>
-            <div class="col-xl-4">
-                <div class="intelligent-panel">
-                    <div class="intelligent-panel__title">Actions suggérées</div>
-                    <div class="intelligent-reco-list">
-                        <?php foreach (array_slice($assistantRecommendations, 0, 3) as $recommendation): ?>
-                        <a class="intelligent-reco" href="<?= $recommendation['link'] ?>">
-                            <span><?= e($recommendation['text']) ?></span>
-                            <strong><?= e($recommendation['button']) ?> <i class="bi bi-arrow-right-short"></i></strong>
-                        </a>
-                        <?php endforeach; ?>
-                    </div>
+        </div>
+        <div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Diagnostic automatique</div>
+            <div class="space-y-2">
+                <?php foreach (array_slice($assistantFactors, 0, 4) as $factor): ?>
+                <div class="flex items-center justify-between rounded-lg <?= tw_tone($toneClasses, $factor['tone'], 'bg') ?> px-3 py-2 text-sm">
+                    <span class="text-gray-500"><?= e($factor['label']) ?></span>
+                    <strong class="<?= tw_tone($toneClasses, $factor['tone'], 'text') ?>"><?= e($factor['value']) ?></strong>
                 </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Actions suggérées</div>
+            <div class="space-y-2">
+                <?php foreach (array_slice($assistantRecommendations, 0, 3) as $recommendation): ?>
+                <a class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 text-sm hover:bg-gray-50 transition" href="<?= $recommendation['link'] ?>">
+                    <span class="text-gray-600"><?= e($recommendation['text']) ?></span>
+                    <strong class="text-brand-600 inline-flex items-center gap-0.5"><?= e($recommendation['button']) ?> <i class="bi bi-arrow-right-short"></i></strong>
+                </a>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Cartes résumé comptable -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-arrow-up-circle-fill"></i></div>
-                    <small class="text-muted ms-2">Chiffre d'affaires</small>
-                </div>
-                <h3 class="text-success mb-1"><?= formatMontant($stats['total_recettes']) ?></h3>
-                <?php if ($stats['plafond_ca'] > 0): ?>
-                <div class="progress mt-2 progress-h5">
-                    <div class="progress-bar bg-success" style="width: <?= min($stats['pct_plafond'], 100) ?>%"></div>
-                </div>
-                <small class="text-muted"><?= $stats['pct_plafond'] ?>% du plafond</small>
-                <?php endif; ?>
-            </div>
+<!-- ═══════════ Cartes résumé comptable ═══════════ -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><i class="bi bi-arrow-up-circle-fill"></i></span>
+            <span class="text-xs text-gray-400">Chiffre d'affaires</span>
         </div>
+        <h3 class="text-xl font-bold text-emerald-600 mb-1"><?= formatMontant($stats['total_recettes']) ?></h3>
+        <?php if ($stats['plafond_ca'] > 0): ?>
+        <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden mt-2">
+            <div class="h-full rounded-full bg-emerald-500" style="width: <?= min($stats['pct_plafond'], 100) ?>%"></div>
+        </div>
+        <small class="text-xs text-gray-400"><?= $stats['pct_plafond'] ?>% du plafond</small>
+        <?php endif; ?>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-arrow-down-circle-fill"></i></div>
-                    <small class="text-muted ms-2">Dépenses</small>
-                </div>
-                <h3 class="text-danger mb-1"><?= formatMontant($stats['total_depenses']) ?></h3>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600"><i class="bi bi-arrow-down-circle-fill"></i></span>
+            <span class="text-xs text-gray-400">Dépenses</span>
         </div>
+        <h3 class="text-xl font-bold text-rose-600 mb-1"><?= formatMontant($stats['total_depenses']) ?></h3>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-bank"></i></div>
-                    <small class="text-muted ms-2">
-                        <?= $conf['is_micro'] ? 'Charges obligatoires' : ($conf['tva_applicable'] ? 'TVA à reverser' : 'Résultat brut') ?>
-                    </small>
-                </div>
-                <?php if ($conf['is_micro']): ?>
-                    <h3 class="text-warning mb-1"><?= formatMontant($stats['charges_obligatoires']) ?></h3>
-                    <small class="text-muted">URSSAF + CFP<?= $stats['versement_liberatoire'] > 0 ? ' + VL' : '' ?></small>
-                <?php elseif ($conf['tva_applicable']): ?>
-                    <h3 class="text-warning mb-1"><?= formatMontant($stats['tva_a_payer']) ?></h3>
-                    <small class="text-muted">Collectée: <?= formatMontant($stats['tva_collectee']) ?></small>
-                <?php else: ?>
-                    <h3 class="text-warning mb-1"><?= formatMontant($stats['benefice_avant_charges']) ?></h3>
-                <?php endif; ?>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600"><i class="bi bi-bank"></i></span>
+            <span class="text-xs text-gray-400"><?= $conf['is_micro'] ? 'Charges obligatoires' : ($conf['tva_applicable'] ? 'TVA à reverser' : 'Résultat brut') ?></span>
         </div>
+        <?php if ($conf['is_micro']): ?>
+            <h3 class="text-xl font-bold text-amber-600 mb-1"><?= formatMontant($stats['charges_obligatoires']) ?></h3>
+            <small class="text-xs text-gray-400">URSSAF + CFP<?= $stats['versement_liberatoire'] > 0 ? ' + VL' : '' ?></small>
+        <?php elseif ($conf['tva_applicable']): ?>
+            <h3 class="text-xl font-bold text-amber-600 mb-1"><?= formatMontant($stats['tva_a_payer']) ?></h3>
+            <small class="text-xs text-gray-400">Collectée : <?= formatMontant($stats['tva_collectee']) ?></small>
+        <?php else: ?>
+            <h3 class="text-xl font-bold text-amber-600 mb-1"><?= formatMontant($stats['benefice_avant_charges']) ?></h3>
+        <?php endif; ?>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-wallet2"></i></div>
-                    <small class="text-muted ms-2"><?= $conf['is_micro'] ? 'Bénéfice net estimé' : 'Résultat net' ?></small>
-                </div>
-                <h3 class="<?= $stats['benefice_net'] >= 0 ? 'text-info' : 'text-danger' ?> mb-1">
-                    <?= formatMontant($stats['benefice_net']) ?>
-                </h3>
-                <?php if ($conf['is_micro']): ?>
-                <small class="text-muted">Imposable: <?= formatMontant($stats['revenu_imposable']) ?></small>
-                <?php endif; ?>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600"><i class="bi bi-wallet2"></i></span>
+            <span class="text-xs text-gray-400"><?= $conf['is_micro'] ? 'Bénéfice net estimé' : 'Résultat net' ?></span>
         </div>
+        <h3 class="text-xl font-bold mb-1 <?= $stats['benefice_net'] >= 0 ? 'text-sky-600' : 'text-rose-600' ?>">
+            <?= formatMontant($stats['benefice_net']) ?>
+        </h3>
+        <?php if ($conf['is_micro']): ?>
+        <small class="text-xs text-gray-400">Imposable : <?= formatMontant($stats['revenu_imposable']) ?></small>
+        <?php endif; ?>
     </div>
 </div>
 
-<!-- Section commerciale rapide -->
-<div class="row g-3 mb-4">
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-4 text-primary fw-bold"><?= $statsCommerciales['devis_total'] ?></div>
-                <small class="text-muted">Devis</small>
-            </div>
-        </div>
+<!-- ═══════════ Section commerciale rapide ═══════════ -->
+<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+    <div class="bg-white rounded-xl border border-gray-100 shadow-card text-center py-4">
+        <div class="text-xl font-bold text-brand-600"><?= $statsCommerciales['devis_total'] ?></div>
+        <small class="text-xs text-gray-400">Devis</small>
     </div>
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-4 text-success fw-bold"><?= $statsCommerciales['devis_acceptes'] ?></div>
-                <small class="text-muted">Acceptés</small>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-card text-center py-4">
+        <div class="text-xl font-bold text-emerald-600"><?= $statsCommerciales['devis_acceptes'] ?></div>
+        <small class="text-xs text-gray-400">Acceptés</small>
     </div>
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-4 text-primary fw-bold"><?= formatMontant($statsCommerciales['ca_facture']) ?></div>
-                <small class="text-muted">CA facturé</small>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-card text-center py-4">
+        <div class="text-xl font-bold text-brand-600"><?= formatMontant($statsCommerciales['ca_facture']) ?></div>
+        <small class="text-xs text-gray-400">CA facturé</small>
     </div>
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-4 text-warning fw-bold"><?= formatMontant($statsCommerciales['en_attente_paiement']) ?></div>
-                <small class="text-muted">En attente</small>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-card text-center py-4">
+        <div class="text-xl font-bold text-amber-600"><?= formatMontant($statsCommerciales['en_attente_paiement']) ?></div>
+        <small class="text-xs text-gray-400">En attente</small>
     </div>
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100 <?= $statsCommerciales['factures_en_retard'] > 0 ? 'border-danger' : '' ?>">
-            <div class="card-body py-3">
-                <div class="fs-4 <?= $statsCommerciales['factures_en_retard'] > 0 ? 'text-danger' : 'text-muted' ?> fw-bold"><?= $statsCommerciales['factures_en_retard'] ?></div>
-                <small class="text-muted">En retard</small>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl border <?= $statsCommerciales['factures_en_retard'] > 0 ? 'border-rose-200' : 'border-gray-100' ?> shadow-card text-center py-4">
+        <div class="text-xl font-bold <?= $statsCommerciales['factures_en_retard'] > 0 ? 'text-rose-600' : 'text-gray-400' ?>"><?= $statsCommerciales['factures_en_retard'] ?></div>
+        <small class="text-xs text-gray-400">En retard</small>
     </div>
-    <div class="col-md-2">
-        <div class="card border-0 text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-4 text-info fw-bold"><?= $statsCommerciales['clients_actifs'] ?></div>
-                <small class="text-muted">Clients actifs</small>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-card text-center py-4">
+        <div class="text-xl font-bold text-sky-600"><?= $statsCommerciales['clients_actifs'] ?></div>
+        <small class="text-xs text-gray-400">Clients actifs</small>
     </div>
 </div>
 
-<!-- Graphiques -->
-<div class="row g-3 mb-4">
-    <div class="col-md-8">
-        <div class="card border-0">
-            <div class="card-header">
-                <i class="bi bi-graph-up"></i> Évolution mensuelle <?= $annee ?>
-            </div>
-            <div class="card-body">
-                <canvas id="chartMensuel" height="280"></canvas>
-            </div>
+<!-- ═══════════ Graphiques ═══════════ -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800">
+            <i class="bi bi-graph-up text-brand-600"></i> Évolution mensuelle <?= $annee ?>
+        </div>
+        <div class="p-5">
+            <canvas id="chartMensuel" height="280"></canvas>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-0 mb-3">
-            <div class="card-header"><i class="bi bi-pie-chart"></i> Recettes par catégorie</div>
-            <div class="card-body">
+    <div class="space-y-4">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card">
+            <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800"><i class="bi bi-pie-chart text-brand-600"></i> Recettes par catégorie</div>
+            <div class="p-5">
                 <?php if (!empty($recettesParCat)): ?>
                     <canvas id="chartRecettes" height="180"></canvas>
                 <?php else: ?>
-                    <p class="text-muted text-center mb-0">Aucune recette</p>
+                    <p class="text-sm text-gray-400 text-center mb-0">Aucune recette</p>
                 <?php endif; ?>
             </div>
         </div>
-        <div class="card border-0">
-            <div class="card-header"><i class="bi bi-pie-chart"></i> Dépenses par catégorie</div>
-            <div class="card-body">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-card">
+            <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800"><i class="bi bi-pie-chart text-brand-600"></i> Dépenses par catégorie</div>
+            <div class="p-5">
                 <?php if (!empty($depensesParCat)): ?>
                     <canvas id="chartDepenses" height="180"></canvas>
                 <?php else: ?>
-                    <p class="text-muted text-center mb-0">Aucune dépense</p>
+                    <p class="text-sm text-gray-400 text-center mb-0">Aucune dépense</p>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Activité récente : 3 colonnes -->
-<div class="row g-3 mb-4">
-    <!-- Dernières transactions -->
-    <div class="col-md-6">
-        <div class="card border-0">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clock-history"></i> Dernières écritures</span>
-                <a href="<?= BASE_URL ?>transactions.php" class="btn btn-sm btn-outline-primary">Voir tout</a>
+<!-- ═══════════ Activité récente ═══════════ -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    <div class="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+            <span class="text-sm font-semibold text-gray-800"><i class="bi bi-clock-history text-brand-600"></i> Dernières écritures</span>
+            <a href="<?= BASE_URL ?>transactions.php" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Voir tout</a>
+        </div>
+        <?php if (empty($dernieres)): ?>
+            <div class="text-center py-10 text-gray-400">
+                <i class="bi bi-inbox text-3xl"></i>
+                <p class="mt-2 mb-0 text-sm">Aucune écriture pour <?= $annee ?>.</p>
             </div>
-            <div class="card-body p-0">
-                <?php if (empty($dernieres)): ?>
-                    <div class="text-center py-4 text-muted">
-                        <i class="bi bi-inbox fs-2rem"></i>
-                        <p class="mt-2 mb-0">Aucune écriture pour <?= $annee ?>.</p>
-                    </div>
-                <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($dernieres as $t): ?>
-                            <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                <div>
-                                    <div class="fw-semibold fs-09"><?= e($t['description']) ?></div>
-                                    <small class="text-muted">
-                                        <?= formatDate($t['date_transaction']) ?>
-                                        <?php if ($t['categorie_nom']): ?>
-                                            · <span class="badge fs-065" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
-                                        <?php endif; ?>
-                                    </small>
-                                </div>
-                                <span class="fw-bold <?= $t['type'] === 'recette' ? 'text-success' : 'text-danger' ?>">
-                                    <?= $t['type'] === 'recette' ? '+' : '-' ?><?= formatMontant($t['montant']) ?>
-                                </span>
+        <?php else: ?>
+            <div class="divide-y divide-gray-50">
+                <?php foreach ($dernieres as $t): ?>
+                    <div class="flex items-center justify-between px-5 py-3">
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium text-gray-800 truncate"><?= e($t['description']) ?></div>
+                            <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                <?= formatDate($t['date_transaction']) ?>
+                                <?php if ($t['categorie_nom']): ?>
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-white" style="background-color: <?= e($t['categorie_couleur']) ?>;"><?= e($t['categorie_nom']) ?></span>
+                                <?php endif; ?>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
+                        <span class="text-sm font-bold shrink-0 ml-3 <?= $t['type'] === 'recette' ? 'text-emerald-600' : 'text-rose-600' ?>">
+                            <?= $t['type'] === 'recette' ? '+' : '-' ?><?= formatMontant($t['montant']) ?>
+                        </span>
                     </div>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 
-    <!-- Derniers devis + factures -->
-    <div class="col-md-3">
-        <div class="card border-0 mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-file-earmark-text"></i> Derniers devis</span>
-                <a href="<?= BASE_URL ?>devis.php" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-arrow-right"></i></a>
-            </div>
-            <div class="list-group list-group-flush">
-                <?php if (empty($derniersDevis)): ?>
-                    <div class="list-group-item text-muted text-center py-3"><small>Aucun devis</small></div>
-                <?php else: foreach ($derniersDevis as $d): $sd = getStatutDevisLabel($d['statut']); ?>
-                    <a href="devis.php?action=voir&id=<?= $d['id'] ?>" class="list-group-item list-group-item-action py-2">
-                        <div class="d-flex justify-content-between">
-                            <small class="fw-semibold"><?= e($d['numero']) ?></small>
-                            <span class="badge bg-<?= $sd['class'] ?> fs-065"><?= $sd['label'] ?></span>
-                        </div>
-                        <small class="text-muted"><?= e($d['client_entreprise'] ?: trim(($d['client_prenom'] ?? '') . ' ' . ($d['client_nom'] ?? ''))) ?></small>
-                        <div class="text-end"><small class="fw-bold"><?= formatMontant($d['montant_ttc']) ?></small></div>
-                    </a>
-                <?php endforeach; endif; ?>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+            <span class="text-sm font-semibold text-gray-800"><i class="bi bi-file-earmark-text text-brand-600"></i> Derniers devis</span>
+            <a href="<?= BASE_URL ?>devis.php" class="text-brand-600 hover:text-brand-700"><i class="bi bi-arrow-right"></i></a>
         </div>
+        <?php if (empty($derniersDevis)): ?>
+            <div class="text-center py-6 text-sm text-gray-400">Aucun devis</div>
+        <?php else: foreach ($derniersDevis as $d): $sd = getStatutDevisLabel($d['statut']); ?>
+            <a href="devis.php?action=voir&id=<?= $d['id'] ?>" class="block px-5 py-3 hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-700"><?= e($d['numero']) ?></span>
+                    <span class="badge bg-<?= $sd['class'] ?> fs-065"><?= $sd['label'] ?></span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5 truncate"><?= e($d['client_entreprise'] ?: trim(($d['client_prenom'] ?? '') . ' ' . ($d['client_nom'] ?? ''))) ?></div>
+                <div class="text-right text-xs font-bold text-gray-700 mt-0.5"><?= formatMontant($d['montant_ttc']) ?></div>
+            </a>
+        <?php endforeach; endif; ?>
     </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-receipt"></i> Dernières factures</span>
-                <a href="<?= BASE_URL ?>factures.php" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-arrow-right"></i></a>
-            </div>
-            <div class="list-group list-group-flush">
-                <?php if (empty($dernieresFactures)): ?>
-                    <div class="list-group-item text-muted text-center py-3"><small>Aucune facture</small></div>
-                <?php else: foreach ($dernieresFactures as $f): $sf = getStatutFactureLabel($f['statut']); ?>
-                    <a href="factures.php?action=voir&id=<?= $f['id'] ?>" class="list-group-item list-group-item-action py-2">
-                        <div class="d-flex justify-content-between">
-                            <small class="fw-semibold"><?= e($f['numero']) ?></small>
-                            <span class="badge bg-<?= $sf['class'] ?> fs-065"><?= $sf['label'] ?></span>
-                        </div>
-                        <small class="text-muted"><?= e($f['client_entreprise'] ?: trim(($f['client_prenom'] ?? '') . ' ' . ($f['client_nom'] ?? ''))) ?></small>
-                        <div class="text-end"><small class="fw-bold"><?= formatMontant($f['montant_ttc']) ?></small></div>
-                    </a>
-                <?php endforeach; endif; ?>
-            </div>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+            <span class="text-sm font-semibold text-gray-800"><i class="bi bi-receipt text-brand-600"></i> Dernières factures</span>
+            <a href="<?= BASE_URL ?>factures.php" class="text-brand-600 hover:text-brand-700"><i class="bi bi-arrow-right"></i></a>
         </div>
+        <?php if (empty($dernieresFactures)): ?>
+            <div class="text-center py-6 text-sm text-gray-400">Aucune facture</div>
+        <?php else: foreach ($dernieresFactures as $f): $sf = getStatutFactureLabel($f['statut']); ?>
+            <a href="factures.php?action=voir&id=<?= $f['id'] ?>" class="block px-5 py-3 hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-700"><?= e($f['numero']) ?></span>
+                    <span class="badge bg-<?= $sf['class'] ?> fs-065"><?= $sf['label'] ?></span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5 truncate"><?= e($f['client_entreprise'] ?: trim(($f['client_prenom'] ?? '') . ' ' . ($f['client_nom'] ?? ''))) ?></div>
+                <div class="text-right text-xs font-bold text-gray-700 mt-0.5"><?= formatMontant($f['montant_ttc']) ?></div>
+            </a>
+        <?php endforeach; endif; ?>
     </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- INTELLIGENCE AVANCÉE                                  -->
+<!-- INTELLIGENCE AVANCÉE                                     -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
 <!-- Alertes proactives avancées -->
 <?php if (!empty($alertesProactives)): ?>
-<div class="card border-0 mb-4 intelligence-section">
-    <div class="card-header bg-gradient-intelligence">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card mb-6 overflow-hidden">
+    <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold flex items-center gap-2">
         <i class="bi bi-lightning-charge-fill"></i> Alertes proactives
-        <span class="badge bg-white text-dark ms-2"><?= count($alertesProactives) ?></span>
+        <span class="inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs">​<?= count($alertesProactives) ?></span>
     </div>
-    <div class="card-body p-0">
-        <div class="list-group list-group-flush">
-            <?php foreach (array_slice($alertesProactives, 0, 5) as $alerte): ?>
-            <a href="<?= BASE_URL . e($alerte['link']) ?>" class="list-group-item list-group-item-action d-flex align-items-center py-3 alerte-proactive-item">
-                <div class="alerte-icon alerte-icon-<?= e($alerte['type']) ?>">
-                    <i class="bi bi-<?= e($alerte['icon']) ?>"></i>
-                </div>
-                <div class="ms-3 flex-grow-1">
-                    <div class="fw-semibold"><?= e($alerte['titre']) ?></div>
-                    <small class="text-muted"><?= e($alerte['texte']) ?></small>
-                </div>
-                <i class="bi bi-chevron-right text-muted"></i>
-            </a>
-            <?php endforeach; ?>
-        </div>
+    <div class="divide-y divide-gray-50">
+        <?php foreach (array_slice($alertesProactives, 0, 5) as $alerte): ?>
+        <a href="<?= BASE_URL . e($alerte['link']) ?>" class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 <?= tw_tone($toneClasses, $alerte['type'], 'bg') ?> <?= tw_tone($toneClasses, $alerte['type'], 'text') ?>">
+                <i class="bi bi-<?= e($alerte['icon']) ?>"></i>
+            </span>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-800 truncate"><?= e($alerte['titre']) ?></div>
+                <div class="text-xs text-gray-400 truncate"><?= e($alerte['texte']) ?></div>
+            </div>
+            <i class="bi bi-chevron-right text-gray-300"></i>
+        </a>
+        <?php endforeach; ?>
     </div>
 </div>
 <?php endif; ?>
 
 <!-- KPIs avancés temps réel -->
-<div class="card border-0 mb-4 intelligence-section">
-    <div class="card-header bg-gradient-intelligence">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card mb-6 overflow-hidden">
+    <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold">
         <i class="bi bi-speedometer"></i> KPIs avancés
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3 col-6">
-                <div class="kpi-card kpi-marge">
-                    <div class="kpi-value"><?= $kpisAvances['taux_marge_brute'] ?>%</div>
-                    <div class="kpi-label">Marge brute</div>
-                    <div class="kpi-detail"><?= formatMontant($kpisAvances['marge_brute']) ?></div>
-                </div>
+    <div class="p-5">
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+            <div class="rounded-xl bg-gray-50 p-4">
+                <div class="text-xl font-bold text-gray-900"><?= $kpisAvances['taux_marge_brute'] ?>%</div>
+                <div class="text-xs font-medium text-gray-500 mt-0.5">Marge brute</div>
+                <div class="text-xs text-gray-400"><?= formatMontant($kpisAvances['marge_brute']) ?></div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="kpi-card kpi-dso">
-                    <div class="kpi-value"><?= $kpisAvances['dso'] ?> j</div>
-                    <div class="kpi-label">Délai paiement (DSO)</div>
-                    <div class="kpi-detail"><?= $kpisAvances['dso'] <= 30 ? 'Excellent' : ($kpisAvances['dso'] <= 60 ? 'Correct' : 'À améliorer') ?></div>
-                </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+                <div class="text-xl font-bold text-gray-900"><?= $kpisAvances['dso'] ?> j</div>
+                <div class="text-xs font-medium text-gray-500 mt-0.5">Délai paiement (DSO)</div>
+                <div class="text-xs text-gray-400"><?= $kpisAvances['dso'] <= 30 ? 'Excellent' : ($kpisAvances['dso'] <= 60 ? 'Correct' : 'À améliorer') ?></div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="kpi-card kpi-conversion">
-                    <div class="kpi-value"><?= $kpisAvances['taux_conversion_devis'] ?>%</div>
-                    <div class="kpi-label">Conversion devis→facture</div>
-                    <div class="kpi-detail"><?= $kpisAvances['devis_convertis'] ?? 0 ?>/<?= $kpisAvances['devis_total'] ?? 0 ?> devis</div>
-                </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+                <div class="text-xl font-bold text-gray-900"><?= $kpisAvances['taux_conversion_devis'] ?>%</div>
+                <div class="text-xs font-medium text-gray-500 mt-0.5">Conversion devis→facture</div>
+                <div class="text-xs text-gray-400"><?= $kpisAvances['devis_convertis'] ?? 0 ?>/<?= $kpisAvances['devis_total'] ?? 0 ?> devis</div>
             </div>
-            <div class="col-md-3 col-6">
-                <div class="kpi-card kpi-recouvrement">
-                    <div class="kpi-value"><?= $kpisAvances['taux_recouvrement'] ?>%</div>
-                    <div class="kpi-label">Taux recouvrement</div>
-                    <div class="kpi-detail">CA moyen client: <?= formatMontant($kpisAvances['ca_moyen_client']) ?></div>
-                </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+                <div class="text-xl font-bold text-gray-900"><?= $kpisAvances['taux_recouvrement'] ?>%</div>
+                <div class="text-xs font-medium text-gray-500 mt-0.5">Taux recouvrement</div>
+                <div class="text-xs text-gray-400">CA moyen client : <?= formatMontant($kpisAvances['ca_moyen_client']) ?></div>
             </div>
         </div>
         <?php if (!empty($kpisAvances['meilleur_mois'])): ?>
-        <div class="row g-3 mt-1">
-            <div class="col-md-6">
-                <div class="kpi-mini">
-                    <i class="bi bi-trophy-fill text-warning"></i>
-                    <span>Meilleur mois : <strong><?= e($kpisAvances['meilleur_mois']) ?></strong> (<?= formatMontant($kpisAvances['meilleur_mois_ca']) ?>)</span>
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+                <i class="bi bi-trophy-fill text-amber-500"></i>
+                <span>Meilleur mois : <strong class="text-gray-800"><?= e($kpisAvances['meilleur_mois']) ?></strong> (<?= formatMontant($kpisAvances['meilleur_mois_ca']) ?>)</span>
             </div>
-            <div class="col-md-6">
-                <div class="kpi-mini">
-                    <i class="bi bi-bar-chart text-muted"></i>
-                    <span>Dépenses moy./mois : <strong><?= formatMontant($kpisAvances['depenses_moy_mensuelles']) ?></strong></span>
-                </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+                <i class="bi bi-bar-chart text-gray-400"></i>
+                <span>Dépenses moy./mois : <strong class="text-gray-800"><?= formatMontant($kpisAvances['depenses_moy_mensuelles']) ?></strong></span>
             </div>
         </div>
         <?php endif; ?>
@@ -723,185 +653,271 @@ include 'header.php';
 </div>
 
 <!-- Dashboard prédictif : Projection CA + Trésorerie -->
-<div class="row g-3 mb-4">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
     <!-- Projection CA -->
-    <div class="col-lg-6">
-        <div class="card border-0 h-100 projection-card">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="projection-icon projection-icon--ca">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold">Projection CA <?= $annee ?></h6>
-                            <small class="text-muted"><?= $projectionCA['mois_courant'] ?> mois écoulés — <?= $projectionCA['mois_restants'] ?> restants</small>
-                        </div>
-                    </div>
-                    <span class="projection-trend-badge projection-trend-badge--<?= $projectionCA['tendance'] ?>">
-                        <i class="bi bi-<?= $projectionCA['tendance'] === 'hausse' ? 'trending-up' : ($projectionCA['tendance'] === 'baisse' ? 'trending-down' : 'dash-lg') ?>"></i>
-                        <?= ucfirst($projectionCA['tendance']) ?>
-                    </span>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <div class="projection-kpi">
-                            <span class="projection-kpi__label">CA réalisé</span>
-                            <span class="projection-kpi__value text-success"><?= formatMontant($projectionCA['total_actuel']) ?></span>
-                            <span class="projection-kpi__sub">Moy. <?= formatMontant($projectionCA['moyenne_mensuelle']) ?>/mois</span>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="projection-kpi">
-                            <span class="projection-kpi__label">Projection annuelle</span>
-                            <span class="projection-kpi__value text-primary"><?= formatMontant($projectionCA['projection_lineaire']) ?></span>
-                            <?php if ($projectionCA['ca_n1'] > 0): ?>
-                            <span class="projection-kpi__sub <?= $projectionCA['variation_n1'] >= 0 ? 'text-success' : 'text-danger' ?>">
-                                <i class="bi bi-<?= $projectionCA['variation_n1'] >= 0 ? 'arrow-up-short' : 'arrow-down-short' ?>"></i>
-                                <?= ($projectionCA['variation_n1'] >= 0 ? '+' : '') . $projectionCA['variation_n1'] ?>% vs <?= $annee - 1 ?>
-                            </span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ($projectionCA['plafond_ca'] > 0): ?>
-                <div class="projection-plafond mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <small class="text-muted"><i class="bi bi-speedometer"></i> Plafond micro-entreprise</small>
-                        <strong class="<?= $projectionCA['pct_projection_plafond'] > 90 ? 'text-danger' : ($projectionCA['pct_projection_plafond'] > 70 ? 'text-warning' : 'text-success') ?>"><?= $projectionCA['pct_projection_plafond'] ?>%</strong>
-                    </div>
-                    <div class="progress projection-progress">
-                        <div class="progress-bar bg-<?= $projectionCA['pct_projection_plafond'] > 90 ? 'danger' : ($projectionCA['pct_projection_plafond'] > 70 ? 'warning' : 'success') ?>"
-                             style="width: <?= min(100, $projectionCA['pct_projection_plafond']) ?>%"></div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-1">
-                        <small class="text-muted"><?= formatMontant($projectionCA['projection_lineaire']) ?></small>
-                        <small class="text-muted"><?= formatMontant($projectionCA['plafond_ca']) ?></small>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <div class="projection-chart-wrapper">
-                    <canvas id="chartProjection" height="180"></canvas>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-graph-up-arrow"></i></span>
+                <div>
+                    <h6 class="text-sm font-bold text-gray-900 mb-0">Projection CA <?= $annee ?></h6>
+                    <small class="text-xs text-gray-400"><?= $projectionCA['mois_courant'] ?> mois écoulés — <?= $projectionCA['mois_restants'] ?> restants</small>
                 </div>
             </div>
+            <span class="inline-flex items-center gap-1 rounded-full <?= tw_tone($toneClasses, $assistantTrendTone, 'bg') ?> <?= tw_tone($toneClasses, $assistantTrendTone, 'text') ?> px-2.5 py-1 text-xs font-medium">
+                <i class="bi bi-<?= $projectionCA['tendance'] === 'hausse' ? 'trending-up' : ($projectionCA['tendance'] === 'baisse' ? 'trending-down' : 'dash-lg') ?>"></i>
+                <?= ucfirst($projectionCA['tendance']) ?>
+            </span>
         </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="rounded-xl bg-gray-50 p-3">
+                <span class="block text-xs text-gray-400">CA réalisé</span>
+                <span class="block text-lg font-bold text-emerald-600"><?= formatMontant($projectionCA['total_actuel']) ?></span>
+                <span class="block text-xs text-gray-400">Moy. <?= formatMontant($projectionCA['moyenne_mensuelle']) ?>/mois</span>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-3">
+                <span class="block text-xs text-gray-400">Projection annuelle</span>
+                <span class="block text-lg font-bold text-brand-600"><?= formatMontant($projectionCA['projection_lineaire']) ?></span>
+                <?php if ($projectionCA['ca_n1'] > 0): ?>
+                <span class="block text-xs <?= $projectionCA['variation_n1'] >= 0 ? 'text-emerald-600' : 'text-rose-600' ?>">
+                    <i class="bi bi-<?= $projectionCA['variation_n1'] >= 0 ? 'arrow-up-short' : 'arrow-down-short' ?>"></i>
+                    <?= ($projectionCA['variation_n1'] >= 0 ? '+' : '') . $projectionCA['variation_n1'] ?>% vs <?= $annee - 1 ?>
+                </span>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <?php if ($projectionCA['plafond_ca'] > 0): ?>
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-1 text-xs">
+                <span class="text-gray-400"><i class="bi bi-speedometer"></i> Plafond micro-entreprise</span>
+                <strong class="<?= $projectionCA['pct_projection_plafond'] > 90 ? 'text-rose-600' : ($projectionCA['pct_projection_plafond'] > 70 ? 'text-amber-600' : 'text-emerald-600') ?>"><?= $projectionCA['pct_projection_plafond'] ?>%</strong>
+            </div>
+            <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div class="h-full rounded-full <?= $projectionCA['pct_projection_plafond'] > 90 ? 'bg-rose-500' : ($projectionCA['pct_projection_plafond'] > 70 ? 'bg-amber-500' : 'bg-emerald-500') ?>"
+                     style="width: <?= min(100, $projectionCA['pct_projection_plafond']) ?>%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-1 text-xs text-gray-400">
+                <span><?= formatMontant($projectionCA['projection_lineaire']) ?></span>
+                <span><?= formatMontant($projectionCA['plafond_ca']) ?></span>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <canvas id="chartProjection" height="180"></canvas>
     </div>
 
     <!-- Trésorerie prévisionnelle -->
-    <div class="col-lg-6">
-        <div class="card border-0 h-100 projection-card">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="projection-icon projection-icon--treso">
-                            <i class="bi bi-safe"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold">Trésorerie prévisionnelle</h6>
-                            <small class="text-muted">Projection sur 6 mois glissants</small>
-                        </div>
-                    </div>
-                    <?php if ($tresorerie['runway_mois'] !== null): ?>
-                    <span class="projection-trend-badge projection-trend-badge--<?= $tresorerie['runway_mois'] > 6 ? 'hausse' : ($tresorerie['runway_mois'] > 3 ? 'stable' : 'baisse') ?>">
-                        <i class="bi bi-fuel-pump"></i>
-                        <?= $tresorerie['runway_mois'] ?> mois
-                    </span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-4">
-                        <div class="projection-kpi">
-                            <span class="projection-kpi__label">Solde actuel</span>
-                            <span class="projection-kpi__value <?= $tresorerie['solde_actuel'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($tresorerie['solde_actuel']) ?></span>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="projection-kpi">
-                            <span class="projection-kpi__label">Entrées prévues</span>
-                            <span class="projection-kpi__value text-info"><?= formatMontant($tresorerie['entrees_prevues']) ?></span>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="projection-kpi">
-                            <span class="projection-kpi__label">Flux net/mois</span>
-                            <span class="projection-kpi__value <?= $tresorerie['flux_net_moyen'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= formatMontant($tresorerie['flux_net_moyen']) ?></span>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ($tresorerie['runway_mois'] !== null): ?>
-                <div class="projection-plafond mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <small class="text-muted"><i class="bi bi-fuel-pump"></i> Runway estimé</small>
-                        <strong class="<?= $tresorerie['runway_mois'] > 6 ? 'text-success' : ($tresorerie['runway_mois'] > 3 ? 'text-warning' : 'text-danger') ?>">
-                            <?= $tresorerie['runway_mois'] ?> mois
-                        </strong>
-                    </div>
-                    <div class="progress projection-progress">
-                        <div class="progress-bar bg-<?= $tresorerie['runway_mois'] > 6 ? 'success' : ($tresorerie['runway_mois'] > 3 ? 'warning' : 'danger') ?>"
-                             style="width: <?= min(100, ($tresorerie['runway_mois'] / 12) * 100) ?>%"></div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <?php if ($tresorerie['date_rupture']): ?>
-                <div class="projection-alert mb-3">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    Rupture de trésorerie estimée dans <strong><?= $tresorerie['mois_avant_rupture'] ?> mois</strong>
-                    <small>(~<?= date('M Y', strtotime($tresorerie['date_rupture'])) ?>)</small>
-                </div>
-                <?php endif; ?>
-
-                <div class="projection-chart-wrapper">
-                    <canvas id="chartTresorerie" height="160"></canvas>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600"><i class="bi bi-safe"></i></span>
+                <div>
+                    <h6 class="text-sm font-bold text-gray-900 mb-0">Trésorerie prévisionnelle</h6>
+                    <small class="text-xs text-gray-400">Projection sur 6 mois glissants</small>
                 </div>
             </div>
+            <?php if ($tresorerie['runway_mois'] !== null): ?>
+            <?php $runwayTone = $tresorerie['runway_mois'] > 6 ? 'success' : ($tresorerie['runway_mois'] > 3 ? 'warning' : 'danger'); ?>
+            <span class="inline-flex items-center gap-1 rounded-full <?= tw_tone($toneClasses, $runwayTone, 'bg') ?> <?= tw_tone($toneClasses, $runwayTone, 'text') ?> px-2.5 py-1 text-xs font-medium">
+                <i class="bi bi-fuel-pump"></i> <?= $tresorerie['runway_mois'] ?> mois
+            </span>
+            <?php endif; ?>
         </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="rounded-xl bg-gray-50 p-3">
+                <span class="block text-xs text-gray-400">Solde actuel</span>
+                <span class="block text-sm font-bold <?= $tresorerie['solde_actuel'] >= 0 ? 'text-emerald-600' : 'text-rose-600' ?>"><?= formatMontant($tresorerie['solde_actuel']) ?></span>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-3">
+                <span class="block text-xs text-gray-400">Entrées prévues</span>
+                <span class="block text-sm font-bold text-sky-600"><?= formatMontant($tresorerie['entrees_prevues']) ?></span>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-3">
+                <span class="block text-xs text-gray-400">Flux net/mois</span>
+                <span class="block text-sm font-bold <?= $tresorerie['flux_net_moyen'] >= 0 ? 'text-emerald-600' : 'text-rose-600' ?>"><?= formatMontant($tresorerie['flux_net_moyen']) ?></span>
+            </div>
+        </div>
+
+        <?php if ($tresorerie['runway_mois'] !== null): ?>
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-1 text-xs">
+                <span class="text-gray-400"><i class="bi bi-fuel-pump"></i> Runway estimé</span>
+                <strong class="<?= $tresorerie['runway_mois'] > 6 ? 'text-emerald-600' : ($tresorerie['runway_mois'] > 3 ? 'text-amber-600' : 'text-rose-600') ?>">
+                    <?= $tresorerie['runway_mois'] ?> mois
+                </strong>
+            </div>
+            <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div class="h-full rounded-full <?= $tresorerie['runway_mois'] > 6 ? 'bg-emerald-500' : ($tresorerie['runway_mois'] > 3 ? 'bg-amber-500' : 'bg-rose-500') ?>"
+                     style="width: <?= min(100, ($tresorerie['runway_mois'] / 12) * 100) ?>%"></div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($tresorerie['date_rupture']): ?>
+        <div class="flex items-start gap-2 rounded-xl bg-rose-50 text-rose-700 px-3 py-2.5 text-sm mb-4">
+            <i class="bi bi-exclamation-triangle-fill mt-0.5"></i>
+            <span>Rupture de trésorerie estimée dans <strong><?= $tresorerie['mois_avant_rupture'] ?> mois</strong>
+            <span class="text-xs text-rose-500">(~<?= date('M Y', strtotime($tresorerie['date_rupture'])) ?>)</span></span>
+        </div>
+        <?php endif; ?>
+
+        <canvas id="chartTresorerie" height="160"></canvas>
     </div>
 </div>
 
 <!-- Charges URSSAF trimestrielles (micro uniquement) -->
 <?php if (!empty($chargesTrimestrielles)): ?>
-<div class="card border-0 mb-4 intelligence-section">
-    <div class="card-header bg-gradient-intelligence">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card mb-6 overflow-hidden">
+    <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold">
         <i class="bi bi-bank2"></i> Estimation charges URSSAF <?= $annee ?>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
+    <div class="overflow-x-auto">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Trimestre</th>
+                    <th class="text-end">CA</th>
+                    <th class="text-end">URSSAF</th>
+                    <th class="text-end">CFP</th>
+                    <?php if ((bool) getParam('versement_liberatoire_actif', '0')): ?><th class="text-end">VL</th><?php endif; ?>
+                    <th class="text-end">Total</th>
+                    <th>Échéance</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($chargesTrimestrielles as $t): ?>
+                <tr class="<?= $t['est_passe'] ? 'text-muted' : '' ?>">
+                    <td><strong><?= e($t['label']) ?></strong></td>
+                    <td class="text-end"><?= formatMontant($t['ca']) ?></td>
+                    <td class="text-end"><?= formatMontant($t['urssaf']) ?></td>
+                    <td class="text-end"><?= formatMontant($t['cfp']) ?></td>
+                    <?php if ((bool) getParam('versement_liberatoire_actif', '0')): ?>
+                        <td class="text-end"><?= formatMontant($t['versement_liberatoire']) ?></td>
+                    <?php endif; ?>
+                    <td class="text-end fw-bold"><?= formatMontant($t['total_charges']) ?></td>
+                    <td><small><?= formatDate($t['echeance']) ?></small></td>
+                    <td>
+                        <?php if ($t['est_passe']): ?>
+                            <span class="badge bg-success-subtle text-success">Passé</span>
+                        <?php else: ?>
+                            <span class="badge bg-warning-subtle text-warning">À venir</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Analyse clients + Produits -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <!-- Top clients -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+        <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold flex items-center justify-between flex-wrap gap-2">
+            <span><i class="bi bi-people-fill"></i> Analyse clients</span>
+            <div class="flex gap-2">
+                <span class="inline-flex items-center rounded-full bg-white/90 text-gray-700 px-2.5 py-1 text-xs font-medium"><?= $analyseClients['taux_fidelisation'] ?>% fidélisés</span>
+                <span class="inline-flex items-center rounded-full bg-white/90 text-gray-700 px-2.5 py-1 text-xs font-medium">Panier moy : <?= formatMontant($analyseClients['panier_moyen']) ?></span>
+            </div>
+        </div>
+        <?php if (!empty($analyseClients['top_clients'])): ?>
+        <div class="overflow-x-auto">
+            <table class="table table-hover mb-0 align-middle table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th>Trimestre</th>
-                        <th class="text-end">CA</th>
-                        <th class="text-end">URSSAF</th>
-                        <th class="text-end">CFP</th>
-                        <?php if ((bool) getParam('versement_liberatoire_actif', '0')): ?><th class="text-end">VL</th><?php endif; ?>
-                        <th class="text-end">Total</th>
-                        <th>Échéance</th>
-                        <th></th>
+                        <th>Client</th>
+                        <th class="text-center">Score</th>
+                        <th class="text-end">CA total</th>
+                        <th class="text-center">Factures</th>
+                        <th>Dernière</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($chargesTrimestrielles as $t): ?>
-                    <tr class="<?= $t['est_passe'] ? 'text-muted' : '' ?>">
-                        <td><strong><?= e($t['label']) ?></strong></td>
-                        <td class="text-end"><?= formatMontant($t['ca']) ?></td>
-                        <td class="text-end"><?= formatMontant($t['urssaf']) ?></td>
-                        <td class="text-end"><?= formatMontant($t['cfp']) ?></td>
-                        <?php if ((bool) getParam('versement_liberatoire_actif', '0')): ?>
-                            <td class="text-end"><?= formatMontant($t['versement_liberatoire']) ?></td>
-                        <?php endif; ?>
-                        <td class="text-end fw-bold"><?= formatMontant($t['total_charges']) ?></td>
-                        <td><small><?= formatDate($t['echeance']) ?></small></td>
+                    <?php foreach (array_slice($analyseClients['top_clients'], 0, 5) as $client): ?>
+                    <tr>
                         <td>
-                            <?php if ($t['est_passe']): ?>
-                                <span class="badge bg-success-subtle text-success">Passé</span>
+                            <div class="fw-semibold"><?= e($client['entreprise'] ?: trim(($client['prenom'] ?? '') . ' ' . $client['nom'])) ?></div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-<?= $client['niveau'] === 'premium' ? 'success' : ($client['niveau'] === 'regulier' ? 'primary' : 'secondary') ?>">
+                                <?= $client['score'] ?>
+                            </span>
+                        </td>
+                        <td class="text-end fw-bold"><?= formatMontant($client['ca_total']) ?></td>
+                        <td class="text-center"><?= $client['nb_factures'] ?></td>
+                        <td><small class="text-muted"><?= $client['derniere_facture'] ? formatDate($client['derniere_facture']) : '-' ?></small></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+        <div class="text-center py-10 text-gray-400">
+            <i class="bi bi-people text-3xl"></i>
+            <p class="mt-2 mb-0 text-sm">Pas encore assez de données clients.</p>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($analyseClients['clients_dormants'])): ?>
+        <div class="border-t border-gray-100 px-5 py-3">
+            <small class="text-rose-600 font-semibold"><i class="bi bi-moon-stars"></i> Clients dormants (&gt;6 mois) :</small>
+            <?php foreach (array_slice($analyseClients['clients_dormants'], 0, 3) as $d): ?>
+            <span class="badge bg-danger-subtle text-danger ms-1">
+                <?= e($d['entreprise'] ?: trim(($d['prenom'] ?? '') . ' ' . $d['nom'])) ?>
+                <small>(<?= $d['jours_inactif'] ?>j)</small>
+            </span>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Analyse produits -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+        <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold flex items-center justify-between flex-wrap gap-2">
+            <span><i class="bi bi-box-seam-fill"></i> Analyse produits</span>
+            <?php if (!empty($analyseProduits['reappro_urgente'])): ?>
+            <span class="inline-flex items-center rounded-full bg-rose-500 px-2.5 py-1 text-xs font-medium"><?= count($analyseProduits['reappro_urgente']) ?> réappro urgente(s)</span>
+            <?php endif; ?>
+        </div>
+        <?php if (!empty($analyseProduits['best_sellers'])): ?>
+        <div class="overflow-x-auto">
+            <table class="table table-hover mb-0 align-middle table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produit</th>
+                        <th class="text-center">Vendus</th>
+                        <th class="text-end">CA généré</th>
+                        <th class="text-end">Marge</th>
+                        <th class="text-center">Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_slice($analyseProduits['best_sellers'], 0, 5) as $p): ?>
+                    <tr>
+                        <td>
+                            <div class="fw-semibold"><?= e($p['nom']) ?></div>
+                            <small class="text-muted"><?= e($p['reference'] ?? '') ?></small>
+                        </td>
+                        <td class="text-center"><?= (int) $p['total_vendu'] ?></td>
+                        <td class="text-end"><?= formatMontant($p['ca_genere']) ?></td>
+                        <td class="text-end">
+                            <span class="<?= $p['marge_pct'] > 30 ? 'text-success' : ($p['marge_pct'] > 10 ? 'text-warning' : 'text-danger') ?>">
+                                <?= $p['marge_pct'] ?>%
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <?php if ($p['gestion_stock']): ?>
+                                <span class="badge bg-<?= (float)$p['stock_actuel'] <= (float)$p['seuil_alerte'] ? 'danger' : 'success' ?>-subtle text-<?= (float)$p['stock_actuel'] <= (float)$p['seuil_alerte'] ? 'danger' : 'success' ?>">
+                                    <?= (int) $p['stock_actuel'] ?>
+                                </span>
                             <?php else: ?>
-                                <span class="badge bg-warning-subtle text-warning">À venir</span>
+                                <small class="text-muted">-</small>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -909,146 +925,24 @@ include 'header.php';
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Analyse clients + Produits -->
-<div class="row g-3 mb-4">
-    <!-- Top clients -->
-    <div class="col-lg-6">
-        <div class="card border-0 h-100 intelligence-section">
-            <div class="card-header bg-gradient-intelligence d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-people-fill"></i> Analyse clients</span>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-white text-dark"><?= $analyseClients['taux_fidelisation'] ?>% fidélisés</span>
-                    <span class="badge bg-white text-dark">Panier moy: <?= formatMontant($analyseClients['panier_moyen']) ?></span>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <?php if (!empty($analyseClients['top_clients'])): ?>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Client</th>
-                                <th class="text-center">Score</th>
-                                <th class="text-end">CA total</th>
-                                <th class="text-center">Factures</th>
-                                <th>Dernière</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach (array_slice($analyseClients['top_clients'], 0, 5) as $client): ?>
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold"><?= e($client['entreprise'] ?: trim(($client['prenom'] ?? '') . ' ' . $client['nom'])) ?></div>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-<?= $client['niveau'] === 'premium' ? 'success' : ($client['niveau'] === 'regulier' ? 'primary' : 'secondary') ?>">
-                                        <?= $client['score'] ?>
-                                    </span>
-                                </td>
-                                <td class="text-end fw-bold"><?= formatMontant($client['ca_total']) ?></td>
-                                <td class="text-center"><?= $client['nb_factures'] ?></td>
-                                <td><small class="text-muted"><?= $client['derniere_facture'] ? formatDate($client['derniere_facture']) : '-' ?></small></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php else: ?>
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-people fs-2rem"></i>
-                    <p class="mt-2 mb-0">Pas encore assez de données clients.</p>
-                </div>
-                <?php endif; ?>
-
-                <?php if (!empty($analyseClients['clients_dormants'])): ?>
-                <div class="border-top px-3 py-2">
-                    <small class="text-danger fw-semibold"><i class="bi bi-moon-stars"></i> Clients dormants (>6 mois) :</small>
-                    <?php foreach (array_slice($analyseClients['clients_dormants'], 0, 3) as $d): ?>
-                    <span class="badge bg-danger-subtle text-danger ms-1">
-                        <?= e($d['entreprise'] ?: trim(($d['prenom'] ?? '') . ' ' . $d['nom'])) ?>
-                        <small>(<?= $d['jours_inactif'] ?>j)</small>
-                    </span>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
+        <?php else: ?>
+        <div class="text-center py-10 text-gray-400">
+            <i class="bi bi-box-seam text-3xl"></i>
+            <p class="mt-2 mb-0 text-sm">Pas encore de données de vente produits.</p>
         </div>
-    </div>
+        <?php endif; ?>
 
-    <!-- Analyse produits -->
-    <div class="col-lg-6">
-        <div class="card border-0 h-100 intelligence-section">
-            <div class="card-header bg-gradient-intelligence d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-box-seam-fill"></i> Analyse produits</span>
-                <?php if (!empty($analyseProduits['reappro_urgente'])): ?>
-                <span class="badge bg-danger"><?= count($analyseProduits['reappro_urgente']) ?> réappro urgente(s)</span>
-                <?php endif; ?>
-            </div>
-            <div class="card-body p-0">
-                <?php if (!empty($analyseProduits['best_sellers'])): ?>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Produit</th>
-                                <th class="text-center">Vendus</th>
-                                <th class="text-end">CA généré</th>
-                                <th class="text-end">Marge</th>
-                                <th class="text-center">Stock</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach (array_slice($analyseProduits['best_sellers'], 0, 5) as $p): ?>
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold"><?= e($p['nom']) ?></div>
-                                    <small class="text-muted"><?= e($p['reference'] ?? '') ?></small>
-                                </td>
-                                <td class="text-center"><?= (int) $p['total_vendu'] ?></td>
-                                <td class="text-end"><?= formatMontant($p['ca_genere']) ?></td>
-                                <td class="text-end">
-                                    <span class="<?= $p['marge_pct'] > 30 ? 'text-success' : ($p['marge_pct'] > 10 ? 'text-warning' : 'text-danger') ?>">
-                                        <?= $p['marge_pct'] ?>%
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <?php if ($p['gestion_stock']): ?>
-                                        <span class="badge bg-<?= (float)$p['stock_actuel'] <= (float)$p['seuil_alerte'] ? 'danger' : 'success' ?>-subtle text-<?= (float)$p['stock_actuel'] <= (float)$p['seuil_alerte'] ? 'danger' : 'success' ?>">
-                                            <?= (int) $p['stock_actuel'] ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <small class="text-muted">-</small>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php else: ?>
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-box-seam fs-2rem"></i>
-                    <p class="mt-2 mb-0">Pas encore de données de vente produits.</p>
-                </div>
-                <?php endif; ?>
-
-                <?php if (!empty($analyseProduits['stock_mort'])): ?>
-                <div class="border-top px-3 py-2">
-                    <small class="text-warning fw-semibold"><i class="bi bi-archive"></i> Stock mort (>90j sans mouvement) :</small>
-                    <?php foreach (array_slice($analyseProduits['stock_mort'], 0, 3) as $sm): ?>
-                    <span class="badge bg-warning-subtle text-warning ms-1">
-                        <?= e($sm['nom']) ?>
-                        <small>(<?= (int) $sm['stock_actuel'] ?> unités)</small>
-                    </span>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
+        <?php if (!empty($analyseProduits['stock_mort'])): ?>
+        <div class="border-t border-gray-100 px-5 py-3">
+            <small class="text-amber-600 font-semibold"><i class="bi bi-archive"></i> Stock mort (&gt;90j sans mouvement) :</small>
+            <?php foreach (array_slice($analyseProduits['stock_mort'], 0, 3) as $sm): ?>
+            <span class="badge bg-warning-subtle text-warning ms-1">
+                <?= e($sm['nom']) ?>
+                <small>(<?= (int) $sm['stock_actuel'] ?> unités)</small>
+            </span>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -1073,19 +967,19 @@ include 'header.php';
     $nbCritiques = count(array_filter($recommandationsIA, fn($r) => in_array($r['type'], ['danger', 'warning'])));
     $nbTotal = count($recommandationsIA);
 ?>
-<div class="card border-0 mb-4 intelligence-section">
-    <div class="card-header bg-gradient-intelligence d-flex justify-content-between align-items-center">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card mb-6 overflow-hidden">
+    <div class="px-5 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold flex items-center justify-between flex-wrap gap-2">
         <span>
             <i class="bi bi-stars"></i> Suggestions intelligentes
-            <small class="text-white-50 ms-2"><?= $nbTotal ?> suggestion<?= $nbTotal > 1 ? 's' : '' ?> basée<?= $nbTotal > 1 ? 's' : '' ?> sur vos données</small>
+            <span class="text-white/70 font-normal ms-2 hidden sm:inline"><?= $nbTotal ?> suggestion<?= $nbTotal > 1 ? 's' : '' ?> basée<?= $nbTotal > 1 ? 's' : '' ?> sur vos données</span>
         </span>
         <?php if ($nbCritiques > 0): ?>
-        <span class="badge bg-danger"><?= $nbCritiques ?> action<?= $nbCritiques > 1 ? 's' : '' ?> recommandée<?= $nbCritiques > 1 ? 's' : '' ?></span>
+        <span class="inline-flex items-center rounded-full bg-rose-500 px-2.5 py-1 text-xs font-medium"><?= $nbCritiques ?> action<?= $nbCritiques > 1 ? 's' : '' ?> recommandée<?= $nbCritiques > 1 ? 's' : '' ?></span>
         <?php endif; ?>
     </div>
-    <div class="card-body">
+    <div class="p-5">
         <!-- Filtres par catégorie -->
-        <div class="d-flex flex-wrap gap-2 mb-3" id="ia-filters">
+        <div class="flex flex-wrap gap-2 mb-4" id="ia-filters">
             <button class="btn btn-sm btn-primary active" data-ia-filter="all">
                 <i class="bi bi-grid-3x3-gap"></i> Toutes <span class="badge bg-white text-primary ms-1"><?= $nbTotal ?></span>
             </button>
@@ -1104,19 +998,19 @@ include 'header.php';
         $critiques = array_filter($recommandationsIA, fn($r) => $r['type'] === 'danger');
         if (!empty($critiques)):
         ?>
-        <div class="alert alert-danger d-flex align-items-start gap-2 py-2 mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+        <div class="flex items-start gap-2 rounded-xl bg-rose-50 text-rose-700 px-4 py-3 text-sm mb-4">
+            <i class="bi bi-exclamation-triangle-fill mt-0.5"></i>
             <div>
                 <strong><?= count($critiques) ?> alerte<?= count($critiques) > 1 ? 's' : '' ?> critique<?= count($critiques) > 1 ? 's' : '' ?></strong> —
                 <?php foreach ($critiques as $c): ?>
-                    <?= e($c['titre']) ?><?= !empty($c['lien']) ? ' <a href="' . e($c['lien']) . '" class="alert-link">Agir →</a>' : '' ?>.
+                    <?= e($c['titre']) ?><?= !empty($c['lien']) ? ' <a href="' . e($c['lien']) . '" class="text-rose-800 font-semibold underline">Agir →</a>' : '' ?>.
                 <?php endforeach; ?>
             </div>
         </div>
         <?php endif; ?>
 
         <!-- Cartes suggestions -->
-        <div class="row g-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <?php foreach ($recommandationsIA as $i => $reco):
                 $typeColors = [
                     'danger'  => ['bg' => 'rgba(220,53,69,0.08)', 'border' => '#dc3545', 'icon_bg' => '#dc3545'],
@@ -1128,8 +1022,8 @@ include 'header.php';
                 $cat = $reco['categorie'] ?? 'general';
                 $catMeta = $catLabels[$cat] ?? $catLabels['general'];
             ?>
-            <div class="col-md-6 col-xl-4 ia-card" data-ia-cat="<?= $cat ?>" <?= $i >= 6 ? 'style="display:none"' : '' ?>>
-                <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background:<?= $tc['bg'] ?>;border-left:3px solid <?= $tc['border'] ?>">
+            <div class="ia-card" data-ia-cat="<?= $cat ?>" <?= $i >= 6 ? 'style="display:none"' : '' ?>>
+                <div class="flex gap-3 rounded-xl p-3.5 h-100" style="background:<?= $tc['bg'] ?>;border-left:3px solid <?= $tc['border'] ?>">
                     <div class="flex-shrink-0">
                         <div class="d-flex align-items-center justify-content-center rounded-circle text-white icon-circle-38" style="background:<?= $tc['icon_bg'] ?>">
                             <i class="bi bi-<?= e($reco['icon']) ?>"></i>
@@ -1153,7 +1047,7 @@ include 'header.php';
         </div>
 
         <?php if ($nbTotal > 6): ?>
-        <div class="text-center mt-3">
+        <div class="text-center mt-4">
             <button class="btn btn-sm btn-outline-primary" id="ia-show-all">
                 <i class="bi bi-chevron-down"></i> Voir les <?= $nbTotal - 6 ?> autres suggestion<?= ($nbTotal - 6) > 1 ? 's' : '' ?>
             </button>
@@ -1164,42 +1058,28 @@ include 'header.php';
 <?php endif; ?>
 
 <!-- Raccourcis action rapide -->
-<div class="card border-0 mb-4">
-    <div class="card-body">
-        <div class="row g-2 text-center">
-            <div class="col">
-                <a href="transactions.php?action=ajouter&type=recette" class="btn btn-outline-success w-100">
-                    <i class="bi bi-plus-circle"></i><br><small>Saisir une recette</small>
-                </a>
-            </div>
-            <div class="col">
-                <a href="transactions.php?action=ajouter&type=depense" class="btn btn-outline-danger w-100">
-                    <i class="bi bi-dash-circle"></i><br><small>Saisir une dépense</small>
-                </a>
-            </div>
-            <div class="col">
-                <a href="devis.php?action=nouveau" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-file-earmark-text"></i><br><small>Créer un devis</small>
-                </a>
-            </div>
-            <div class="col">
-                <a href="factures.php?action=nouvelle" class="btn btn-outline-info w-100">
-                    <i class="bi bi-receipt"></i><br><small>Créer une facture</small>
-                </a>
-            </div>
-            <div class="col">
-                <a href="rapports.php?annee=<?= $annee ?>" class="btn btn-outline-warning w-100">
-                    <i class="bi bi-bar-chart-line"></i><br><small>Voir les rapports</small>
-                </a>
-            </div>
-            <?php if ($cpModuleEnabled): ?>
-            <div class="col">
-                <a href="conges.php" class="btn btn-outline-secondary w-100">
-                    <i class="bi bi-calendar2-check"></i><br><small>Gérer les CP</small>
-                </a>
-            </div>
-            <?php endif; ?>
-        </div>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-card p-5 mb-2">
+    <div class="grid grid-cols-2 sm:grid-cols-3 <?= $cpModuleEnabled ? 'xl:grid-cols-6' : 'xl:grid-cols-5' ?> gap-3 text-center">
+        <a href="transactions.php?action=ajouter&type=recette" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-emerald-600 hover:bg-emerald-50 transition">
+            <i class="bi bi-plus-circle text-lg"></i><small class="text-xs font-medium">Saisir une recette</small>
+        </a>
+        <a href="transactions.php?action=ajouter&type=depense" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-rose-600 hover:bg-rose-50 transition">
+            <i class="bi bi-dash-circle text-lg"></i><small class="text-xs font-medium">Saisir une dépense</small>
+        </a>
+        <a href="devis.php?action=nouveau" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-brand-600 hover:bg-brand-50 transition">
+            <i class="bi bi-file-earmark-text text-lg"></i><small class="text-xs font-medium">Créer un devis</small>
+        </a>
+        <a href="factures.php?action=nouvelle" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-sky-600 hover:bg-sky-50 transition">
+            <i class="bi bi-receipt text-lg"></i><small class="text-xs font-medium">Créer une facture</small>
+        </a>
+        <a href="rapports.php?annee=<?= $annee ?>" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-amber-600 hover:bg-amber-50 transition">
+            <i class="bi bi-bar-chart-line text-lg"></i><small class="text-xs font-medium">Voir les rapports</small>
+        </a>
+        <?php if ($cpModuleEnabled): ?>
+        <a href="conges.php" class="flex flex-col items-center gap-1.5 rounded-xl border border-gray-100 py-4 text-gray-600 hover:bg-gray-50 transition">
+            <i class="bi bi-calendar2-check text-lg"></i><small class="text-xs font-medium">Gérer les CP</small>
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -1260,5 +1140,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
 <?php include 'footer.php'; ?>

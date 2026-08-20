@@ -108,15 +108,20 @@ include 'commercial_header.php';
 <?php
 $filtreStatut = $_GET['statut'] ?? '';
 $filtreRecherche = $_GET['recherche'] ?? '';
-$commandesList = getCommandesList(['statut' => $filtreStatut, 'recherche' => $filtreRecherche]);
-$totalHT = array_sum(array_map(fn($c) => (float)$c['montant_ttc'], $commandesList));
+$listFiltres = ['statut' => $filtreStatut, 'recherche' => $filtreRecherche];
+$perPage = 30;
+$commandesStats = getCommandesStats($listFiltres);
+$totalPages = max(1, (int) ceil($commandesStats['nb'] / $perPage));
+$page = max(1, min((int) ($_GET['page'] ?? 1), $totalPages));
+$commandesList = getCommandesList($listFiltres + ['limit' => $perPage, 'offset' => ($page - 1) * $perPage]);
+$totalHT = $commandesStats['total_ttc'];
 ?>
 
 <div class="hero-banner mb-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h2 class="mb-1"><i class="bi bi-cart-check"></i> Commandes</h2>
-            <p class="text-muted mb-0"><?= count($commandesList) ?> commande<?= count($commandesList) > 1 ? 's' : '' ?></p>
+            <p class="text-muted mb-0"><?= $commandesStats['nb'] ?> commande<?= $commandesStats['nb'] > 1 ? 's' : '' ?></p>
         </div>
         <a href="?action=nouvelle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nouvelle commande</a>
     </div>
@@ -124,9 +129,9 @@ $totalHT = array_sum(array_map(fn($c) => (float)$c['montant_ttc'], $commandesLis
 
 <!-- Stat cards -->
 <?php
-$nbEnAttente = count(array_filter($commandesList, fn($c) => $c['statut'] === 'en_attente'));
-$nbConfirmee = count(array_filter($commandesList, fn($c) => $c['statut'] === 'confirmee'));
-$nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livree'));
+$nbEnAttente = $commandesStats['nb_en_attente'];
+$nbConfirmee = $commandesStats['nb_confirmee'];
+$nbLivree = $commandesStats['nb_livree'];
 ?>
 <div class="row g-3 mb-4">
     <div class="col-md-3 col-6">
@@ -216,7 +221,7 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
     </div>
 </div>
 
-<?php if (empty($commandesList)): ?>
+<?php if ($commandesStats['nb'] === 0): ?>
     <div class="card border-0">
         <div class="card-body text-center empty-state">
             <div class="empty-state-icon">
@@ -241,7 +246,7 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
             <div class="commercial-table-card__stats">
                 <span class="commercial-table-pill"><i class="bi bi-hourglass-split"></i> En attente : <strong><?= $nbEnAttente ?></strong></span>
                 <span class="commercial-table-pill"><i class="bi bi-box-seam"></i> Confirmées : <strong><?= $nbConfirmee ?></strong></span>
-                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= count($commandesList) ?></strong></span>
+                <span class="commercial-table-pill"><i class="bi bi-collection"></i> Total : <strong><?= $commandesStats['nb'] ?></strong></span>
             </div>
         </div>
         <div class="table-responsive">
@@ -277,6 +282,11 @@ $nbLivree = count(array_filter($commandesList, fn($c) => $c['statut'] === 'livre
                 </tbody>
             </table>
         </div>
+        <?php if ($totalPages > 1): ?>
+        <div class="card-footer bg-white py-3">
+            <?= renderPagination($page, $totalPages, $listFiltres) ?>
+        </div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 

@@ -1,24 +1,20 @@
-    </main><!-- /.app-content -->
+            </main><!-- /.app-content -->
 
-    <footer class="py-4 footer-blue border-top">
-        <div class="container-fluid">
-            <div class="row align-items-center text-center text-md-start">
-                <div class="col-md-4">
-                    <small><i class="bi bi-briefcase-fill"></i> <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></small>
+            <footer class="footer-blue border-t border-gray-200 bg-white py-4 px-4 sm:px-6">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+                    <span><i class="bi bi-briefcase-fill"></i> <?= e(APP_NAME) ?> v<?= e(APP_VERSION) ?></span>
+                    <span><?= e(getParam('nom_entreprise', 'Mon Activité')) ?></span>
+                    <span>
+                        <i class="bi bi-shield-check"></i> Connexion sécurisée · <?= date('Y') ?>
+                        · <a href="<?= BASE_URL ?>mentions-legales.php" class="text-gray-400" target="_blank">Mentions légales</a>
+                    </span>
                 </div>
-                <div class="col-md-4 text-center">
-                    <small><?= e(getParam('nom_entreprise', 'Mon Activité')) ?></small>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <small><i class="bi bi-shield-check"></i> Connexion sécurisée · <?= date('Y') ?></small>
-                </div>
-            </div>
-        </div>
-    </footer>
+            </footer>
+    </div><!-- /.tw-app -->
 
     <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true" data-version="<?= e(APP_VERSION) ?>">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content news-modal">
+            <div class="modal-content news-modal rounded-2xl border-0 shadow-xl">
                 <div class="modal-header border-0 pb-0">
                     <div>
                         <div class="small text-uppercase text-primary fw-bold mb-1">Nouveauté v<?= e(APP_VERSION) ?></div>

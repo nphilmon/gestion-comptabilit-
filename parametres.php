@@ -31,6 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $champs = [
         'nom_entreprise', 'siret', 'activite', 'adresse_entreprise',
+        'code_postal', 'ville', 'email_entreprise', 'telephone_entreprise',
+        'hebergeur_nom', 'hebergeur_adresse', 'hebergeur_site',
         'forme_juridique', 'regime', 'regime_imposition',
         'plafond_ca', 'taux_abattement',
         'taux_cotisations_sociales', 'taux_cfp',
@@ -125,6 +127,26 @@ include 'header.php';
                     <textarea name="adresse_entreprise" class="form-control" rows="2"><?= e(getParam('adresse_entreprise')) ?></textarea>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label">Code postal</label>
+                    <input type="text" name="code_postal" class="form-control" maxlength="10"
+                           value="<?= e(getParam('code_postal')) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ville</label>
+                    <input type="text" name="ville" class="form-control"
+                           value="<?= e(getParam('ville')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Email de contact</label>
+                    <input type="email" name="email_entreprise" class="form-control"
+                           value="<?= e(getParam('email_entreprise')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Téléphone de contact</label>
+                    <input type="text" name="telephone_entreprise" class="form-control"
+                           value="<?= e(getParam('telephone_entreprise')) ?>">
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Conditions de paiement</label>
                     <input type="text" name="conditions_paiement" class="form-control"
                            value="<?= e(getParam('conditions_paiement', 'Paiement à réception')) ?>">
@@ -171,6 +193,33 @@ include 'header.php';
                 </div>
                 <div class="col-md-12">
                     <small class="text-muted">Renseigne un chemin local relatif au projet, par exemple <code>uploads/logo.png</code> ou <code>assets/logo.jpg</code>.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 mb-4">
+        <div class="card-header"><i class="bi bi-hdd-network"></i> Hébergement (page Mentions légales)</div>
+        <div class="card-body">
+            <p class="text-muted small">
+                Ces informations alimentent la page publique <code>mentions-legales.php</code>, obligatoire au regard de la loi
+                pour la confiance dans l'économie numérique (LCEN). Renseigne l'hébergeur réel de ce site.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nom de l'hébergeur</label>
+                    <input type="text" name="hebergeur_nom" class="form-control" placeholder="ex: OVH SAS"
+                           value="<?= e(getParam('hebergeur_nom')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Adresse de l'hébergeur</label>
+                    <input type="text" name="hebergeur_adresse" class="form-control" placeholder="ex: 2 rue Kellermann, 59100 Roubaix, France"
+                           value="<?= e(getParam('hebergeur_adresse')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Site web de l'hébergeur</label>
+                    <input type="text" name="hebergeur_site" class="form-control" placeholder="ex: https://www.ovhcloud.com"
+                           value="<?= e(getParam('hebergeur_site')) ?>">
                 </div>
             </div>
         </div>

@@ -708,4 +708,18 @@ document.addEventListener('DOMContentLoaded', function() {
         syncNavbarScrollState();
         window.addEventListener('scroll', syncNavbarScrollState, { passive: true });
     }
+
+    // =============================================================
+    // REFONTE PILOTE — Panneau de navigation mobile (Tailwind navbar)
+    // =============================================================
+    const mobileNavToggle = document.querySelector('[data-mobile-nav-toggle]');
+    const mobileNavPanel = document.querySelector('[data-mobile-nav-panel]');
+
+    if (mobileNavToggle && mobileNavPanel) {
+        mobileNavToggle.addEventListener('click', function() {
+            const isOpen = !mobileNavPanel.classList.contains('hidden');
+            mobileNavPanel.classList.toggle('hidden');
+            mobileNavToggle.setAttribute('aria-expanded', String(!isOpen));
+        });
+    }
 });
