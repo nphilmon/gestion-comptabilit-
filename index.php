@@ -490,7 +490,7 @@ include 'header.php';
             <i class="bi bi-graph-up text-brand-600"></i> Évolution mensuelle <?= $annee ?>
         </div>
         <div class="p-5">
-            <canvas id="chartMensuel" height="280"></canvas>
+            <div class="relative h-[280px]"><canvas id="chartMensuel"></canvas></div>
         </div>
     </div>
     <div class="space-y-4">
@@ -498,7 +498,7 @@ include 'header.php';
             <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800"><i class="bi bi-pie-chart text-brand-600"></i> Recettes par catégorie</div>
             <div class="p-5">
                 <?php if (!empty($recettesParCat)): ?>
-                    <canvas id="chartRecettes" height="180"></canvas>
+                    <div class="relative h-[180px]"><canvas id="chartRecettes"></canvas></div>
                 <?php else: ?>
                     <p class="text-sm text-gray-400 text-center mb-0">Aucune recette</p>
                 <?php endif; ?>
@@ -508,7 +508,7 @@ include 'header.php';
             <div class="px-5 py-4 border-b border-gray-50 text-sm font-semibold text-gray-800"><i class="bi bi-pie-chart text-brand-600"></i> Dépenses par catégorie</div>
             <div class="p-5">
                 <?php if (!empty($depensesParCat)): ?>
-                    <canvas id="chartDepenses" height="180"></canvas>
+                    <div class="relative h-[180px]"><canvas id="chartDepenses"></canvas></div>
                 <?php else: ?>
                     <p class="text-sm text-gray-400 text-center mb-0">Aucune dépense</p>
                 <?php endif; ?>
@@ -714,7 +714,11 @@ include 'header.php';
         </div>
         <?php endif; ?>
 
-        <canvas id="chartProjection" height="180"></canvas>
+        <?php if ($projectionCA['total_actuel'] > 0): ?>
+            <div class="relative h-[180px]"><canvas id="chartProjection"></canvas></div>
+        <?php else: ?>
+            <p class="text-sm text-gray-400 text-center mb-0 py-6">Pas encore de recette enregistrée en <?= $annee ?> — le graphique s'affichera dès votre première recette.</p>
+        <?php endif; ?>
     </div>
 
     <!-- Trésorerie prévisionnelle -->
@@ -773,7 +777,11 @@ include 'header.php';
         </div>
         <?php endif; ?>
 
-        <canvas id="chartTresorerie" height="160"></canvas>
+        <?php if ($tresorerie['solde_actuel'] != 0 || $tresorerie['flux_net_moyen'] != 0): ?>
+            <div class="relative h-[160px]"><canvas id="chartTresorerie"></canvas></div>
+        <?php else: ?>
+            <p class="text-sm text-gray-400 text-center mb-0 py-6">Pas encore de mouvement de trésorerie enregistré — le graphique s'affichera dès vos premières transactions.</p>
+        <?php endif; ?>
     </div>
 </div>
 
