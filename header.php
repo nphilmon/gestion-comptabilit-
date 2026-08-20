@@ -170,7 +170,7 @@ function navBtnClasses(bool $active): string {
                     </form>
 
                     <div class="dropdown">
-                        <button class="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-brand-700 shadow-sm hover:bg-blue-50 hover:shadow transition focus:outline-none focus:ring-2 focus:ring-white/60"
+                        <button class="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-brand-700 shadow-md hover:bg-blue-50 hover:shadow-lg hover:-translate-y-px transition focus:outline-none focus:ring-2 focus:ring-white/60"
                                 type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-plus-circle-fill"></i>
                             <span class="hidden sm:inline">Créer</span>
@@ -194,7 +194,7 @@ function navBtnClasses(bool $active): string {
                     </div>
 
                     <div class="dropdown hidden sm:block">
-                        <button class="flex h-10 items-center gap-2 rounded-lg border border-white/25 bg-white/15 pl-2 pr-3 text-sm text-white hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
+                        <button class="flex h-10 items-center gap-2 rounded-lg border border-white/25 bg-white/15 pl-2 pr-3 text-sm text-white shadow-md hover:bg-white/25 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/40 transition"
                                 type="button" data-bs-toggle="dropdown">
                             <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/25">
                                 <i class="bi bi-person-fill"></i>
