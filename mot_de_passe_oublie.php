@@ -174,5 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="<?= BASE_URL ?>login.php"><i class="bi bi-arrow-left"></i> Retour à la connexion</a>
         </div>
     </main>
+
+    <?php include __DIR__ . '/cookie_notice.php'; ?>
 </body>
 </html>

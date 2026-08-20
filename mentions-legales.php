@@ -298,7 +298,7 @@ $hebergeurSite = getParam('hebergeur_site', '');
             </p>
         </div>
 
-        <div class="legal-card">
+        <div class="legal-card" id="cookies">
             <h2><i class="bi bi-cookie"></i> 5. Cookies</h2>
             <p>
                 <?= e(APP_NAME) ?> utilise uniquement un cookie de session strictement nécessaire au fonctionnement de
