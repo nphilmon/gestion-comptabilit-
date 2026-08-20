@@ -207,5 +207,7 @@ if ($token === '' || !$user) {
         });
     }
     </script>
+
+    <?php include __DIR__ . '/cookie_notice.php'; ?>
 </body>
 </html>
