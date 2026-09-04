@@ -137,6 +137,26 @@ function initializeDatabaseSchema(PDO $pdo): void {
             CONSTRAINT `fk_password_resets_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+        // Double authentification (TOTP) — obligatoire pour tous les comptes.
+        if (!columnExists($pdo, 'users', 'totp_secret')) {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `totp_secret` VARCHAR(64) DEFAULT NULL AFTER `derniere_connexion`");
+        }
+        if (!columnExists($pdo, 'users', 'totp_enabled')) {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `totp_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `totp_secret`");
+        }
+        if (!columnExists($pdo, 'users', 'totp_confirmed_at')) {
+            $pdo->exec("ALTER TABLE `users` ADD COLUMN `totp_confirmed_at` DATETIME DEFAULT NULL AFTER `totp_enabled`");
+        }
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `user_backup_codes` (
+            `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT UNSIGNED NOT NULL,
+            `code_hash` VARCHAR(255) NOT NULL,
+            `used_at` DATETIME DEFAULT NULL,
+            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_user_backup_codes_user` (`user_id`),
+            CONSTRAINT `fk_user_backup_codes_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
         $pdo->exec("CREATE TABLE IF NOT EXISTS `exercices` (
             `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             `nom` VARCHAR(120) NOT NULL,

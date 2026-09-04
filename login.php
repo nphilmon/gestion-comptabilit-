@@ -36,13 +36,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!checkLoginAttempts($email)) {
         $wait = max(1, ceil(getLoginWaitTime($email) / 60));
         $error = "Trop de tentatives. Réessayez dans $wait minute(s).";
-    } elseif (attemptLogin($email, $password)) {
-        $redirect = $_SESSION['redirect_after_login'] ?? BASE_URL;
-        unset($_SESSION['redirect_after_login']);
-        header('Location: ' . $redirect);
-        exit;
     } else {
-        $error = 'Email ou mot de passe incorrect.';
+        $status = attemptLogin($email, $password);
+        if ($status === '2fa_required') {
+            header('Location: ' . BASE_URL . 'verifier_2fa.php');
+            exit;
+        } elseif ($status === 'setup_required') {
+            header('Location: ' . BASE_URL . 'configurer_2fa.php');
+            exit;
+        } else {
+            $error = 'Email ou mot de passe incorrect.';
+        }
     }
 }
 ?>

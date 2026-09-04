@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS `users` (
     `role` ENUM('admin', 'comptable', 'lecteur') NOT NULL DEFAULT 'comptable',
     `actif` TINYINT(1) DEFAULT 1,
     `derniere_connexion` DATETIME DEFAULT NULL,
+    `totp_secret` VARCHAR(64) DEFAULT NULL,
+    `totp_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `totp_confirmed_at` DATETIME DEFAULT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -68,6 +71,20 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Aucun utilisateur par défaut : setup.php détecte une base sans
 -- utilisateur et guide la création du premier compte administrateur
 -- avec un mot de passe choisi par l'installateur.
+
+-- -------------------------------------------------------------
+-- Table des codes de secours pour la double authentification (TOTP)
+-- Chaque code n'est utilisable qu'une fois ; seul le hash est stocké.
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `user_backup_codes` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT UNSIGNED NOT NULL,
+    `code_hash` VARCHAR(255) NOT NULL,
+    `used_at` DATETIME DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_user_backup_codes_user` (`user_id`),
+    CONSTRAINT `fk_user_backup_codes_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 -- -------------------------------------------------------------
 -- Table des jetons de réinitialisation de mot de passe

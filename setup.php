@@ -80,7 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logActivity((int) $db->lastInsertId(), 'setup', 'Compte administrateur créé');
 
                 attemptLogin($email, $pw);
-                header('Location: ' . BASE_URL . 'setup.php?step=2');
+                // La 2FA est obligatoire avant de poursuivre l'assistant.
+                $_SESSION['redirect_after_login'] = BASE_URL . 'setup.php?step=2';
+                header('Location: ' . BASE_URL . 'configurer_2fa.php');
                 exit;
             }
         }

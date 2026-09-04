@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             logActivity((int) $db->lastInsertId(), 'inscription', 'Nouveau compte créé');
 
-            // Connexion automatique
+            // Connexion automatique, puis configuration obligatoire de la 2FA
             attemptLogin($email, $password);
 
-            header('Location: ' . BASE_URL);
+            header('Location: ' . BASE_URL . 'configurer_2fa.php');
             exit;
         }
     }

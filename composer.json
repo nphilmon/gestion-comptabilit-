@@ -1,5 +1,8 @@
 {
     "require-dev": {
         "phpunit/phpunit": "^11"
+    },
+    "require": {
+        "bacon/bacon-qr-code": "^3.1"
     }
 }

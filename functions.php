@@ -4,6 +4,7 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/Totp.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_strict_mode', '1');
@@ -57,7 +58,7 @@ function getCurrentUser(): ?array {
     static $user = null;
     if ($user === null) {
         $db = getDB();
-        $stmt = $db->prepare('SELECT id, nom, email, role, actif FROM users WHERE id = ? AND actif = 1');
+        $stmt = $db->prepare('SELECT id, nom, email, role, actif, totp_enabled FROM users WHERE id = ? AND actif = 1');
         $stmt->execute([$_SESSION['user_id']]);
         $user = $stmt->fetch() ?: null;
         if (!$user) {
@@ -71,11 +72,21 @@ function getCurrentUser(): ?array {
 
 function requireLogin(): void {
     checkSessionTimeout();
-    if (!isLoggedIn() || !getCurrentUser()) {
+    $user = isLoggedIn() ? getCurrentUser() : null;
+    if (!$user) {
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
         $_SESSION = [];
         session_destroy();
         header('Location: ' . BASE_URL . 'login.php');
+        exit;
+    }
+    // Filet de sécurité : la 2FA est obligatoire pour tous les comptes. Une
+    // session déjà ouverte avant l'activation de cette exigence (ou pour un
+    // compte dont la 2FA aurait été désactivée entre-temps) est redirigée
+    // vers la configuration obligatoire plutôt que de continuer sans 2FA.
+    if (empty($user['totp_enabled'])) {
+        $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
+        header('Location: ' . BASE_URL . 'configurer_2fa.php');
         exit;
     }
 }
@@ -179,27 +190,32 @@ function clearLoginAttempts(?string $identifier = null): void {
     clearRateLimitHits('login', $identifier);
 }
 
-function attemptLogin(string $email, string $password): bool {
+/**
+ * Vérifie le mot de passe et prépare la connexion, sans jamais la finaliser
+ * directement : la double authentification (TOTP) étant obligatoire pour
+ * tous les comptes, la session complète n'est ouverte qu'après succès de
+ * finalizeLogin(), une fois le code TOTP (ou un code de secours) vérifié
+ * par verifier_2fa.php — ou juste après la configuration initiale
+ * obligatoire par configurer_2fa.php pour un compte qui n'a pas encore
+ * activé la 2FA.
+ *
+ * Retourne :
+ *  - 'invalid'        : email/mot de passe incorrect ou compte inactif
+ *  - '2fa_required'    : mot de passe correct, code TOTP à saisir
+ *  - 'setup_required'  : mot de passe correct, 2FA pas encore activée
+ */
+function attemptLogin(string $email, string $password): string {
     $db = getDB();
-    $stmt = $db->prepare('SELECT id, nom, email, password_hash, role, actif FROM users WHERE LOWER(email) = LOWER(?)');
+    $stmt = $db->prepare('SELECT id, nom, email, password_hash, role, actif, totp_enabled FROM users WHERE LOWER(email) = LOWER(?)');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
     if (!$user || !$user['actif'] || !password_verify($password, $user['password_hash'])) {
         recordLoginAttempt($email);
-        return false;
+        return 'invalid';
     }
 
-    // Regénérer l'ID de session pour prévenir la fixation de session
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['user_nom'] = $user['nom'];
-    $_SESSION['user_role'] = $user['role'];
-    $_SESSION['last_activity'] = time();
     clearLoginAttempts($email);
-
-    // Mettre à jour la dernière connexion
-    $db->prepare('UPDATE users SET derniere_connexion = NOW() WHERE id = ?')->execute([$user['id']]);
 
     // Rehacher si nécessaire
     if (password_needs_rehash($user['password_hash'], PASSWORD_BCRYPT)) {
@@ -207,7 +223,69 @@ function attemptLogin(string $email, string $password): bool {
         $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$newHash, $user['id']]);
     }
 
-    // Log d'activité
+    // Regénérer l'ID de session pour prévenir la fixation de session, dès que
+    // le mot de passe est validé (avant même l'étape de 2FA).
+    session_regenerate_id(true);
+    $_SESSION['pending_2fa_user_id'] = $user['id'];
+    $_SESSION['pending_2fa_since'] = time();
+
+    return $user['totp_enabled'] ? '2fa_required' : 'setup_required';
+}
+
+// Délai maximum pour finaliser une connexion en attente de 2FA (secondes).
+const PENDING_2FA_TTL = 600;
+
+/**
+ * Récupère l'utilisateur dont la connexion est en attente de 2FA (mot de
+ * passe déjà vérifié par attemptLogin), pour verifier_2fa.php et
+ * configurer_2fa.php. Retourne null (et nettoie la session) si aucune
+ * connexion n'est en attente, si elle a expiré, ou si le compte n'existe
+ * plus / a été désactivé entre-temps.
+ */
+function getPending2faUser(): ?array {
+    if (empty($_SESSION['pending_2fa_user_id'])) {
+        return null;
+    }
+    if (time() - (int) ($_SESSION['pending_2fa_since'] ?? 0) > PENDING_2FA_TTL) {
+        clearPending2fa();
+        return null;
+    }
+    $db = getDB();
+    $stmt = $db->prepare('SELECT id, nom, email, role, actif, totp_secret, totp_enabled FROM users WHERE id = ? AND actif = 1');
+    $stmt->execute([$_SESSION['pending_2fa_user_id']]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        clearPending2fa();
+        return null;
+    }
+    return $user;
+}
+
+function clearPending2fa(): void {
+    unset($_SESSION['pending_2fa_user_id'], $_SESSION['pending_2fa_since']);
+}
+
+/**
+ * Ouvre la session complète pour l'utilisateur dont la connexion était en
+ * attente de 2FA, une fois le code TOTP (ou un code de secours) vérifié,
+ * ou juste après l'activation initiale obligatoire de la 2FA.
+ */
+function finalizeLogin(int $userId): bool {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT id, nom, email, role, actif FROM users WHERE id = ? AND actif = 1');
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        return false;
+    }
+
+    clearPending2fa();
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_nom'] = $user['nom'];
+    $_SESSION['user_role'] = $user['role'];
+    $_SESSION['last_activity'] = time();
+
+    $db->prepare('UPDATE users SET derniere_connexion = NOW() WHERE id = ?')->execute([$user['id']]);
     logActivity($user['id'], 'connexion', 'Connexion réussie');
 
     return true;
@@ -223,6 +301,110 @@ function logout(): void {
         setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
     session_destroy();
+}
+
+// --- Double authentification (TOTP) obligatoire ---
+
+function userNeedsTotpSetup(array $user): bool {
+    return empty($user['totp_enabled']);
+}
+
+/**
+ * Génère (ou réutilise) le secret TOTP en attente de confirmation pour un
+ * utilisateur. Réutilise le secret existant tant qu'il n'a pas encore été
+ * confirmé, pour qu'un simple rechargement de la page de configuration ne
+ * rende pas invalide un QR code déjà scanné par l'application de
+ * l'utilisateur.
+ */
+function generateTotpSecret(int $userId): string {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT totp_secret, totp_enabled FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+    if ($row && !empty($row['totp_secret']) && !$row['totp_enabled']) {
+        return $row['totp_secret'];
+    }
+
+    $secret = Totp::generateSecret();
+    $db->prepare('UPDATE users SET totp_secret = ?, totp_enabled = 0, totp_confirmed_at = NULL WHERE id = ?')
+        ->execute([$secret, $userId]);
+    return $secret;
+}
+
+/**
+ * Active la 2FA pour un utilisateur après vérification du premier code TOTP
+ * saisi lors de la configuration. Retourne false si aucun secret en attente
+ * n'existe ou si le code est invalide.
+ */
+function enableTotpForUser(int $userId, string $code): bool {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT totp_secret FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $secret = $stmt->fetchColumn();
+    if (!$secret || !Totp::verify($secret, $code)) {
+        return false;
+    }
+
+    $db->prepare('UPDATE users SET totp_enabled = 1, totp_confirmed_at = NOW() WHERE id = ?')->execute([$userId]);
+    return true;
+}
+
+/**
+ * Vérifie un code TOTP pour un utilisateur dont la 2FA est déjà active
+ * (étape de connexion, dans verifier_2fa.php).
+ */
+function verifyTotpCode(int $userId, string $code): bool {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT totp_secret FROM users WHERE id = ? AND totp_enabled = 1');
+    $stmt->execute([$userId]);
+    $secret = $stmt->fetchColumn();
+    if (!$secret) {
+        return false;
+    }
+    return Totp::verify($secret, $code);
+}
+
+/**
+ * (Re)génère un jeu de 10 codes de secours à usage unique pour un
+ * utilisateur, en remplaçant tout jeu précédent. Les codes en clair ne sont
+ * jamais stockés : seul leur hash l'est, comme pour les mots de passe.
+ * Les codes en clair sont retournés une seule fois, pour affichage immédiat.
+ */
+function generateBackupCodes(int $userId, int $count = 10): array {
+    $db = getDB();
+    $db->prepare('DELETE FROM user_backup_codes WHERE user_id = ?')->execute([$userId]);
+
+    $insert = $db->prepare('INSERT INTO user_backup_codes (user_id, code_hash) VALUES (?, ?)');
+    $codes = [];
+    for ($i = 0; $i < $count; $i++) {
+        $code = strtoupper(bin2hex(random_bytes(4))); // 8 caractères hexadécimaux
+        $codes[] = $code;
+        $insert->execute([$userId, password_hash($code, PASSWORD_BCRYPT)]);
+    }
+    return $codes;
+}
+
+/**
+ * Vérifie un code de secours et le marque comme utilisé s'il est valide, en
+ * secours au TOTP (appareil perdu). Chaque code n'est utilisable qu'une
+ * seule fois.
+ */
+function verifyAndConsumeBackupCode(int $userId, string $code): bool {
+    $code = strtoupper(trim($code));
+    if ($code === '') {
+        return false;
+    }
+
+    $db = getDB();
+    $stmt = $db->prepare('SELECT id, code_hash FROM user_backup_codes WHERE user_id = ? AND used_at IS NULL');
+    $stmt->execute([$userId]);
+    foreach ($stmt->fetchAll() as $row) {
+        if (password_verify($code, $row['code_hash'])) {
+            $db->prepare('UPDATE user_backup_codes SET used_at = NOW() WHERE id = ?')->execute([$row['id']]);
+            return true;
+        }
+    }
+    return false;
 }
 
 // --- Réinitialisation de mot de passe ---
