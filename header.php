@@ -315,7 +315,7 @@ function navBtnClasses(bool $active): string {
                     $bc = $breadcrumbMap[$page_courante];
                 ?>
                 <nav aria-label="breadcrumb" class="mb-4">
-                    <ol class="flex items-center gap-1.5 text-sm text-gray-500">
+                    <ol class="list-none flex items-center gap-1.5 text-sm text-gray-500">
                         <li><a href="<?= BASE_URL ?>" class="hover:text-brand-600"><i class="bi bi-house"></i></a></li>
                         <?php if (isset($bc['parent'], $parentMap[$bc['parent']])): ?>
                         <li class="text-gray-300">/</li>
