@@ -1,0 +1,29 @@
+# Gestion Comptable Pro — outil de gestion privé.
+# La quasi-totalité de l'application est derrière connexion (les
+# robots n'y verraient de toute façon qu'une redirection vers /login.php).
+# Liste blanche : tout est bloqué sauf les quelques pages réellement
+# publiques (page de présentation, mentions légales) et les ressources
+# nécessaires à leur rendu.
+
+User-agent: *
+Disallow: /
+
+Allow: /$
+Allow: /presentation.php
+Allow: /mentions-legales.php
+Allow: /assets/
+Allow: /robots.txt
+
+# Jamais d'indexation : jetons sensibles dans l'URL, documents générés,
+# exports de données, API interne.
+Disallow: /reinitialiser_mot_de_passe.php
+Disallow: /pdf_generator.php
+Disallow: /livre_pdf.php
+Disallow: /bulletin_paie_pdf.php
+Disallow: /export_csv.php
+Disallow: /export_einvoice.php
+Disallow: /api_entreprise.php
+Disallow: /uploads/
+Disallow: /database/
+Disallow: /vendor/
+Disallow: /tests/
